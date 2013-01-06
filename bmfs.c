@@ -67,7 +67,6 @@ int main(int argc, char *argv[])
 	{
 		fseek(disk, 0, SEEK_END);
 		disksize = ftell(disk) / 1048576;			// Disk size in MiB
-//		printf("Disk Size: %d MiB\n", disksize);
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 		fread(Directory, 4096, 1, disk);			// Read 4096 bytes to the Directory buffer
 		rewind(disk);
@@ -76,28 +75,36 @@ int main(int argc, char *argv[])
 		{
 			list();
 		}
-		else if (strcasecmp(s_create, command) == 0)
+
+		if (argc < 4)
 		{
-			printf("Maximum file size in MiB: ");
-			fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
-			filesize = atoi(tempstring);
-			create(filename, filesize);
-		}
-		else if (strcasecmp(s_read, command) == 0)
-		{
-			read(filename);
-		}
-		else if (strcasecmp(s_write, command) == 0)
-		{
-			write(filename);
-		}
-		else if (strcasecmp(s_delete, command) == 0)
-		{
-			delete(filename);
+			printf("Insufficient arguments.\n");
 		}
 		else
 		{
-			printf("Unknown command\n");
+			if (strcasecmp(s_create, command) == 0)
+			{
+				printf("Maximum file size in MiB: ");
+				fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
+				filesize = atoi(tempstring);
+				create(filename, filesize);
+			}
+			else if (strcasecmp(s_read, command) == 0)
+			{
+				read(filename);
+			}
+			else if (strcasecmp(s_write, command) == 0)
+			{
+				write(filename);
+			}
+			else if (strcasecmp(s_delete, command) == 0)
+			{
+				delete(filename);
+			}
+			else
+			{
+				printf("Unknown command\n");
+			}
 		}
 		fclose(disk);
 	}
@@ -140,7 +147,7 @@ void list()
 {
 	int tint;
 
-	printf("List\n");
+	printf("%s Disk Size: %d MiB\n==============\n", diskname, disksize);
 	for (tint = 0; tint < 64; tint++)			// Max 64 entries
 	{
 		memcpy(pentry, Directory+(tint*64), 64);
@@ -216,13 +223,13 @@ void write(char *filename)
 	char buffer[100];
 	int tint, slot;
 	unsigned long long tempfilesize;
-	
+
 	if (0 == findfile(filename, &tempentry, &slot))
 	{
 		printf("File not found in BMFS. A file entry must first be created.\n");
 	}
 	else
-	{		
+	{
 		printf("Writing local file '%s' to BMFS... ", filename);
 		if ((tfile = fopen(filename, "rb")) == NULL)
 		{
@@ -260,7 +267,23 @@ void write(char *filename)
 
 void delete(char *filename)
 {
-	printf("Deleting file '%s' from BMFS.\n", filename);
+	struct BMFSEntry tempentry;
+	char delmarker = 0x01;
+	int slot;
+
+	if (0 == findfile(filename, &tempentry, &slot))
+	{
+		printf("File not found in BMFS.\n");
+	}
+	else
+	{
+		printf("Deleting file '%s' from BMFS... ", filename);
+		// Update directory
+		memcpy(Directory+(slot*64), &delmarker, 1);
+		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
+		fwrite(Directory, 4096, 1, disk);			// Write new directory to disk				
+		printf("Complete\n");
+	}
 }
 
 
