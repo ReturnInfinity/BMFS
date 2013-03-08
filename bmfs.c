@@ -172,6 +172,9 @@ void create(char *filename, unsigned long long maxsize)
 {
 	struct BMFSEntry tempentry;
 	int slot;
+	
+	if (maxsize % 2 != 0)
+		maxsize++;
 
 	if (findfile(filename, &tempentry, &slot) == 0)
 	{
