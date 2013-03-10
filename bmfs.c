@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 		fread(Directory, 4096, 1, disk);			// Read 4096 bytes to the Directory buffer
 		rewind(disk);
 		
-		if (DiskInfo[0] != 'B' & DiskInfo[1] != 'M' & DiskInfo[2] != 'F' & DiskInfo[3] != 'S')
+		if (strcasecmp(DiskInfo, fs_tag) != 0)
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
@@ -98,6 +98,10 @@ int main(int argc, char *argv[])
 		if (strcasecmp(s_list, command) == 0)
 		{
 			list();
+		}
+		else if (strcasecmp(s_format, command) == 0)
+		{
+			format();
 		}
 		else
 		{
@@ -194,12 +198,12 @@ void format()
 	printf("!!! WARNING !!!\nThis will destroy the current file system on disk '%s'.\n", diskname);
 	printf("Respond with 'YES' if so.\nFormat now?: ");
 	fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
+	strtok(tempstring, "\n");				// Remove trailing newline
 	if (strcmp(tempstring, "YES") == 0)
 	{
 		memset(DiskInfo, 0, 512);
 		memset(Directory, 0, 4096);
 		memcpy(DiskInfo, fs_tag, 4);
-		memcpy(&DiskInfo+16, &disksize, 8);
 		rewind(disk);
 		fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
 		fwrite(DiskInfo, 512, 1, disk);				// Read 512 bytes to the DiskInfo buffer
