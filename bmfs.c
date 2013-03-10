@@ -1,6 +1,7 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
 
+// dd if=/dev/zero of=test.img bs=1m count=128
 
 /* Global includes */
 #include <stdio.h>
@@ -24,6 +25,7 @@ unsigned int filesize, disksize;
 char tempfilename[32], tempstring[32];
 char *filename, *diskname, *command;
 char s_list[] = "list";
+char s_format[] = "format";
 char s_create[] = "create";
 char s_read[] = "read";
 char s_write[] = "write";
@@ -35,6 +37,7 @@ unsigned char Directory[4096];
 /* Built-in functions */
 int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 void list();
+void format();
 void create(char *filename, unsigned long long maxsize);
 void read(char *filename);
 void write(char *filename);
@@ -46,7 +49,7 @@ int main(int argc, char *argv[])
 	/* first argument needs to be a NIC */
 	if (argc < 3)
 	{
-		printf("BareMetal File System Utility v0.1 (2012 12 29)\n");
+		printf("BareMetal File System Utility v0.1 (2013 03 09)\n");
 		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n\n");
 		printf("Usage: %s disk function file\n", argv[0]);
 		printf("Disk: the name of the disk file\n");
@@ -71,14 +74,20 @@ int main(int argc, char *argv[])
 		fread(Directory, 4096, 1, disk);			// Read 4096 bytes to the Directory buffer
 		rewind(disk);
 
-		if (strcasecmp(s_list, command) == 0)
-		{
-			list();
-		}
-
 		if (argc < 4)
 		{
-			printf("Insufficient arguments.\n");
+			if (strcasecmp(s_list, command) == 0)
+			{
+				list();
+			}
+			else if (strcasecmp(s_format, command) == 0)
+			{
+				format();
+			}
+			else
+			{
+				printf("Insufficient arguments.\n");
+			}
 		}
 		else
 		{
@@ -108,8 +117,6 @@ int main(int argc, char *argv[])
 		}
 		fclose(disk);
 	}
-
-//	printf("\n");
 	return 0;
 }
 
@@ -147,7 +154,7 @@ void list()
 {
 	int tint;
 
-	printf("%s Disk Size: %d MiB\n==============\n", diskname, disksize);
+	printf("%s\nDisk Size: %d MiB\n==============\n", diskname, disksize);
 	for (tint = 0; tint < 64; tint++)			// Max 64 entries
 	{
 		memcpy(pentry, Directory+(tint*64), 64);
@@ -168,6 +175,12 @@ void list()
 }
 
 
+void format()
+{
+
+}
+
+
 void create(char *filename, unsigned long long maxsize)
 {
 	struct BMFSEntry tempentry;
@@ -182,7 +195,7 @@ void create(char *filename, unsigned long long maxsize)
 	}
 	else
 	{
-		printf("File already exists.\n");
+		printf("Error: File already exists.\n");
 	}
 }
 
@@ -195,7 +208,7 @@ void read(char *filename)
 
 	if (0 == findfile(filename, &tempentry, &slot))
 	{
-		printf("File not found in BMFS.\n");
+		printf("Error: File not found in BMFS.\n");
 	}
 	else
 	{
@@ -229,7 +242,7 @@ void write(char *filename)
 
 	if (0 == findfile(filename, &tempentry, &slot))
 	{
-		printf("File not found in BMFS. A file entry must first be created.\n");
+		printf("Error: File not found in BMFS. A file entry must first be created.\n");
 	}
 	else
 	{
@@ -276,7 +289,7 @@ void delete(char *filename)
 
 	if (0 == findfile(filename, &tempentry, &slot))
 	{
-		printf("File not found in BMFS.\n");
+		printf("Error: File not found in BMFS.\n");
 	}
 	else
 	{
