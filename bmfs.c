@@ -24,6 +24,7 @@ FILE *file, *disk;
 unsigned int filesize, disksize;
 char tempfilename[32], tempstring[32];
 char *filename, *diskname, *command;
+char fs_tag[] = "BMFS";
 char s_list[] = "list";
 char s_format[] = "format";
 char s_create[] = "create";
@@ -33,6 +34,7 @@ char s_delete[] = "delete";
 struct BMFSEntry entry;
 void *pentry = &entry;
 unsigned char Directory[4096];
+unsigned char DiskInfo[512];
 
 /* Built-in functions */
 int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
@@ -64,59 +66,71 @@ int main(int argc, char *argv[])
 
 	if ((disk = fopen(diskname, "r+b")) == NULL)	// Open for read/write in binary mode
 	{
-		printf("Error opening disk '%s'\n", diskname);
+		printf("Error: Unable to open disk '%s'\n", diskname);
 	}
-	else
+	else	// Opened ok, is it a valid BMFS disk?
 	{
 		fseek(disk, 0, SEEK_END);
 		disksize = ftell(disk) / 1048576;			// Disk size in MiB
+		fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
+		fread(DiskInfo, 512, 1, disk);				// Read 512 bytes to the DiskInfo buffer
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 		fread(Directory, 4096, 1, disk);			// Read 4096 bytes to the Directory buffer
 		rewind(disk);
-
-		if (argc < 4)
+		
+		if (DiskInfo[0] != 'B' & DiskInfo[1] != 'M' & DiskInfo[2] != 'F' & DiskInfo[3] != 'S')
 		{
-			if (strcasecmp(s_list, command) == 0)
-			{
-				list();
-			}
-			else if (strcasecmp(s_format, command) == 0)
+			if (strcasecmp(s_format, command) == 0)
 			{
 				format();
 			}
 			else
 			{
-				printf("Insufficient arguments.\n");
+				printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
 			}
+			fclose(disk);
+			return 0;
+		}
+	}
+
+	if (argc < 4)
+	{
+		if (strcasecmp(s_list, command) == 0)
+		{
+			list();
 		}
 		else
 		{
-			if (strcasecmp(s_create, command) == 0)
-			{
-				printf("Maximum file size in MiB: ");
-				fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
-				filesize = atoi(tempstring);
-				create(filename, filesize);
-			}
-			else if (strcasecmp(s_read, command) == 0)
-			{
-				read(filename);
-			}
-			else if (strcasecmp(s_write, command) == 0)
-			{
-				write(filename);
-			}
-			else if (strcasecmp(s_delete, command) == 0)
-			{
-				delete(filename);
-			}
-			else
-			{
-				printf("Unknown command\n");
-			}
+			printf("Insufficient arguments.\n");
 		}
-		fclose(disk);
 	}
+	else
+	{
+		if (strcasecmp(s_create, command) == 0)
+		{
+			printf("Maximum file size in MiB: ");
+			fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
+			filesize = atoi(tempstring);
+			create(filename, filesize);
+		}
+		else if (strcasecmp(s_read, command) == 0)
+		{
+			read(filename);
+		}
+		else if (strcasecmp(s_write, command) == 0)
+		{
+			write(filename);
+		}
+		else if (strcasecmp(s_delete, command) == 0)
+		{
+			delete(filename);
+		}
+		else
+		{
+			printf("Unknown command\n");
+		}
+	}
+	fclose(disk);
 	return 0;
 }
 
@@ -177,7 +191,26 @@ void list()
 
 void format()
 {
-
+	printf("!!! WARNING !!!\nThis will destroy the current file system on disk '%s'.\n", diskname);
+	printf("Respond with 'YES' if so.\nFormat now?: ");
+	fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
+	if (strcmp(tempstring, "YES") == 0)
+	{
+		memset(DiskInfo, 0, 512);
+		memset(Directory, 0, 4096);
+		memcpy(DiskInfo, fs_tag, 4);
+		memcpy(&DiskInfo+16, &disksize, 8);
+		rewind(disk);
+		fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
+		fwrite(DiskInfo, 512, 1, disk);				// Read 512 bytes to the DiskInfo buffer
+		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
+		fwrite(Directory, 4096, 1, disk);			// Read 4096 bytes to the Directory buffer
+		printf("Format complete.\n");
+	}
+	else
+	{
+		printf("Format aborted!\n");
+	}
 }
 
 
@@ -215,7 +248,7 @@ void read(char *filename)
 		printf("Reading '%s' from BMFS to local file... ", filename);
 		if ((tfile = fopen(tempentry.FileName, "wb")) == NULL)
 		{
-			printf("Error opening local file '%s'\n", tempentry.FileName);
+			printf("Error: Could not open local file '%s'\n", tempentry.FileName);
 		}
 		else
 		{
@@ -249,7 +282,7 @@ void write(char *filename)
 		printf("Writing local file '%s' to BMFS... ", filename);
 		if ((tfile = fopen(filename, "rb")) == NULL)
 		{
-			printf("Error opening local file '%s'\n", tempentry.FileName);
+			printf("Error: Could not open local file '%s'\n", tempentry.FileName);
 		}
 		else
 		{
