@@ -1,6 +1,7 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
 
+// Create a new 128MB disk image
 // dd if=/dev/zero of=test.img bs=1m count=128
 
 /* Global includes */
@@ -11,7 +12,7 @@
 /* Global defines */
 struct BMFSEntry
 {
-	unsigned char FileName[32];
+	char FileName[32];
 	unsigned long long StartingBlock;
 	unsigned long long ReservedBlocks;
 	unsigned long long FileSize;
@@ -33,8 +34,8 @@ char s_write[] = "write";
 char s_delete[] = "delete";
 struct BMFSEntry entry;
 void *pentry = &entry;
-unsigned char Directory[4096];
-unsigned char DiskInfo[512];
+char Directory[4096];
+char DiskInfo[512];
 
 /* Built-in functions */
 int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
 		fread(Directory, 4096, 1, disk);			// Read 4096 bytes to the Directory buffer
 		rewind(disk);
 		
-		if (strcasecmp(DiskInfo, fs_tag) != 0)
+		if (strcasecmp(DiskInfo, fs_tag) != 0)		// Is it a BMFS formatted disk?
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
@@ -203,8 +204,7 @@ void format()
 	{
 		memset(DiskInfo, 0, 512);
 		memset(Directory, 0, 4096);
-		memcpy(DiskInfo, fs_tag, 4);
-		rewind(disk);
+		memcpy(DiskInfo, fs_tag, 4);				// Add the 'BMFS' tag
 		fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
 		fwrite(DiskInfo, 512, 1, disk);				// Read 512 bytes to the DiskInfo buffer
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
@@ -273,7 +273,6 @@ void write(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
-	char buffer[100];
 	int tint, slot;
 	unsigned long long tempfilesize;
 
