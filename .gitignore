@@ -1,0 +1,10 @@
+# Object files
+*.o
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Mac crap
+.DS_Store
