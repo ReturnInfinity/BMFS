@@ -24,10 +24,12 @@ The location of free blocks can be calculated from the directory. As all files a
 The first and last disk blocks are reserved for file system usage. All other disk blocks can be used for data.
 
 	Block 0:
-	4KiB - Legacy MBR Boot sector (512B)
-		 - Free space (3584B)
+	4KiB - Legacy MBR (Master Boot Sector) sector (512B)
+		 - Free space (512B)
+		 - BMFS marker (512B)
+		 - Free space (512B)
 	4KiB - Directory (Max 64 files, 64-bytes for each record)
-	Free space (2040KiB)
+	The remaining space in Block 0 is free to use.
 
 	Block 1 .. n-1:
 	Data
