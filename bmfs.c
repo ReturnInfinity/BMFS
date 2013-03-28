@@ -118,7 +118,10 @@ int main(int argc, char *argv[])
 			printf("Maximum file size in MiB: ");
 			fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
 			filesize = atoi(tempstring);
-			create(filename, filesize);
+			if (filesize >= 1)
+				create(filename, filesize);
+			else
+				printf("Error: Invalid file size.\n");
 		}
 		else if (strcasecmp(s_read, command) == 0)
 		{
