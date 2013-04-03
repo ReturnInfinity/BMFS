@@ -27,7 +27,7 @@ The first and last disk blocks are reserved for file system usage. All other dis
 	4KiB - Legacy MBR (Master Boot Sector) sector (512B)
 		 - Free space (512B)
 		 - BMFS marker (512B)
-		 - Free space (512B)
+		 - Free space (2560B)
 	4KiB - Directory (Max 64 files, 64-bytes for each record)
 	The remaining space in Block 0 is free to use.
 
