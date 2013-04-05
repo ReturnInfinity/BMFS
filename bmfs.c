@@ -184,7 +184,9 @@ void list()
 {
 	int tint;
 
-	printf("%s\nDisk Size: %d MiB\n==============\n", diskname, disksize);
+	printf("%s\nDisk Size: %d MiB\n", diskname, disksize);
+	printf("Name                            |            Size (B)|      Reserved (MiB)\n");
+	printf("==========================================================================\n");
 	for (tint = 0; tint < 64; tint++)			// Max 64 entries
 	{
 		memcpy(pentry, Directory+(tint*64), 64);
@@ -198,8 +200,7 @@ void list()
 		}
 		else										// Valid entry
 		{
-			printf("%s, Size:%lld B of %lld MiB\n", entry.FileName, entry.FileSize, (entry.ReservedBlocks*2));
-//			printf("%s, Start:%lld, Resv:%lld MiB, Size:%lld B\n", entry.FileName, entry.StartingBlock, (entry.ReservedBlocks*2), entry.FileSize);
+			printf("%-32s %20lld %20lld\n", entry.FileName, entry.FileSize, (entry.ReservedBlocks*2));
 		}
 	}
 }
