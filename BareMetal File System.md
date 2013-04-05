@@ -49,7 +49,7 @@ BMFS supports a single directory with a maximum of 64 individual files. Each fil
 	File size (64-bit unsigned int)
 	Unused (8 bytes)
 
-A filename that starts with 0x00 marks the end of the directory. A filename that starts with 0x01 marks an unused record that should be ignored.
+A file name that starts with 0x00 marks the end of the directory. A file name that starts with 0x01 marks an unused record that should be ignored.
 
 Maximum file size supported is 18,446,744,073,709,551,614 bytes (~18 EiB) with a maximum of 9,223,372,036,854,775,807 allocated blocks.
 
@@ -64,7 +64,8 @@ The following system calls should be available:
 - Directory/List (Prepare and display a list of file)
 - Query (Query the existence/details of a file)
 
-# Create
+
+**Create**
 
 The create function accepts two parameters:
 
@@ -72,14 +73,14 @@ The create function accepts two parameters:
 	Reserved = The number of blocks to reserve for the file
 
 
-# Delete
+**Delete**
 
 The delete function accepts one parameter:
 
 	Name = The name of the file to delete
 
 
-# Read
+**Read**
 
 The read function accepts two parameters:
 
@@ -87,7 +88,7 @@ The read function accepts two parameters:
 	Destination = The memory address to store the file
 
 
-# Write
+**Write**
 
 The write function accepts three parameters:
 
@@ -96,12 +97,12 @@ The write function accepts three parameters:
 	Size = The amount of bytes to write
 
 
-# Directory/List
+**Directory/List**
 
 The dir/ls function accepts no parameters
 
 
-# Query
+**Query**
 
 The query function accepts one parameter:
 
@@ -109,5 +110,5 @@ The query function accepts one parameter:
 
 The query function will return the following:
 
-	Size = The current size of the file in bytes (0 if it doesn't exist)
-	Reserved = The amount of blocks reserved for the file
+	Size = The current size of the file in bytes
+	Reserved = The amount of blocks reserved for the file (0 if it doesn't exist)
