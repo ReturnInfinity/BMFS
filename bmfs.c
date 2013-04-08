@@ -32,9 +32,10 @@ char s_create[] = "create";
 char s_read[] = "read";
 char s_write[] = "write";
 char s_delete[] = "delete";
-char s_rename[] = "rename";
 struct BMFSEntry entry;
 void *pentry = &entry;
+char *BlockMap;
+char *FileBlocks;
 char Directory[4096];
 char DiskInfo[512];
 
@@ -46,7 +47,6 @@ void create(char *filename, unsigned long long maxsize);
 void read(char *filename);
 void write(char *filename);
 void delete(char *filename);
-void bfms_rename(char *oldfilename, char *newfilename);
 
 /* Program code */
 int main(int argc, char *argv[])
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n\n");
 		printf("Usage: %s disk function file\n", argv[0]);
 		printf("Disk: the name of the disk file\n");
-		printf("Function: list, read, write, create, delete, rename\n");
+		printf("Function: list, read, write, create, delete\n");
 		printf("File: (if applicable)\n");
 		exit(0);
 	}
@@ -134,12 +134,6 @@ int main(int argc, char *argv[])
 		else if (strcasecmp(s_delete, command) == 0)
 		{
 			delete(filename);
-		}
-		else if (strcasecmp(s_rename, command) == 0)
-		{
-			printf("New file name: ");
-			fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
-//			bmfs_rename(filename, &tempstring);
 		}
 		else
 		{
@@ -241,6 +235,19 @@ void create(char *filename, unsigned long long maxsize)
 	if (findfile(filename, &tempentry, &slot) == 0)
 	{
 		printf("Creating new file..\n");
+
+		// Populate a block map
+		
+
+		// Find an area with enough free blocks
+		
+
+		// Add file record to Directory
+		
+
+		// Flush Directory to disk
+		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
+		fwrite(Directory, 4096, 1, disk);			// Write 4096 bytes for the Directory
 	}
 	else
 	{
@@ -347,34 +354,6 @@ void delete(char *filename)
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 		fwrite(Directory, 4096, 1, disk);			// Write new directory to disk				
 		printf("Complete\n");
-	}
-}
-
-
-void bmfs_rename(char *oldfilename, char *newfilename)
-{
-	struct BMFSEntry tempentry;
-	int slot;
-
-	if (0 == findfile(oldfilename, &tempentry, &slot))
-	{
-		printf("Error: File not found in BMFS.\n");
-	}
-	else
-	{
-		if (strlen(newfilename) < 31)
-		{
-			printf("Renaming file '%s' to '%s'... ", oldfilename, newfilename);
-			// Update directory
-			memcpy(Directory+(slot*64), &newfilename, strlen(newfilename));
-			fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-			fwrite(Directory, 4096, 1, disk);			// Write new directory to disk				
-			printf("Complete\n");
-		}
-		else
-		{
-			printf("Error: File name is too long.\n");
-		}
 	}
 }
 
