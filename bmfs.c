@@ -51,14 +51,14 @@ void delete(char *filename);
 /* Program code */
 int main(int argc, char *argv[])
 {
-	/* first argument needs to be a NIC */
+	/* Parse arguments */
 	if (argc < 3)
 	{
 		printf("BareMetal File System Utility v0.1 (2013 03 09)\n");
 		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n\n");
 		printf("Usage: %s disk function file\n", argv[0]);
 		printf("Disk: the name of the disk file\n");
-		printf("Function: list, read, write, create, delete\n");
+		printf("Function: list, read, write, create, delete, format\n");
 		printf("File: (if applicable)\n");
 		exit(0);
 	}
