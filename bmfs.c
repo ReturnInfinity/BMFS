@@ -223,6 +223,19 @@ void format()
 	}
 }
 
+// helper function for qsort, sorts by StartingBlock field
+static int StartingBlockCmp(const void *pa, const void *pb)
+{
+	struct BMFSEntry *ea = (struct BMFSEntry *)pa;
+	struct BMFSEntry *eb = (struct BMFSEntry *)pb;
+	// empty records go to the end
+	if (ea->FileName[0] == 0x01)
+		return 1;
+	if (eb->FileName[0] == 0x01)
+		return -1;
+	// compare non-empty records by their starting blocks number
+	return (ea->StartingBlock - eb->StartingBlock);
+}
 
 void create(char *filename, unsigned long long maxsize)
 {
@@ -234,20 +247,99 @@ void create(char *filename, unsigned long long maxsize)
 
 	if (findfile(filename, &tempentry, &slot) == 0)
 	{
-		printf("Creating new file..\n");
+		unsigned long long blocks_requested = maxsize / 2; // how many blocks to allocate
+		unsigned long long num_blocks = disksize / 2; // number of blocks in the disk
+		char dir_copy[4096]; // copy of directory
+		int num_used_entries = 0; // how many entries of Directory are either used or deleted
+		int first_free_entry = -1; // where to put new entry
+		int tint;
+		struct BMFSEntry *pEntry;
+		unsigned long long new_file_start = 0;
+		unsigned long long prev_file_end = 1;
 
-		// Populate a block map
-		
+		printf("Creating new file...\n");
+
+		// Make a copy of Directory to play with
+		memcpy(dir_copy, Directory, 4096);
+
+		// Calculate number of files
+		for (tint = 0; tint < 64; tint++) 
+		{
+			pEntry = (struct BMFSEntry *)(dir_copy + tint * 64); // points to the current directory entry
+			if (pEntry->FileName[0] == 0x00) // end of directory
+			{
+				num_used_entries = tint;
+				if (first_free_entry == -1)
+					first_free_entry = tint; // there were no unused entires before, will use this one
+				break;
+			}
+			else if (pEntry->FileName[0] == 0x01) // unused entry
+			{
+				if (first_free_entry == -1)
+					first_free_entry = tint; // will use it for our new file
+			}
+		}
+
+		if (first_free_entry == -1)
+		{
+			printf("Cannot create file: no free directory entries.\n");
+			return;
+		}
 
 		// Find an area with enough free blocks
-		
+		// Sort our copy of the directory by starting block number
+		qsort(dir_copy, num_used_entries, 64, StartingBlockCmp);
+
+		for (tint = 0; tint < num_used_entries + 1; tint++)
+		{
+			// on each iteration of this loop we'll see if a new file can fit
+			// between the end of the previous file (initially == 1) 
+			// and the beginning of the current file (or the last data block if there are no more files).
+
+			unsigned long long this_file_start;
+			pEntry = (struct BMFSEntry *)(dir_copy + tint * 64); // points to the current directory entry
+
+			if (tint == num_used_entries || pEntry->FileName[0] == 0x01) 
+				this_file_start = num_blocks - 2; // index of the last block
+			else
+				this_file_start = pEntry->StartingBlock;
+
+			if (this_file_start - prev_file_end >= blocks_requested) 
+			{ // fits here
+				new_file_start = prev_file_end;
+				break;
+			}
+
+			if (tint < num_used_entries)
+				prev_file_end = pEntry->StartingBlock + pEntry->ReservedBlocks;
+		}
+
+		if (new_file_start == 0) 
+		{
+			printf("Cannot create file of size %lld MiB.\n", maxsize);
+			return;
+		}
 
 		// Add file record to Directory
-		
+		pEntry = (struct BMFSEntry *)(Directory + first_free_entry * 64);
+		pEntry->StartingBlock = new_file_start;
+		pEntry->ReservedBlocks = blocks_requested;
+		pEntry->FileSize = 0;
+		strcpy(pEntry->FileName, filename);
+
+		if (first_free_entry == num_used_entries && num_used_entries + 1 < 64)
+		{
+			// here we used the record that was marked with 0x00, 
+			// so make sure to mark the next record with 0x00 if it exists
+			pEntry = (struct BMFSEntry *)(Directory + (num_used_entries + 1) * 64);
+			pEntry->FileName[0] = 0x00;
+		}
 
 		// Flush Directory to disk
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 		fwrite(Directory, 4096, 1, disk);			// Write 4096 bytes for the Directory
+
+		printf("Complete: file %s starts at block %lld, directory entry #%d.\n", filename, new_file_start, first_free_entry);
 	}
 	else
 	{
