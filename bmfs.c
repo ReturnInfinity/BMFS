@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	/* Parse arguments */
 	if (argc < 3)
 	{
-		printf("BareMetal File System Utility v0.1 (2013 03 09)\n");
+		printf("BareMetal File System Utility v1.0 (2013 04 10)\n");
 		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n\n");
 		printf("Usage: %s disk function file\n", argv[0]);
 		printf("Disk: the name of the disk file\n");
@@ -339,7 +339,8 @@ void create(char *filename, unsigned long long maxsize)
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 		fwrite(Directory, 4096, 1, disk);			// Write 4096 bytes for the Directory
 
-		printf("Complete: file %s starts at block %lld, directory entry #%d.\n", filename, new_file_start, first_free_entry);
+//		printf("Complete: file %s starts at block %lld, directory entry #%d.\n", filename, new_file_start, first_free_entry);
+		printf("Complete\n");
 	}
 	else
 	{
