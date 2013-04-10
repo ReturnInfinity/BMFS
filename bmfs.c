@@ -300,7 +300,7 @@ void create(char *filename, unsigned long long maxsize)
 			pEntry = (struct BMFSEntry *)(dir_copy + tint * 64); // points to the current directory entry
 
 			if (tint == num_used_entries || pEntry->FileName[0] == 0x01) 
-				this_file_start = num_blocks - 2; // index of the last block
+				this_file_start = num_blocks - 1; // index of the last block
 			else
 				this_file_start = pEntry->StartingBlock;
 
