@@ -1,9 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
 
-// Create a new 128MB disk image
-// dd if=/dev/zero of=test.img bs=1m count=128
-
 /* Global includes */
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +15,6 @@ struct BMFSEntry
 	unsigned long long FileSize;
 	unsigned long long Unused;
 };
-#define WHERE fprintf(stderr,"[LOG]%s:%d\n",__FILE__,__LINE__);
 
 /* Global variables */
 FILE *file, *disk;
