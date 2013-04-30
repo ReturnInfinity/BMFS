@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
 	if ((disk = fopen(diskname, "r+b")) == NULL)	// Open for read/write in binary mode
 	{
 		printf("Error: Unable to open disk '%s'\n", diskname);
+		exit(0);
 	}
 	else	// Opened ok, is it a valid BMFS disk?
 	{
