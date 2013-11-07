@@ -93,66 +93,68 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (argc < 4)
+	if (strcasecmp(s_list, command) == 0)
 	{
-		if (strcasecmp(s_list, command) == 0)
-		{
-			list();
-		}
-		else if (strcasecmp(s_format, command) == 0)
-		{
-			format();
-		}
-		else
-		{
-			printf("Insufficient arguments.\n");
-		}
+		list();
 	}
-	else
+	else if (strcasecmp(s_format, command) == 0)
 	{
-		
-		if (strcasecmp(s_create, command) == 0)
+		if (argc > 3)
 		{
-			if (argc > 4)
+			if (strcasecmp(argv[3], "/FORCE") == 0)
 			{
-				int filesize = atoi(argv[4]);
-
-				if (filesize >= 1)
-				{
-					create(filename, filesize);
-				}
-				else
-				{
-			  		printf("Error: Invalid file size.\n");
-				}
+				format();
 			}
 			else
 			{
-				printf("Maximum file size in MiB: ");
-				fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
-				filesize = atoi(tempstring);
-				if (filesize >= 1)
-					create(filename, filesize);
-				else
-					printf("Error: Invalid file size.\n");
+				printf("Format aborted!\n");
 			}
 		}
-		else if (strcasecmp(s_read, command) == 0)
+		else	
 		{
-			read(filename);
+			printf("Format aborted!\n");
 		}
-		else if (strcasecmp(s_write, command) == 0)
+	}
+	else if (strcasecmp(s_create, command) == 0)
+	{
+		if (argc > 4)
 		{
-			write(filename);
-		}
-		else if (strcasecmp(s_delete, command) == 0)
-		{
-			delete(filename);
+			int filesize = atoi(argv[4]);
+			if (filesize >= 1)
+			{
+				create(filename, filesize);
+			}
+			else
+			{
+		  		printf("Error: Invalid file size.\n");
+			}
 		}
 		else
 		{
-			printf("Unknown command\n");
+			printf("Maximum file size in MiB: ");
+			fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
+			filesize = atoi(tempstring);
+			if (filesize >= 1)
+				create(filename, filesize);
+			else
+				printf("Error: Invalid file size.\n");
 		}
+	}
+	else if (strcasecmp(s_read, command) == 0)
+	{
+		read(filename);
+	}
+	else if (strcasecmp(s_write, command) == 0)
+	{
+		write(filename);
+	}
+	else if (strcasecmp(s_delete, command) == 0)
+	{
+		delete(filename);
+	}
+	else
+	{
+		printf("Unknown command\n");
 	}
 	fclose(disk);
 	return 0;
@@ -216,26 +218,16 @@ void list()
 
 void format()
 {
-	printf("!!! WARNING !!!\nThis will destroy the current file system on disk '%s'.\n", diskname);
-	printf("Respond with 'YES' if so.\nFormat now?: ");
-	fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
-	strtok(tempstring, "\n");				// Remove trailing newline
-	if (strcmp(tempstring, "YES") == 0)
-	{
-		memset(DiskInfo, 0, 512);
-		memset(Directory, 0, 4096);
-		memcpy(DiskInfo, fs_tag, 4);				// Add the 'BMFS' tag
-		fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
-		fwrite(DiskInfo, 512, 1, disk);				// Write 512 bytes for the DiskInfo
-		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-		fwrite(Directory, 4096, 1, disk);			// Write 4096 bytes for the Directory
-		printf("Format complete.\n");
-	}
-	else
-	{
-		printf("Format aborted!\n");
-	}
+	memset(DiskInfo, 0, 512);
+	memset(Directory, 0, 4096);
+	memcpy(DiskInfo, fs_tag, 4);				// Add the 'BMFS' tag
+	fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
+	fwrite(DiskInfo, 512, 1, disk);			// Write 512 bytes for the DiskInfo
+	fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
+	fwrite(Directory, 4096, 1, disk);		// Write 4096 bytes for the Directory
+	printf("Format complete.\n");
 }
+
 
 // helper function for qsort, sorts by StartingBlock field
 static int StartingBlockCmp(const void *pa, const void *pb)
