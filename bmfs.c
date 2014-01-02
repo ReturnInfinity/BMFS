@@ -117,27 +117,34 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_create, command) == 0)
 	{
-		if (argc > 4)
+		if (filename == NULL)
 		{
-			int filesize = atoi(argv[4]);
-			if (filesize >= 1)
-			{
-				create(filename, filesize);
-			}
-			else
-			{
-		  		printf("Error: Invalid file size.\n");
-			}
+			printf("Error: File name not specified.\n");
 		}
 		else
 		{
-			printf("Maximum file size in MiB: ");
-			fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
-			filesize = atoi(tempstring);
-			if (filesize >= 1)
-				create(filename, filesize);
+			if (argc > 4)
+			{
+				int filesize = atoi(argv[4]);
+				if (filesize >= 1)
+				{
+					create(filename, filesize);
+				}
+				else
+				{
+			  		printf("Error: Invalid file size.\n");
+				}
+			}
 			else
-				printf("Error: Invalid file size.\n");
+			{
+				printf("Maximum file size in MiB: ");
+				fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
+				filesize = atoi(tempstring);
+				if (filesize >= 1)
+					create(filename, filesize);
+				else
+					printf("Error: Invalid file size.\n");
+			}
 		}
 	}
 	else if (strcasecmp(s_read, command) == 0)
