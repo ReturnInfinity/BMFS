@@ -6,5 +6,8 @@
 *.out
 *.app
 
+# UNIX/Linux/Mac Executable
+bmfs
+
 # Mac crap
 .DS_Store
