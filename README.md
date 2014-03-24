@@ -3,7 +3,21 @@
 
 Utility for accessing a disk (or disk image) formatted with BMFS.
 
-## Creating a new disk image ##
+## Creating a new disk image that boots BareMetal-OS ##
+
+    bmfs disk.image initialize 128M path/to/bmfs_mbr.sys path/to/pure64.sys path/to/kernel64.sys
+
+or if the Pure64 boot loader and BareMetal-OS kernel are combined into one file:
+
+    bmfs disk.image initialize 128M path/to/bmfs_mbr.sys path/to/software.sys
+
+
+## Creating a new, formatted disk image ##
+
+    bmfs disk.image initialize 128M
+
+
+## Creating a new, unformatted disk image ##
 
 Linux/Unix/Mac OS X:
 
