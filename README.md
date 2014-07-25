@@ -1,9 +1,14 @@
-# BMFS #
+# BMFS
+
+Utility for accessing a disk or disk image formatted with BareMetal File System (BMFS).
 
 
-Utility for accessing a disk (or disk image) formatted with BMFS.
+## Creating a new, formatted disk image
 
-## Creating a new disk image that boots BareMetal-OS ##
+    bmfs disk.image initialize 128M
+
+
+## Creating a new disk image that boots BareMetal OS
 
     bmfs disk.image initialize 128M path/to/bmfs_mbr.sys path/to/pure64.sys path/to/kernel64.sys
 
@@ -12,25 +17,7 @@ or if the Pure64 boot loader and BareMetal-OS kernel are combined into one file:
     bmfs disk.image initialize 128M path/to/bmfs_mbr.sys path/to/software.sys
 
 
-## Creating a new, formatted disk image ##
-
-    bmfs disk.image initialize 128M
-
-
-## Creating a new, unformatted disk image ##
-
-Linux/Unix/Mac OS X:
-
-    dd if=/dev/zero of=disk.image bs=1M count=128
-
-Windows:
-
-Download [contig](http://technet.microsoft.com/en-us/sysinternals/bb897428.aspx). Take the size you want in MiB and multiply it by 1048576.
-
-	contig -n disk.image 134217728
-
-
-## Formatting a disk image ##
+## Formatting a disk image
 
 	bmfs disk.image format
 
@@ -38,7 +25,8 @@ In Linux/Unix/Mac OS X you can also format a physical drive by passing the corre
 
 	sudo bmfs /dev/sdc format
 
-## Display BMFS disk contents ##
+
+## Display BMFS disk contents
 
 	bmfs disk.image list
 
@@ -53,21 +41,29 @@ Sample output:
 	Another file.app                                    1                    2
 	helloc.app                                        800                    2
 
-## Create a new file entry and allocate space to it ##
 
-	bmfs disk.image create ThisIsATest.file
+## Create a new file and reserve space for it
+
+	bmfs disk.image create FileName.Ext
 
 You will be prompted for the size to reserve.
 
-## Read from BMFS to a local file##
+Alternately, you can specify the reserved size after the file name. The reserved size is given in Megabytes and will automatically round up to an even number.
 
-	bmfs disk.image read ThisIsATest.file
+	bmfs disk.image create FileName.Ext 4
 
-## Write a local file to BMFS ##
 
-	bmfs disk.image write ThisIsATest.file
+## Read from BMFS to a local file
 
-## Delete a file on BMFS ##
+	bmfs disk.image read FileName.Ext
 
-	bmfs disk.image delete ThisIsATest.file
+
+## Write a local file to BMFS
+
+	bmfs disk.image write FileName.Ext
+
+
+## Delete a file on BMFS
+
+	bmfs disk.image delete FileName.Ext
 
