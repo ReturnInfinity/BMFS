@@ -2,6 +2,7 @@
 
 BMFS is a new file system used by the BareMetal kernel and its related systems. The design is extremely simplified compared to conventional file systems. The system is also geared more toward a small number of very large files (databases, large data files). As all files are contiguous we can also implement memory mapped disk IO. BMFS was inspired by the [RT11 File System](http://en.wikipedia.org/wiki/RT11#File_system).
 
+
 ## Characteristics:
 
 - Very simple layout
@@ -9,17 +10,18 @@ BMFS is a new file system used by the BareMetal kernel and its related systems. 
 - Disk is divided into 2 MiB blocks
 - Flat organization; no subdirectories/subfolders
 
+
 ## Disk structure
 
-**Blocks**
+#### Blocks
 
 For simplicity, BMFS acts as an abstraction layer where a number of contiguous [sectors](http://en.wikipedia.org/wiki/Disk_sector) are accessed instead of individual sectors. With BMFS, each disk block is 2MiB. The disk driver will handle the optimal way to access the disk (based on if the disk uses 512 byte sectors or supports the new [Advanced Format](http://en.wikipedia.org/wiki/Advanced_Format) 4096 byte sectors). 2MiB blocks were chosen to match the 2MiB memory page allocation that is used within BareMetal.
 
-**Free Blocks**
+#### Free Blocks
 
 The location of free blocks can be calculated from the directory. As all files are contiguous we can extract the location of free blocks by comparing against the blocks that are currently in use. The calculation for locating free blocks only needs to be completed in the file create function.
 
-**Disk layout**
+#### Disk layout
 
 The first and last disk blocks are reserved for file system usage. All other disk blocks can be used for data.
 
@@ -37,11 +39,11 @@ The first and last disk blocks are reserved for file system usage. All other dis
 	Block n (last block on disk):
 	Copy of Block 0
 
-**Directory**
+#### Directory
 
 BMFS supports a single directory with a maximum of 64 individual files. Each file record is 64 bytes. The directory structure is 4096 bytes and starts at sector 8.
 
-**Directory Record structure**:
+#### Directory Record structure:
 
 	Filename (32 bytes) - Null-terminated ASCII string
 	Starting Block number (64-bit unsigned int)
@@ -53,7 +55,8 @@ A file name that starts with 0x00 marks the end of the directory. A file name th
 
 Maximum file size supported is 70,368,744,177,664 bytes (64 TiB) with a maximum of 33,554,432 allocated blocks.
 
-## Files
+
+## Functions
 
 The following system calls should be available:
 
@@ -65,7 +68,7 @@ The following system calls should be available:
 - Query (Query the existence/details of a file)
 
 
-**Create**
+#### Create
 
 The create function accepts two parameters:
 
@@ -73,14 +76,14 @@ The create function accepts two parameters:
 	Reserved = The number of blocks to reserve for the file
 
 
-**Delete**
+#### Delete
 
 The delete function accepts one parameter:
 
 	Name = The name of the file to delete
 
 
-**Read**
+#### Read
 
 The read function accepts two parameters:
 
@@ -88,7 +91,7 @@ The read function accepts two parameters:
 	Destination = The memory address to store the file
 
 
-**Write**
+#### Write
 
 The write function accepts three parameters:
 
@@ -97,12 +100,12 @@ The write function accepts three parameters:
 	Size = The amount of bytes to write
 
 
-**Directory/List**
+#### Directory/List
 
 The dir/ls function accepts no parameters
 
 
-**Query**
+#### Query
 
 The query function accepts one parameter:
 
