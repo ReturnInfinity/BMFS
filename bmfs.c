@@ -1,5 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
+/* v1.1 (2015 02 10) */
 
 /* Global includes */
 #include <stdio.h>
@@ -35,6 +36,7 @@ char s_create[] = "create";
 char s_read[] = "read";
 char s_write[] = "write";
 char s_delete[] = "delete";
+char s_version[] = "version";
 struct BMFSEntry entry;
 void *pentry = &entry;
 char *BlockMap;
@@ -58,12 +60,10 @@ int main(int argc, char *argv[])
 	/* Parse arguments */
 	if (argc < 3)
 	{
-		printf("BareMetal File System Utility v1.0 (2013 04 10)\n");
-		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n\n");
 		printf("Usage: %s disk function file\n", argv[0]);
-		printf("Disk: the name of the disk file\n");
-		printf("Function: list, read, write, create, delete, format, initialize\n");
-		printf("File: (if applicable)\n");
+		printf("\tDisk: the name of the disk file\n");
+		printf("\tFunction: list, read, write, create, delete, format, initialize\n");
+		printf("\tFile: (if applicable)\n");
 		exit(0);
 	}
 
@@ -187,9 +187,14 @@ int main(int argc, char *argv[])
 	{
 		delete(filename);
 	}
+    else if (strcasecmp(s_version, command) == 0)
+    {
+        printf("BareMetal File System Utility v1.1 (2015 02 10)\n");
+        printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
+    }
 	else
 	{
-		printf("Unknown command\n");
+		printf("Error: Unknown command\n");
 	}
 	if (disk != NULL)
 	{
@@ -233,7 +238,7 @@ void list()
 {
 	int tint;
 
-	printf("%s\nDisk Size: %d MiB\n", diskname, disksize);
+	printf("Disk Size: %d MiB\n", disksize);
 	printf("Name                            |            Size (B)|      Reserved (MiB)\n");
 	printf("==========================================================================\n");
 	for (tint = 0; tint < 64; tint++)			// Max 64 entries
@@ -259,12 +264,11 @@ void format()
 {
 	memset(DiskInfo, 0, 512);
 	memset(Directory, 0, 4096);
-	memcpy(DiskInfo, fs_tag, 4);				// Add the 'BMFS' tag
-	fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
-	fwrite(DiskInfo, 512, 1, disk);			// Write 512 bytes for the DiskInfo
-	fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-	fwrite(Directory, 4096, 1, disk);		// Write 4096 bytes for the Directory
-	printf("Format complete.\n");
+	memcpy(DiskInfo, fs_tag, 4);                    // Add the 'BMFS' tag
+	fseek(disk, 1024, SEEK_SET);                    // Seek 1KiB in for disk information
+	fwrite(DiskInfo, 512, 1, disk);                 // Write 512 bytes for the DiskInfo
+	fseek(disk, 4096, SEEK_SET);                    // Seek 4KiB in for directory
+	fwrite(Directory, 4096, 1, disk);               // Write 4096 bytes for the Directory
 }
 
 
@@ -482,9 +486,8 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 	}
 
 	// Write the master boot record if it was specified by the caller.
-	if (ret == 0 && mbrFile !=NULL)
+	if (ret == 0 && mbrFile != NULL)
 	{
-		printf("Writing master boot record.\n");
 		fseek(disk, 0, SEEK_SET);
 		if (fread(buffer, 512, 1, mbrFile) == 1)
 		{
@@ -502,9 +505,8 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 	}
 
 	// Write the boot loader if it was specified by the caller.
-	if (ret == 0 && bootFile !=NULL)
+	if (ret == 0 && bootFile != NULL)
 	{
-		printf("Writing %s file.\n", bootFileType);
 		fseek(disk, 8192, SEEK_SET);
 		for (;;)
 		{
@@ -531,9 +533,8 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 
 	// Write the kernel if it was specified by the caller. The kernel must
 	// immediately follow the boot loader on disk (i.e. no seek needed.)
-	if (ret == 0 && kernelFile !=NULL)
+	if (ret == 0 && kernelFile != NULL)
 	{
-		printf("Writing kernel.\n");
 		for (;;)
 		{
 			chunkSize = fread( buffer, 1, bufferSize, kernelFile);
@@ -625,8 +626,6 @@ void create(char *filename, unsigned long long maxsize)
 		unsigned long long new_file_start = 0;
 		unsigned long long prev_file_end = 1;
 
-		printf("Creating new file...\n");
-
 		// Make a copy of Directory to play with
 		memcpy(dir_copy, Directory, 4096);
 
@@ -650,7 +649,7 @@ void create(char *filename, unsigned long long maxsize)
 
 		if (first_free_entry == -1)
 		{
-			printf("Cannot create file: no free directory entries.\n");
+			printf("Error: Cannot create file. No free directory entries.\n");
 			return;
 		}
 
@@ -684,7 +683,7 @@ void create(char *filename, unsigned long long maxsize)
 
 		if (new_file_start == 0) 
 		{
-			printf("Cannot create file of size %lld MiB.\n", maxsize);
+			printf("Error: Cannot create file of size %lld MiB.\n", maxsize);
 			return;
 		}
 
@@ -708,7 +707,6 @@ void create(char *filename, unsigned long long maxsize)
 		fwrite(Directory, 4096, 1, disk);			// Write 4096 bytes for the Directory
 
 //		printf("Complete: file %s starts at block %lld, directory entry #%d.\n", filename, new_file_start, first_free_entry);
-		printf("Complete\n");
 	}
 	else
 	{
@@ -729,7 +727,6 @@ void read(char *filename)
 	}
 	else
 	{
-		printf("Reading '%s' from BMFS to local file... ", filename);
 		if ((tfile = fopen(tempentry.FileName, "wb")) == NULL)
 		{
 			printf("Error: Could not open local file '%s'\n", tempentry.FileName);
@@ -743,7 +740,6 @@ void read(char *filename)
 				// TODO: Rework with fread and fwrite (ideally with a 2MiB buffer)
 			}
 			fclose(tfile);
-			printf("Complete\n");
 		}
 	}
 }
@@ -762,7 +758,6 @@ void write(char *filename)
 	}
 	else
 	{
-		printf("Writing local file '%s' to BMFS... ", filename);
 		if ((tfile = fopen(filename, "rb")) == NULL)
 		{
 			printf("Error: Could not open local file '%s'\n", tempentry.FileName);
@@ -775,7 +770,7 @@ void write(char *filename)
 			rewind(tfile);
 			if ((tempentry.ReservedBlocks*2097152) < tempfilesize)
 			{
-				printf("Not enough reserved space in BMFS.\n");
+				printf("Error: Not enough reserved space in BMFS.\n");
 			}
 			else
 			{
@@ -789,7 +784,6 @@ void write(char *filename)
 				memcpy(Directory+(slot*64)+48, &tempfilesize, 8);
 				fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 				fwrite(Directory, 4096, 1, disk);			// Write new directory to disk
-				printf("Complete\n");
 			}
 			fclose(tfile);
 		}
@@ -809,12 +803,10 @@ void delete(char *filename)
 	}
 	else
 	{
-		printf("Deleting file '%s' from BMFS... ", filename);
 		// Update directory
 		memcpy(Directory+(slot*64), &delmarker, 1);
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 		fwrite(Directory, 4096, 1, disk);			// Write new directory to disk				
-		printf("Complete\n");
 	}
 }
 

@@ -33,12 +33,11 @@ In Linux/Unix/Mac OS X you can also format a physical drive by passing the corre
 Sample output:
 
 	C:\baremetal>utils\bmfs BMFS-256-flat.vmdk list
-	BMFS-256-flat.vmdk
 	Disk Size: 256 MiB
 	Name                            |            Size (B)|      Reserved (MiB)
 	==========================================================================
 	test.app                                           31                    2
-	Another file.app                                    1                    2
+	AnotherFile.app                                     1                    2
 	helloc.app                                        800                    2
 
 
