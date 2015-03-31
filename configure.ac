@@ -1,6 +1,6 @@
 AC_PREREQ([2.69])
 AC_INIT([BMFS], [1.1], [ian.seyler@returninfinity.com])
-AM_INIT_AUTOMAKE(foreign])
+AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/bmfs.c])
 AC_CONFIG_HEADERS([config.h])
 
