@@ -67,23 +67,24 @@ int main(int argc, char *argv[])
 	/* Parse arguments */
 	if (argc < 3)
 	{
-		printf("Usage: %s disk function file\n", argv[0]);
-		printf("\tDisk: the name of the disk file\n");
-		printf("\tFunction: list, read, write, create, delete, format, initialize\n");
-		printf("\tFile: (if applicable)\n");
+		if (strcasecmp(s_version, argv[1]) == 0)
+		{
+			printf("BareMetal File System Utility v1.1 (2015 04 01)\n");
+			printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
+		}
+		else
+		{
+			printf("Usage: %s disk function file\n", argv[0]);
+			printf("\tDisk: the name of the disk file\n");
+			printf("\tFunction: list, read, write, create, delete, format, initialize\n");
+			printf("\tFile: (if applicable)\n");
+		}
 		exit(0);
 	}
 
 	diskname = argv[1];
 	command = argv[2];
 	filename = argv[3];
-
-	if (strcasecmp(s_version, diskname) == 0)
-	{
-		printf("BareMetal File System Utility v1.1 (2015 04 01)\n");
-		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
-		exit(0);
-	}
 
 	if (strcasecmp(s_initialize, command) == 0)
 	{
