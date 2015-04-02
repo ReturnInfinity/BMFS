@@ -1,22 +1,29 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.1 (2015 02 10) */
+/* v1.1 (2015 04 01) */
 
 /* Global includes */
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
 
+/* Typedefs */
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
 /* Global defines */
 struct BMFSEntry
 {
 	char FileName[32];
-	unsigned long long StartingBlock;
-	unsigned long long ReservedBlocks;
-	unsigned long long FileSize;
-	unsigned long long Unused;
+	u64 StartingBlock;
+	u64 ReservedBlocks;
+	u64 FileSize;
+	u64 Unused;
 };
 
 /* Global constants */
@@ -25,7 +32,7 @@ const unsigned long long minimumDiskSize = (6 * 1024 * 1024);
 
 /* Global variables */
 FILE *file, *disk;
-unsigned int filesize, disksize;
+unsigned int filesize, disksize, retval;
 char tempfilename[32], tempstring[32];
 char *filename, *diskname, *command;
 char fs_tag[] = "BMFS";
@@ -71,14 +78,21 @@ int main(int argc, char *argv[])
 	command = argv[2];
 	filename = argv[3];
 
+	if (strcasecmp(s_version, diskname) == 0)
+	{
+		printf("BareMetal File System Utility v1.1 (2015 04 01)\n");
+		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
+		exit(0);
+	}
+
 	if (strcasecmp(s_initialize, command) == 0)
 	{
 		if (argc >= 4)
 		{
-			char *size = argv[3];  // Required
-			char *mbr = (argc > 4 ? argv[4] : NULL);    // Opt.
-			char *boot = (argc > 5 ? argv[5] : NULL);   // Opt.
-			char *kernel = (argc > 6 ? argv[6] : NULL); // Opt.
+			char *size = argv[3];				// Required
+			char *mbr = (argc > 4 ? argv[4] : NULL);    	// Opt.
+			char *boot = (argc > 5 ? argv[5] : NULL);   	// Opt.
+			char *kernel = (argc > 6 ? argv[6] : NULL); 	// Opt.
 			int ret = initialize(diskname, size, mbr, boot, kernel);
 			exit(ret);
 		}
@@ -91,22 +105,22 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if ((disk = fopen(diskname, "r+b")) == NULL)	// Open for read/write in binary mode
+	if ((disk = fopen(diskname, "r+b")) == NULL)			// Open for read/write in binary mode
 	{
 		printf("Error: Unable to open disk '%s'\n", diskname);
 		exit(0);
 	}
-	else	// Opened ok, is it a valid BMFS disk?
+	else								// Opened ok, is it a valid BMFS disk?
 	{
 		fseek(disk, 0, SEEK_END);
 		disksize = ftell(disk) / 1048576;			// Disk size in MiB
 		fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
-		fread(DiskInfo, 512, 1, disk);				// Read 512 bytes to the DiskInfo buffer
+		retval = fread(DiskInfo, 512, 1, disk);			// Read 512 bytes to the DiskInfo buffer
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-		fread(Directory, 4096, 1, disk);			// Read 4096 bytes to the Directory buffer
+		retval = fread(Directory, 4096, 1, disk);		// Read 4096 bytes to the Directory buffer
 		rewind(disk);
 		
-		if (strcasecmp(DiskInfo, fs_tag) != 0)		// Is it a BMFS formatted disk?
+		if (strcasecmp(DiskInfo, fs_tag) != 0)			// Is it a BMFS formatted disk?
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
@@ -166,8 +180,8 @@ int main(int argc, char *argv[])
 			else
 			{
 				printf("Maximum file size in MiB: ");
-				fgets(tempstring, 32, stdin);			// Get up to 32 chars from the keyboard
-				filesize = atoi(tempstring);
+				if (fgets(tempstring, 32, stdin) != NULL)	// Get up to 32 chars from the keyboard
+					filesize = atoi(tempstring);
 				if (filesize >= 1)
 					create(filename, filesize);
 				else
@@ -187,11 +201,6 @@ int main(int argc, char *argv[])
 	{
 		delete(filename);
 	}
-    else if (strcasecmp(s_version, command) == 0)
-    {
-        printf("BareMetal File System Utility v1.1 (2015 02 10)\n");
-        printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
-    }
 	else
 	{
 		printf("Error: Unknown command\n");
@@ -220,7 +229,7 @@ int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 		{
 			// Ignore
 		}
-		else										// Valid entry
+		else							// Valid entry
 		{
 			if (strcmp(filename, entry.FileName) == 0)
 			{
@@ -241,7 +250,7 @@ void list()
 	printf("Disk Size: %d MiB\n", disksize);
 	printf("Name                            |            Size (B)|      Reserved (MiB)\n");
 	printf("==========================================================================\n");
-	for (tint = 0; tint < 64; tint++)			// Max 64 entries
+	for (tint = 0; tint < 64; tint++)				// Max 64 entries
 	{
 		memcpy(pentry, Directory+(tint*64), 64);
 		if (entry.FileName[0] == 0x00)				// End of directory, bail out
@@ -252,9 +261,9 @@ void list()
 		{
 			// Ignore
 		}
-		else										// Valid entry
+		else							// Valid entry
 		{
-			printf("%-32s %20lld %20lld\n", entry.FileName, entry.FileSize, (entry.ReservedBlocks*2));
+			printf("%-32s %20lld %20lld\n", entry.FileName, (long long int)entry.FileSize, (long long int)(entry.ReservedBlocks*2));
 		}
 	}
 }
