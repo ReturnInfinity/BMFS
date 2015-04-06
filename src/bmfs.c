@@ -67,10 +67,13 @@ int main(int argc, char *argv[])
 	/* Parse arguments */
 	if (argc < 3)
 	{
-		if (strcasecmp(s_version, argv[1]) == 0)
+		if (argc > 1)
 		{
-			printf("BareMetal File System Utility v1.1 (2015 04 01)\n");
-			printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
+			if (strcasecmp(s_version, argv[1]) == 0)
+			{
+				printf("BareMetal File System Utility v1.2 (2015 04 06)\n");
+				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
+			}
 		}
 		else
 		{
@@ -724,12 +727,13 @@ void create(char *filename, unsigned long long maxsize)
 	}
 }
 
-
+// Read a file from a BMFS volume
 void read(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
-	int tint, slot;
+	int tint, slot, retval, bytestoread;
+	char *buffer;
 
 	if (0 == findfile(filename, &tempentry, &slot))
 	{
@@ -743,11 +747,30 @@ void read(char *filename)
 		}
 		else
 		{
+			bytestoread = tempentry.FileSize;
 			fseek(disk, tempentry.StartingBlock*2097152, SEEK_SET); // Skip to the starting block in the disk
-			for (tint=0; tint<tempentry.FileSize; tint++)
+			buffer = malloc(2097152);
+			if (buffer == NULL)
 			{
-				putc(getc(disk), tfile);			// This is really terrible.
-				// TODO: Rework with fread and fwrite (ideally with a 2MiB buffer)
+				printf("Error: Unable to allocate enough memory for buffer.\n");
+			}
+			else
+			{
+				while (bytestoread != 0)
+				{
+					if (bytestoread >= 2097152)
+					{
+						retval = fread(buffer, 2097152, 1, disk);
+						fwrite(buffer, 2097152, 1, tfile);
+						bytestoread -= 2097152;
+					}
+					else
+					{
+						retval = fread(buffer, bytestoread, 1, disk);
+						fwrite(buffer, bytestoread, 1, tfile);
+						bytestoread = 0;
+					}
+				}
 			}
 			fclose(tfile);
 		}
@@ -755,12 +778,14 @@ void read(char *filename)
 }
 
 
+// Write a file to a BMFS volume
 void write(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
-	int tint, slot;
+	int tint, slot, retval;
 	unsigned long long tempfilesize;
+	char *buffer;
 
 	if (0 == findfile(filename, &tempentry, &slot))
 	{
@@ -785,10 +810,28 @@ void write(char *filename)
 			else
 			{
 				fseek(disk, tempentry.StartingBlock*2097152, SEEK_SET); // Skip to the starting block in the disk
-				for (tint=0; tint<tempfilesize; tint++)
+				buffer = malloc(2097152);
+				if (buffer == NULL)
 				{
-					putc(getc(tfile), disk);			// This is really terrible.
-					// TODO: Rework with fread and fwrite (ideally with a 2MiB buffer)
+					printf("Error: Unable to allocate enough memory for buffer.\n");
+				}
+				else
+				{
+					while (tempfilesize != 0)
+					{
+						if (tempfilesize >= 2097152)
+						{
+							retval = fread(buffer, 2097152, 1, tfile);
+							fwrite(buffer, 2097152, 1, disk);
+							tempfilesize -= 2097152;
+						}
+						else
+						{
+							retval = fread(buffer, tempfilesize, 1, tfile);
+							fwrite(buffer, tempfilesize, 1, disk);
+							tempfilesize = 0;
+						}
+					}
 				}
 				// Update directory
 				memcpy(Directory+(slot*64)+48, &tempfilesize, 8);
