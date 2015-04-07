@@ -1,6 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.1 (2015 04 01) */
+/* v1.2 (2015 04 07) */
 
 /* Global includes */
 #include <stdio.h>
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_version, argv[1]) == 0)
 			{
-				printf("BareMetal File System Utility v1.2 (2015 04 06)\n");
+				printf("BareMetal File System Utility v1.2 (2015 04 07)\n");
 				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
 			}
 		}
@@ -828,7 +828,8 @@ void write(char *filename)
 						else
 						{
 							retval = fread(buffer, tempfilesize, 1, tfile);
-							fwrite(buffer, tempfilesize, 1, disk);
+							memset(buffer+(tempfilesize), 0, (2097152-tempfilesize)); // 0 the rest of the buffer
+							fwrite(buffer, 2097152, 1, disk);
 							tempfilesize = 0;
 						}
 					}
