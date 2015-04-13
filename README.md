@@ -3,6 +3,14 @@
 Utility for accessing a disk or disk image formatted with BareMetal File System (BMFS).
 
 
+## Building BMFS
+
+    autoreconf -fi
+    ./configure
+    make
+    sudo make install
+
+
 ## Creating a new, formatted disk image
 
     bmfs disk.image initialize 128M
