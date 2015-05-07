@@ -1,6 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.2 (2015 04 07) */
+/* v1.2.1 (2015 05 07) */
 
 /* Global includes */
 #include <stdio.h>
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_version, argv[1]) == 0)
 			{
-				printf("BareMetal File System Utility v1.2 (2015 04 07)\n");
+				printf("BareMetal File System Utility v1.2.1 (2015 05 07)\n");
 				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
 			}
 		}
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 		retval = fread(Directory, 4096, 1, disk);		// Read 4096 bytes to the Directory buffer
 		rewind(disk);
-		
+
 		if (strcasecmp(DiskInfo, fs_tag) != 0)			// Is it a BMFS formatted disk?
 		{
 			if (strcasecmp(s_format, command) == 0)
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 				printf("Format aborted!\n");
 			}
 		}
-		else	
+		else
 		{
 			printf("Format aborted!\n");
 		}
@@ -241,7 +241,7 @@ int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 				*entrynumber = tint;
 				return 1;
 			}
-		}	
+		}
 	}
 	return 0;
 }
@@ -623,7 +623,7 @@ void create(char *filename, unsigned long long maxsize)
 {
 	struct BMFSEntry tempentry;
 	int slot;
-	
+
 	if (maxsize % 2 != 0)
 		maxsize++;
 
@@ -643,7 +643,7 @@ void create(char *filename, unsigned long long maxsize)
 		memcpy(dir_copy, Directory, 4096);
 
 		// Calculate number of files
-		for (tint = 0; tint < 64; tint++) 
+		for (tint = 0; tint < 64; tint++)
 		{
 			pEntry = (struct BMFSEntry *)(dir_copy + tint * 64); // points to the current directory entry
 			if (pEntry->FileName[0] == 0x00) // end of directory
@@ -673,18 +673,18 @@ void create(char *filename, unsigned long long maxsize)
 		for (tint = 0; tint < num_used_entries + 1; tint++)
 		{
 			// on each iteration of this loop we'll see if a new file can fit
-			// between the end of the previous file (initially == 1) 
+			// between the end of the previous file (initially == 1)
 			// and the beginning of the current file (or the last data block if there are no more files).
 
 			unsigned long long this_file_start;
 			pEntry = (struct BMFSEntry *)(dir_copy + tint * 64); // points to the current directory entry
 
-			if (tint == num_used_entries || pEntry->FileName[0] == 0x01) 
+			if (tint == num_used_entries || pEntry->FileName[0] == 0x01)
 				this_file_start = num_blocks - 1; // index of the last block
 			else
 				this_file_start = pEntry->StartingBlock;
 
-			if (this_file_start - prev_file_end >= blocks_requested) 
+			if (this_file_start - prev_file_end >= blocks_requested)
 			{ // fits here
 				new_file_start = prev_file_end;
 				break;
@@ -694,7 +694,7 @@ void create(char *filename, unsigned long long maxsize)
 				prev_file_end = pEntry->StartingBlock + pEntry->ReservedBlocks;
 		}
 
-		if (new_file_start == 0) 
+		if (new_file_start == 0)
 		{
 			printf("Error: Cannot create file of size %lld MiB.\n", maxsize);
 			return;
@@ -709,7 +709,7 @@ void create(char *filename, unsigned long long maxsize)
 
 		if (first_free_entry == num_used_entries && num_used_entries + 1 < 64)
 		{
-			// here we used the record that was marked with 0x00, 
+			// here we used the record that was marked with 0x00,
 			// so make sure to mark the next record with 0x00 if it exists
 			pEntry = (struct BMFSEntry *)(Directory + (num_used_entries + 1) * 64);
 			pEntry->FileName[0] = 0x00;
@@ -835,6 +835,7 @@ void write(char *filename)
 					}
 				}
 				// Update directory
+				tempfilesize = ftell(tfile);
 				memcpy(Directory+(slot*64)+48, &tempfilesize, 8);
 				fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
 				fwrite(Directory, 4096, 1, disk);			// Write new directory to disk
@@ -860,7 +861,7 @@ void delete(char *filename)
 		// Update directory
 		memcpy(Directory+(slot*64), &delmarker, 1);
 		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-		fwrite(Directory, 4096, 1, disk);			// Write new directory to disk				
+		fwrite(Directory, 4096, 1, disk);			// Write new directory to disk
 	}
 }
 
