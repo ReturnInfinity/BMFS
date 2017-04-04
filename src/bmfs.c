@@ -763,7 +763,7 @@ void read(char *filename)
 					if (bytestoread >= blockSize)
 					{
 						retval = fread(buffer, blockSize, 1, disk);
-						if (retval == blockSize)
+						if (retval == 1)
 						{
 							fwrite(buffer, blockSize, 1, tfile);
 							bytestoread -= blockSize;
@@ -777,7 +777,7 @@ void read(char *filename)
 					else
 					{
 						retval = fread(buffer, bytestoread, 1, disk);
-						if (retval == bytestoread)
+						if (retval == 1)
 						{
 							fwrite(buffer, bytestoread, 1, tfile);
 							bytestoread = 0;
@@ -840,7 +840,7 @@ void write(char *filename)
 						if (tempfilesize >= blockSize)
 						{
 							retval = fread(buffer, blockSize, 1, tfile);
-							if (retval == blockSize)
+							if (retval == 1)
 							{
 								fwrite(buffer, blockSize, 1, disk);
 								tempfilesize -= blockSize;
@@ -854,7 +854,7 @@ void write(char *filename)
 						else
 						{
 							retval = fread(buffer, tempfilesize, 1, tfile);
-							if (retval == tempfilesize)
+							if (retval == 1)
 							{
 								memset(buffer+(tempfilesize), 0, (blockSize-tempfilesize)); // 0 the rest of the buffer
 								fwrite(buffer, blockSize, 1, disk);
