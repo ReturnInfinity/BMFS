@@ -1,6 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.2.1 (2015 05 07) */
+/* v1.2.2 (2017 04 04) */
 
 /* Global includes */
 #include <stdio.h>
@@ -29,6 +29,8 @@ struct BMFSEntry
 /* Global constants */
 // Min disk size is 6MiB (three blocks of 2MiB each.)
 const unsigned long long minimumDiskSize = (6 * 1024 * 1024);
+// Block size is 2MiB
+const int blockSize = 2 * 1024 * 1024;
 
 /* Global variables */
 FILE *file, *disk;
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_version, argv[1]) == 0)
 			{
-				printf("BareMetal File System Utility v1.2.1 (2015 05 07)\n");
+				printf("BareMetal File System Utility v1.2.2 (2017 04 04)\n");
 				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
 			}
 		}
@@ -748,8 +750,8 @@ void read(char *filename)
 		else
 		{
 			bytestoread = tempentry.FileSize;
-			fseek(disk, tempentry.StartingBlock*2097152, SEEK_SET); // Skip to the starting block in the disk
-			buffer = malloc(2097152);
+			fseek(disk, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
+			buffer = malloc(blockSize);
 			if (buffer == NULL)
 			{
 				printf("Error: Unable to allocate enough memory for buffer.\n");
@@ -758,13 +760,13 @@ void read(char *filename)
 			{
 				while (bytestoread != 0)
 				{
-					if (bytestoread >= 2097152)
+					if (bytestoread >= blockSize)
 					{
-						retval = fread(buffer, 2097152, 1, disk);
-						if (retval == 2097152)
+						retval = fread(buffer, blockSize, 1, disk);
+						if (retval == blockSize)
 						{
-							fwrite(buffer, 2097152, 1, tfile);
-							bytestoread -= 2097152;
+							fwrite(buffer, blockSize, 1, tfile);
+							bytestoread -= blockSize;
 						}
 						else
 						{
@@ -819,14 +821,14 @@ void write(char *filename)
 			fseek(tfile, 0, SEEK_END);
 			tempfilesize = ftell(tfile);
 			rewind(tfile);
-			if ((tempentry.ReservedBlocks*2097152) < tempfilesize)
+			if ((tempentry.ReservedBlocks*blockSize) < tempfilesize)
 			{
 				printf("Error: Not enough reserved space in BMFS.\n");
 			}
 			else
 			{
-				fseek(disk, tempentry.StartingBlock*2097152, SEEK_SET); // Skip to the starting block in the disk
-				buffer = malloc(2097152);
+				fseek(disk, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
+				buffer = malloc(blockSize);
 				if (buffer == NULL)
 				{
 					printf("Error: Unable to allocate enough memory for buffer.\n");
@@ -835,13 +837,13 @@ void write(char *filename)
 				{
 					while (tempfilesize != 0)
 					{
-						if (tempfilesize >= 2097152)
+						if (tempfilesize >= blockSize)
 						{
-							retval = fread(buffer, 2097152, 1, tfile);
-							if (retval == 2097152)
+							retval = fread(buffer, blockSize, 1, tfile);
+							if (retval == blockSize)
 							{
-								fwrite(buffer, 2097152, 1, disk);
-								tempfilesize -= 2097152;
+								fwrite(buffer, blockSize, 1, disk);
+								tempfilesize -= blockSize;
 							}
 							else
 							{
@@ -854,8 +856,8 @@ void write(char *filename)
 							retval = fread(buffer, tempfilesize, 1, tfile);
 							if (retval == tempfilesize)
 							{
-								memset(buffer+(tempfilesize), 0, (2097152-tempfilesize)); // 0 the rest of the buffer
-								fwrite(buffer, 2097152, 1, disk);
+								memset(buffer+(tempfilesize), 0, (blockSize-tempfilesize)); // 0 the rest of the buffer
+								fwrite(buffer, blockSize, 1, disk);
 								tempfilesize = 0;
 							}
 							else
