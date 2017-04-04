@@ -732,7 +732,7 @@ void read(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
-	int tint, slot, retval, bytestoread;
+	int slot, retval, bytestoread;
 	char *buffer;
 
 	if (0 == findfile(filename, &tempentry, &slot))
@@ -783,7 +783,7 @@ void write(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
-	int tint, slot, retval;
+	int slot, retval;
 	unsigned long long tempfilesize;
 	char *buffer;
 
