@@ -761,14 +761,30 @@ void read(char *filename)
 					if (bytestoread >= 2097152)
 					{
 						retval = fread(buffer, 2097152, 1, disk);
-						fwrite(buffer, 2097152, 1, tfile);
-						bytestoread -= 2097152;
+						if (retval == 2097152)
+						{
+							fwrite(buffer, 2097152, 1, tfile);
+							bytestoread -= 2097152;
+						}
+						else
+						{
+							printf("Error: Unexpected read length detected.\n");
+							bytestoread = 0;
+						}
 					}
 					else
 					{
 						retval = fread(buffer, bytestoread, 1, disk);
-						fwrite(buffer, bytestoread, 1, tfile);
-						bytestoread = 0;
+						if (retval == bytestoread)
+						{
+							fwrite(buffer, bytestoread, 1, tfile);
+							bytestoread = 0;
+						}
+						else
+						{
+							printf("Error: Unexpected read length detected.\n");
+							bytestoread = 0;
+						}
 					}
 				}
 			}
@@ -822,15 +838,31 @@ void write(char *filename)
 						if (tempfilesize >= 2097152)
 						{
 							retval = fread(buffer, 2097152, 1, tfile);
-							fwrite(buffer, 2097152, 1, disk);
-							tempfilesize -= 2097152;
+							if (retval == 2097152)
+							{
+								fwrite(buffer, 2097152, 1, disk);
+								tempfilesize -= 2097152;
+							}
+							else
+							{
+								printf("Error: Unexpected read length detected.\n");
+								tempfilesize = 0;
+							}
 						}
 						else
 						{
 							retval = fread(buffer, tempfilesize, 1, tfile);
-							memset(buffer+(tempfilesize), 0, (2097152-tempfilesize)); // 0 the rest of the buffer
-							fwrite(buffer, 2097152, 1, disk);
-							tempfilesize = 0;
+							if (retval == tempfilesize)
+							{
+								memset(buffer+(tempfilesize), 0, (2097152-tempfilesize)); // 0 the rest of the buffer
+								fwrite(buffer, 2097152, 1, disk);
+								tempfilesize = 0;
+							}
+							else
+							{
+								printf("Error: Unexpected read length detected.\n");
+								tempfilesize = 0;
+							}
 						}
 					}
 				}
