@@ -30,7 +30,7 @@ struct BMFSEntry
 // Min disk size is 6MiB (three blocks of 2MiB each.)
 const unsigned long long minimumDiskSize = (6 * 1024 * 1024);
 // Block size is 2MiB
-const int blockSize = 2 * 1024 * 1024;
+const unsigned int blockSize = 2 * 1024 * 1024;
 
 /* Global variables */
 FILE *file, *disk;
@@ -734,7 +734,8 @@ void read(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
-	int slot, retval, bytestoread;
+	int slot, retval;
+	unsigned long long bytestoread;
 	char *buffer;
 
 	if (0 == findfile(filename, &tempentry, &slot))
