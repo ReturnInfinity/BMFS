@@ -1,8 +1,12 @@
+CFLAGS = -Wall -W -pedantic -std=c99
+VPATH = src
+
+.PHONY: all
 all: bmfs
 
-bmfs: src/bmfs.c
-	$(CC) -o bmfs src/bmfs.c -Wall -W -pedantic -std=c99
+bmfs: bmfs.c
 
+.PHONY: clean
 clean:
-	rm -f bmfs
+	$(RM) bmfs
 
