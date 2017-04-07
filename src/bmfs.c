@@ -1,6 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.2.2 (2017 04 04) */
+/* v1.2.3 (2017 04 07) */
 
 /* Global includes */
 #include <stdio.h>
@@ -28,7 +28,7 @@ struct BMFSEntry
 
 /* Global constants */
 // Min disk size is 6MiB (three blocks of 2MiB each.)
-const unsigned long long minimumDiskSize = (6 * 1024 * 1024);
+const unsigned int minimumDiskSize = (6 * 1024 * 1024);
 // Block size is 2MiB
 const unsigned int blockSize = 2 * 1024 * 1024;
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_version, argv[1]) == 0)
 			{
-				printf("BareMetal File System Utility v1.2.2 (2017 04 04)\n");
+				printf("BareMetal File System Utility v1.2.3 (2017 04 07)\n");
 				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
 			}
 		}
@@ -400,7 +400,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 	{
 		if (diskSize < minimumDiskSize)
 		{
-			printf( "Error: Disk size must be at least %llu bytes (%lluMiB)\n", minimumDiskSize, minimumDiskSize / (1024*1024));
+			printf( "Error: Disk size must be at least %d bytes (%dMiB)\n", minimumDiskSize, minimumDiskSize / (1024*1024));
 			ret = 1;
 		}
 	}
