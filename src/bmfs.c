@@ -7,8 +7,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
+
+#ifdef _MSC_VER
+static int strcasecmp(const char *str1, const char *str2);
+#else /* _MSC_VER */
+#include <strings.h>
+#endif /* _MSC_VER */
 
 /* Typedefs */
 typedef uint8_t u8;
@@ -900,5 +905,10 @@ void delete(char *filename)
 	}
 }
 
+#ifdef _MSC_VER
+static int strcasecmp(const char *str1, const char *str2){
+	return _stricmp(str1, str2);
+}
+#endif /* _MSC_VER */
 
 /* EOF */
