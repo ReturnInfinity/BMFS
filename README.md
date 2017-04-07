@@ -5,19 +5,18 @@ Utility for accessing a disk or disk image formatted with BareMetal File System 
 
 ## Prerequisites
 
-GCC (C compiler) and Automake are required for building the BMFS disk utility.
+GCC (C compiler) is required for building the BMFS disk utility.
 
 In Ubuntu this can be completed with the following command:
 
-	sudo apt-get install gcc automake
+	sudo apt-get install gcc
 
 
 ## Building BMFS
 
-    autoreconf -fi
-    ./configure
     make
-    sudo make install
+
+*You can copy the bmfs binary to a location in the system path for ease of use*
 
 
 ## Creating a new, formatted disk image
