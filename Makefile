@@ -4,9 +4,11 @@ VPATH = src
 .PHONY: all
 all: bmfs
 
-bmfs: bmfs.c
+bmfs: bmfs.c libbmfs.o
+
+libbmfs.o: libbmfs.c libbmfs.h
 
 .PHONY: clean
 clean:
-	$(RM) bmfs
+	$(RM) bmfs libbmfs.o
 
