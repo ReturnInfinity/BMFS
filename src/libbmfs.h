@@ -49,14 +49,14 @@ char Directory[4096];
 char DiskInfo[512];
 
 /* Built-in functions */
-int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
-void list();
-void format();
-int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
-void create(char *filename, unsigned long long maxsize);
-void read(char *filename);
-void write(char *filename);
-void delete(char *filename);
+int bmfs_findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
+void bmfs_list();
+void bmfs_format();
+int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
+void bmfs_create(char *filename, unsigned long long maxsize);
+void bmfs_read(char *filename);
+void bmfs_write(char *filename);
+void bmfs_delete(char *filename);
 
 
 #endif /* LIBBMFS_H */

@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 			char *mbr = (argc > 4 ? argv[4] : NULL);    	// Opt.
 			char *boot = (argc > 5 ? argv[5] : NULL);   	// Opt.
 			char *kernel = (argc > 6 ? argv[6] : NULL); 	// Opt.
-			int ret = initialize(diskname, size, mbr, boot, kernel);
+			int ret = bmfs_initialize(diskname, size, mbr, boot, kernel);
 			exit(ret);
 		}
 		else
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
-				format();
+				bmfs_format();
 			}
 			else
 			{
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
 	if (strcasecmp(s_list, command) == 0)
 	{
-		list();
+		bmfs_list();
 	}
 	else if (strcasecmp(s_format, command) == 0)
 	{
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(argv[3], "/FORCE") == 0)
 			{
-				format();
+				bmfs_format();
 			}
 			else
 			{
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 				int filesize = atoi(argv[4]);
 				if (filesize >= 1)
 				{
-					create(filename, filesize);
+					bmfs_create(filename, filesize);
 				}
 				else
 				{
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 				if (fgets(tempstring, 32, stdin) != NULL)	// Get up to 32 chars from the keyboard
 					filesize = atoi(tempstring);
 				if (filesize >= 1)
-					create(filename, filesize);
+					bmfs_create(filename, filesize);
 				else
 					printf("Error: Invalid file size.\n");
 			}
@@ -156,15 +156,15 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_read, command) == 0)
 	{
-		read(filename);
+		bmfs_read(filename);
 	}
 	else if (strcasecmp(s_write, command) == 0)
 	{
-		write(filename);
+		bmfs_write(filename);
 	}
 	else if (strcasecmp(s_delete, command) == 0)
 	{
-		delete(filename);
+		bmfs_delete(filename);
 	}
 	else
 	{

@@ -45,18 +45,8 @@ char *FileBlocks;
 char Directory[4096];
 char DiskInfo[512];
 
-/* Built-in functions */
-int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
-void list();
-void format();
-int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
-void create(char *filename, unsigned long long maxsize);
-void read(char *filename);
-void write(char *filename);
-void delete(char *filename);
 
-
-int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+int bmfs_findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 {
 	int tint;
 
@@ -85,7 +75,7 @@ int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 }
 
 
-void list()
+void bmfs_list()
 {
 	int tint;
 
@@ -111,7 +101,7 @@ void list()
 }
 
 
-void format()
+void bmfs_format()
 {
 	memset(DiskInfo, 0, 512);
 	memset(Directory, 0, 4096);
@@ -123,7 +113,7 @@ void format()
 }
 
 
-int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
+int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 {
 	unsigned long long diskSize = 0;
 	unsigned long long writeSize = 0;
@@ -333,7 +323,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 	if (ret == 0)
 	{
 		rewind(disk);
-		format();
+		bmfs_format();
 	}
 
 	// Write the master boot record if it was specified by the caller.
@@ -457,7 +447,7 @@ static int StartingBlockCmp(const void *pa, const void *pb)
 	return (ea->StartingBlock - eb->StartingBlock);
 }
 
-void create(char *filename, unsigned long long maxsize)
+void bmfs_create(char *filename, unsigned long long maxsize)
 {
 	struct BMFSEntry tempentry;
 	int slot;
@@ -465,7 +455,7 @@ void create(char *filename, unsigned long long maxsize)
 	if (maxsize % 2 != 0)
 		maxsize++;
 
-	if (findfile(filename, &tempentry, &slot) == 0)
+	if (bmfs_findfile(filename, &tempentry, &slot) == 0)
 	{
 		unsigned long long blocks_requested = maxsize / 2; // how many blocks to allocate
 		unsigned long long num_blocks = disksize / 2; // number of blocks in the disk
@@ -566,7 +556,7 @@ void create(char *filename, unsigned long long maxsize)
 }
 
 // Read a file from a BMFS volume
-void read(char *filename)
+void bmfs_read(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
@@ -574,7 +564,7 @@ void read(char *filename)
 	unsigned long long bytestoread;
 	char *buffer;
 
-	if (0 == findfile(filename, &tempentry, &slot))
+	if (0 == bmfs_findfile(filename, &tempentry, &slot))
 	{
 		printf("Error: File not found in BMFS.\n");
 	}
@@ -634,7 +624,7 @@ void read(char *filename)
 
 
 // Write a file to a BMFS volume
-void write(char *filename)
+void bmfs_write(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
@@ -642,7 +632,7 @@ void write(char *filename)
 	unsigned long long tempfilesize;
 	char *buffer;
 
-	if (0 == findfile(filename, &tempentry, &slot))
+	if (0 == bmfs_findfile(filename, &tempentry, &slot))
 	{
 		printf("Error: File not found in BMFS. A file entry must first be created.\n");
 	}
@@ -717,13 +707,13 @@ void write(char *filename)
 }
 
 
-void delete(char *filename)
+void bmfs_delete(char *filename)
 {
 	struct BMFSEntry tempentry;
 	char delmarker = 0x01;
 	int slot;
 
-	if (0 == findfile(filename, &tempentry, &slot))
+	if (0 == bmfs_findfile(filename, &tempentry, &slot))
 	{
 		printf("Error: File not found in BMFS.\n");
 	}
