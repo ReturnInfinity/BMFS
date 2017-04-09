@@ -127,6 +127,12 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 	return bmfs_create(path + 1, 1);
 }
 
+static int bmfs_fuse_unlink(const char *path)
+{
+	bmfs_delete(path + 1);
+	return 0;
+}
+
 /** This function opens a file.
  * Except, the way fuse is implemented,
  * it really just checks that it exists.
@@ -169,6 +175,7 @@ static struct fuse_operations bmfs_fuse_operations = {
 	.utimens = bmfs_fuse_utimens,
 	.readdir = bmfs_fuse_readdir,
 	.create = bmfs_fuse_create,
+	.unlink = bmfs_fuse_unlink,
 	.open = bmfs_fuse_open,
 	.read = bmfs_fuse_read,
 	.write = bmfs_fuse_write
