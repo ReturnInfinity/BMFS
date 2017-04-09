@@ -12,6 +12,7 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
+#include <sys/types.h>
 
 /* Typedefs */
 typedef uint8_t u8;
@@ -55,17 +56,23 @@ char DiskInfo[512];
 /* Built-in functions */
 int bmfs_opendir(struct BMFSDir *dir, const char *path);
 int bmfs_readdir(struct BMFSDir *dir, FILE *file);
+int bmfs_savedir(const struct BMFSDir *dir);
 int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 void bmfs_list();
 void bmfs_format();
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
-void bmfs_create(char *filename, unsigned long long maxsize);
+int bmfs_create(const char *filename, unsigned long long maxsize);
 unsigned long long bmfs_read(const char *filename,
                              void * buf,
                              unsigned long long len,
                              unsigned long long off);
+int bmfs_write(const char *filename,
+               const void *buf,
+               size_t len,
+               off_t off);
+
 void bmfs_readfile(char *filename);
-void bmfs_write(char *filename);
+void bmfs_writefile(char *filename);
 void bmfs_delete(char *filename);
 
 

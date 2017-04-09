@@ -5,6 +5,7 @@
 /* Global includes */
 #include "libbmfs.h"
 #include <errno.h>
+#include <limits.h>
 
 /* Global constants */
 // Min disk size is 6MiB (three blocks of 2MiB each.)
@@ -37,9 +38,19 @@ int bmfs_opendir(struct BMFSDir *dir, const char *path)
 
 int bmfs_readdir(struct BMFSDir *dir, FILE *file)
 {
+	memset(dir, 0, sizeof(*dir));
 	fseek(file, 4096, SEEK_SET);
 	fread(dir->Entries, 1, sizeof(dir->Entries), file);
 	fseek(file, 0, SEEK_SET);
+	return 0;
+}
+
+
+
+int bmfs_savedir(const struct BMFSDir *dir)
+{
+	fseek(disk, 4096, SEEK_SET);
+	fwrite(dir->Entries, 1, sizeof(dir->Entries), disk);
 	return 0;
 }
 
@@ -453,7 +464,7 @@ static int StartingBlockCmp(const void *pa, const void *pb)
 	return (ea->StartingBlock - eb->StartingBlock);
 }
 
-void bmfs_create(char *filename, unsigned long long maxsize)
+int bmfs_create(const char *filename, unsigned long long maxsize)
 {
 	struct BMFSEntry tempentry;
 	int slot;
@@ -461,104 +472,95 @@ void bmfs_create(char *filename, unsigned long long maxsize)
 	if (maxsize % 2 != 0)
 		maxsize++;
 
-	if (bmfs_findfile(filename, &tempentry, &slot) == 0)
+	if (bmfs_findfile(filename, &tempentry, &slot))
+		return -EEXIST;
+
+	unsigned long long blocks_requested = maxsize / 2; // how many blocks to allocate
+	unsigned long long num_blocks = disksize / 2; // number of blocks in the disk
+	int num_used_entries = 0; // how many entries of Directory are either used or deleted
+	int first_free_entry = -1; // where to put new entry
+	int tint;
+	struct BMFSEntry *pEntry;
+	unsigned long long new_file_start = 0;
+	unsigned long long prev_file_end = 1;
+
+	struct BMFSDir dir;
+	if (bmfs_readdir(&dir, disk) != 0)
+		return -ENOENT;
+
+	// Calculate number of files
+	for (tint = 0; tint < 64; tint++)
 	{
-		unsigned long long blocks_requested = maxsize / 2; // how many blocks to allocate
-		unsigned long long num_blocks = disksize / 2; // number of blocks in the disk
-		char dir_copy[4096]; // copy of directory
-		int num_used_entries = 0; // how many entries of Directory are either used or deleted
-		int first_free_entry = -1; // where to put new entry
-		int tint;
-		struct BMFSEntry *pEntry;
-		unsigned long long new_file_start = 0;
-		unsigned long long prev_file_end = 1;
-
-		// Make a copy of Directory to play with
-		memcpy(dir_copy, Directory, 4096);
-
-		// Calculate number of files
-		for (tint = 0; tint < 64; tint++)
+		pEntry = &dir.Entries[tint]; // points to the current directory entry
+		if (pEntry->FileName[0] == 0x00) // end of directory
 		{
-			pEntry = (struct BMFSEntry *)(dir_copy + tint * 64); // points to the current directory entry
-			if (pEntry->FileName[0] == 0x00) // end of directory
-			{
-				num_used_entries = tint;
-				if (first_free_entry == -1)
-					first_free_entry = tint; // there were no unused entires before, will use this one
-				break;
-			}
-			else if (pEntry->FileName[0] == 0x01) // unused entry
-			{
-				if (first_free_entry == -1)
-					first_free_entry = tint; // will use it for our new file
-			}
+			num_used_entries = tint;
+			if (first_free_entry == -1)
+				first_free_entry = tint; // there were no unused entires before, will use this one
+			break;
 		}
-
-		if (first_free_entry == -1)
+		else if (pEntry->FileName[0] == 0x01) // unused entry
 		{
-			printf("Error: Cannot create file. No free directory entries.\n");
-			return;
+			if (first_free_entry == -1)
+				first_free_entry = tint; // will use it for our new file
 		}
-
-		// Find an area with enough free blocks
-		// Sort our copy of the directory by starting block number
-		qsort(dir_copy, num_used_entries, 64, StartingBlockCmp);
-
-		for (tint = 0; tint < num_used_entries + 1; tint++)
-		{
-			// on each iteration of this loop we'll see if a new file can fit
-			// between the end of the previous file (initially == 1)
-			// and the beginning of the current file (or the last data block if there are no more files).
-
-			unsigned long long this_file_start;
-			pEntry = (struct BMFSEntry *)(dir_copy + tint * 64); // points to the current directory entry
-
-			if (tint == num_used_entries || pEntry->FileName[0] == 0x01)
-				this_file_start = num_blocks - 1; // index of the last block
-			else
-				this_file_start = pEntry->StartingBlock;
-
-			if (this_file_start - prev_file_end >= blocks_requested)
-			{ // fits here
-				new_file_start = prev_file_end;
-				break;
-			}
-
-			if (tint < num_used_entries)
-				prev_file_end = pEntry->StartingBlock + pEntry->ReservedBlocks;
-		}
-
-		if (new_file_start == 0)
-		{
-			printf("Error: Cannot create file of size %lld MiB.\n", maxsize);
-			return;
-		}
-
-		// Add file record to Directory
-		pEntry = (struct BMFSEntry *)(Directory + first_free_entry * 64);
-		pEntry->StartingBlock = new_file_start;
-		pEntry->ReservedBlocks = blocks_requested;
-		pEntry->FileSize = 0;
-		strcpy(pEntry->FileName, filename);
-
-		if (first_free_entry == num_used_entries && num_used_entries + 1 < 64)
-		{
-			// here we used the record that was marked with 0x00,
-			// so make sure to mark the next record with 0x00 if it exists
-			pEntry = (struct BMFSEntry *)(Directory + (num_used_entries + 1) * 64);
-			pEntry->FileName[0] = 0x00;
-		}
-
-		// Flush Directory to disk
-		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-		fwrite(Directory, 4096, 1, disk);			// Write 4096 bytes for the Directory
-
-//		printf("Complete: file %s starts at block %lld, directory entry #%d.\n", filename, new_file_start, first_free_entry);
 	}
-	else
+
+	if (first_free_entry == -1)
 	{
-		printf("Error: File already exists.\n");
+		printf("Error: Cannot create file. No free directory entries.\n");
+		return -ENOSPC;
 	}
+
+	// Find an area with enough free blocks
+	// Sort our copy of the directory by starting block number
+	qsort(dir.Entries, num_used_entries, 64, StartingBlockCmp);
+
+	for (tint = 0; tint < num_used_entries + 1; tint++)
+	{
+		// on each iteration of this loop we'll see if a new file can fit
+		// between the end of the previous file (initially == 1)
+		// and the beginning of the current file (or the last data block if there are no more files).
+
+		unsigned long long this_file_start;
+		pEntry = &dir.Entries[tint]; // points to the current directory entry
+
+		if (tint == num_used_entries || pEntry->FileName[0] == 0x01)
+			this_file_start = num_blocks - 1; // index of the last block
+		else
+			this_file_start = pEntry->StartingBlock;
+
+		if (this_file_start - prev_file_end >= blocks_requested)
+		{ // fits here
+			new_file_start = prev_file_end;
+			break;
+		}
+
+		if (tint < num_used_entries)
+			prev_file_end = pEntry->StartingBlock + pEntry->ReservedBlocks;
+	}
+
+	if (new_file_start == 0)
+	{
+		printf("Error: Cannot create file of size %lld MiB.\n", maxsize);
+		return -ENOSPC;
+	}
+
+	// Add file record to Directory
+	pEntry = &dir.Entries[first_free_entry];
+	pEntry->StartingBlock = new_file_start;
+	pEntry->ReservedBlocks = blocks_requested;
+	pEntry->FileSize = 0;
+	strcpy(pEntry->FileName, filename);
+
+	if (first_free_entry == num_used_entries && num_used_entries + 1 < 64)
+	{
+		// here we used the record that was marked with 0x00,
+		// so make sure to mark the next record with 0x00 if it exists
+		dir.Entries[num_used_entries + 1].FileName[0] = 0x00;
+	}
+
+	return bmfs_savedir(&dir);
 }
 
 // Read a file from a BMFS volume
@@ -655,8 +657,49 @@ unsigned long long bmfs_read(const char *filename,
 	return fread(buf, 1, len, disk);
 }
 
+int bmfs_write(const char *filename,
+               const void *buf,
+               size_t len,
+               off_t off)
+{
+	struct BMFSEntry tempentry;
+	int slot;
+
+	if (bmfs_findfile(filename, &tempentry, &slot) == 0)
+		return -ENOENT;
+
+	/* make sure fuse isn't
+	 * screwing anything up */
+	if (off < 0)
+		off = 0;
+
+	/* Make sure the offset doesn't overflow */
+	if (off > (tempentry.ReservedBlocks*blockSize))
+		off = tempentry.ReservedBlocks*blockSize;
+
+	/* Make sure the read length doesn't overflow */
+	if ((off+len) > (tempentry.ReservedBlocks*blockSize))
+		len = (tempentry.ReservedBlocks*blockSize) - off;
+
+	/* must be able to distinguish between bytes
+	 * written and a negative error code */
+	if (len > INT_MAX)
+		len = INT_MAX;
+
+	/* Skip to the starting block in the disk */
+	fseek(disk, (tempentry.StartingBlock*blockSize) + off, SEEK_SET);
+
+	size_t write_count = fwrite(buf, 1, len, disk);
+
+	struct BMFSDir dir;
+	bmfs_readdir(&dir, disk);
+	dir.Entries[slot].FileSize += write_count;
+	bmfs_savedir(&dir);
+	return write_count;
+}
+
 // Write a file to a BMFS volume
-void bmfs_write(char *filename)
+void bmfs_writefile(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
