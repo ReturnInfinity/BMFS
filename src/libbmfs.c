@@ -27,6 +27,12 @@ char Directory[4096];
 char DiskInfo[512];
 
 
+void bmfs_dir_zero(struct BMFSDir *dir)
+{
+	memset(dir, 0, sizeof(*dir));
+}
+
+
 int bmfs_opendir(struct BMFSDir *dir, const char *path)
 {
 	disk = fopen(path, "r+b");
@@ -38,7 +44,8 @@ int bmfs_opendir(struct BMFSDir *dir, const char *path)
 
 int bmfs_readdir(struct BMFSDir *dir, FILE *file)
 {
-	memset(dir, 0, sizeof(*dir));
+	bmfs_dir_zero(dir);
+
 	fseek(file, 4096, SEEK_SET);
 	fread(dir->Entries, 1, sizeof(dir->Entries), file);
 	fseek(file, 0, SEEK_SET);

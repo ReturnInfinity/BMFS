@@ -54,6 +54,7 @@ char Directory[4096];
 char DiskInfo[512];
 
 /* Built-in functions */
+void bmfs_dir_zero(struct BMFSDir *dir);
 int bmfs_opendir(struct BMFSDir *dir, const char *path);
 int bmfs_readdir(struct BMFSDir *dir, FILE *file);
 int bmfs_savedir(const struct BMFSDir *dir);
