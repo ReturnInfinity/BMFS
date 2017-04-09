@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_read, command) == 0)
 	{
-		bmfs_read(filename);
+		bmfs_readfile(filename);
 	}
 	else if (strcasecmp(s_write, command) == 0)
 	{
