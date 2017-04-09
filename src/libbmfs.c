@@ -44,31 +44,39 @@ int bmfs_readdir(struct BMFSDir *dir, FILE *file)
 }
 
 
-int bmfs_findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 {
 	int tint;
+	struct BMFSDir dir;
+
+	if (bmfs_readdir(&dir, disk) != 0)
+		return 0;
 
 	for (tint = 0; tint < 64; tint++)
 	{
-		memcpy(pentry, Directory+(tint*64), 64);
-		if (entry.FileName[0] == 0x00)				// End of directory
-		{
-			tint = 64;
-		}
-		else if (entry.FileName[0] == 0x01)			// Emtpy entry
-		{
-			// Ignore
-		}
-		else							// Valid entry
-		{
-			if (strcmp(filename, entry.FileName) == 0)
-			{
-				memcpy(fileentry, pentry, 64);
-				*entrynumber = tint;
-				return 1;
-			}
-		}
+		if (dir.entries[tint].FileName[0] == 0)
+			/* end of directory */
+			break;
+		else if (dir.entries[tint].FileName[0] == 1)
+			/* skip empty entry */
+			continue;
+		else if (strcmp(dir.entries[tint].FileName, filename) != 0)
+			/* not a match, skip this file */
+			continue;
+
+		/* found a match */
+
+		/* set entrynumber, if requested */
+		if (entrynumber != NULL)
+			*entrynumber = tint;
+
+		/* copy entry data, if requested */
+		if (fileentry != NULL)
+			memcpy(fileentry, &dir.entries[tint], sizeof(*fileentry));
+
+		return 1;
 	}
+	/* entry not found */
 	return 0;
 }
 
@@ -554,7 +562,7 @@ void bmfs_create(char *filename, unsigned long long maxsize)
 }
 
 // Read a file from a BMFS volume
-void bmfs_read(char *filename)
+void bmfs_readfile(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
@@ -620,6 +628,32 @@ void bmfs_read(char *filename)
 	}
 }
 
+unsigned long long bmfs_read(const char *filename,
+                             void *buf,
+                             unsigned long long len,
+                             unsigned long long off)
+{
+	struct BMFSEntry tempentry;
+
+	if (bmfs_findfile(filename, &tempentry, NULL) == 0)
+	{
+		memcpy(buf, "h", 1);
+		return 1;
+	}
+
+	/* Make sure the offset doesn't overflow */
+	if (off > tempentry.FileSize)
+		off = tempentry.FileSize;
+
+	/* Make sure the read length doesn't overflow */
+	if ((off + len) > tempentry.FileSize)
+		len = tempentry.FileSize - off;
+
+	/* Skip to the starting block in the disk */
+	fseek(disk, (tempentry.StartingBlock*blockSize) + off, SEEK_SET);
+
+	return fread(buf, 1, len, disk);
+}
 
 // Write a file to a BMFS volume
 void bmfs_write(char *filename)

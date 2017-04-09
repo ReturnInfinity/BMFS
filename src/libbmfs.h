@@ -55,12 +55,16 @@ char DiskInfo[512];
 /* Built-in functions */
 int bmfs_opendir(struct BMFSDir *dir, const char *path);
 int bmfs_readdir(struct BMFSDir *dir, FILE *file);
-int bmfs_findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
+int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 void bmfs_list();
 void bmfs_format();
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
 void bmfs_create(char *filename, unsigned long long maxsize);
-void bmfs_read(char *filename);
+unsigned long long bmfs_read(const char *filename,
+                             void * buf,
+                             unsigned long long len,
+                             unsigned long long off);
+void bmfs_readfile(char *filename);
 void bmfs_write(char *filename);
 void bmfs_delete(char *filename);
 
