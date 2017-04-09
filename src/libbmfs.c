@@ -105,28 +105,59 @@ void bmfs_dir_zero(struct BMFSDir *dir)
 
 int bmfs_opendir(struct BMFSDir *dir, const char *path)
 {
-	disk = fopen(path, "r+b");
-	if (disk == NULL)
-		return ENOENT;
-	return bmfs_readdir(dir, disk);
-}
-
-
-int bmfs_readdir(struct BMFSDir *dir, FILE *file)
-{
-	bmfs_dir_zero(dir);
-
-	fseek(file, 4096, SEEK_SET);
-	fread(dir->Entries, 1, sizeof(dir->Entries), file);
-	fseek(file, 0, SEEK_SET);
+	int err;
+	FILE *diskfile;
+	diskfile = fopen(path, "r+b");
+	if (diskfile == NULL)
+		return -ENOENT;
+	err = bmfs_readdir(dir, diskfile);
+	if (err != 0)
+		return err;
+	fclose(diskfile);
 	return 0;
 }
 
 
-int bmfs_savedir(const struct BMFSDir *dir)
+int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile)
 {
-	fseek(disk, 4096, SEEK_SET);
-	fwrite(dir->Entries, 1, sizeof(dir->Entries), disk);
+	bmfs_dir_zero(dir);
+
+	if (fseek(diskfile, 4096, SEEK_SET) != 0)
+		return -errno;
+
+	if (fread(dir->Entries, 1, sizeof(dir->Entries), diskfile) != sizeof(dir->Entries))
+		return -errno;
+
+	return 0;
+}
+
+
+int bmfs_savedir(const struct BMFSDir *dir, const char *path)
+{
+	int err;
+	FILE * diskfile;
+	diskfile = fopen(path, "wb");
+	if (diskfile == NULL)
+		return -errno;
+
+	err = bmfs_writedir(dir, diskfile);
+	if (err != 0)
+		return err;
+
+	fclose(diskfile);
+
+	return 0;
+}
+
+
+int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile)
+{
+	if (fseek(diskfile, 4096, SEEK_SET) != 0)
+		return -errno;
+
+	if (fwrite(dir->Entries, 1, sizeof(dir->Entries), disk) != sizeof(dir->Entries))
+		return -errno;
+
 	return 0;
 }
 
@@ -661,7 +692,7 @@ int bmfs_create(const char *filename, unsigned long long maxsize)
 		dir.Entries[num_used_entries + 1].FileName[0] = 0x00;
 	}
 
-	return bmfs_savedir(&dir);
+	return bmfs_writedir(&dir, disk);
 }
 
 // Read a file from a BMFS volume
@@ -797,7 +828,7 @@ int bmfs_write(const char *filename,
 
 	entry->FileSize += write_count;
 
-	bmfs_savedir(&dir);
+	bmfs_writedir(&dir, disk);
 
 	return write_count;
 }
@@ -884,7 +915,7 @@ void bmfs_writefile(char *filename)
 	// Update directory
 	tempfilesize = ftell(tfile);
 	entry->FileSize = tempfilesize;
-	bmfs_savedir(&dir);
+	bmfs_writedir(&dir, disk);
 	fclose(tfile);
 }
 
@@ -902,7 +933,7 @@ void bmfs_delete(const char *filename)
 
 	entry->FileName[0] = 1;
 
-	bmfs_savedir(&dir);
+	bmfs_writedir(&dir, disk);
 }
 
 
