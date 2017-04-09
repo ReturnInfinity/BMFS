@@ -41,19 +41,14 @@ extern const unsigned int minimumDiskSize;
 extern const unsigned int blockSize;
 
 /* Global variables */
-FILE *file, *disk;
-unsigned int filesize, disksize, retval;
-char tempfilename[32], tempstring[32];
-char *filename, *diskname, *command;
-extern const char fs_tag[];
-struct BMFSEntry entry;
-extern void *pentry;
-char *BlockMap;
-char *FileBlocks;
-char Directory[4096];
-char DiskInfo[512];
+extern FILE *disk;
 
 /* Built-in functions */
+int bmfs_disk_bytes(FILE *diskfile, size_t *bytes);
+int bmfs_disk_mebibytes(FILE *diskfile, size_t *mebibytes);
+int bmfs_disk_blocks(FILE *diskfile, size_t *blocks);
+int bmfs_check_tag(FILE *diskfile);
+int bmfs_write_tag(FILE *diskfile);
 void bmfs_dir_zero(struct BMFSDir *dir);
 int bmfs_opendir(struct BMFSDir *dir, const char *path);
 int bmfs_readdir(struct BMFSDir *dir, FILE *file);

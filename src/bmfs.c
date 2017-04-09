@@ -25,6 +25,12 @@ char s_version[] = "version";
 /* Program code */
 int main(int argc, char *argv[])
 {
+	char *diskname;
+	char *command;
+	char *filename;
+	char tempstring[32];
+	unsigned int filesize;
+
 	/* Parse arguments */
 	if (argc < 3)
 	{
@@ -77,15 +83,7 @@ int main(int argc, char *argv[])
 	}
 	else								// Opened ok, is it a valid BMFS disk?
 	{
-		fseek(disk, 0, SEEK_END);
-		disksize = ftell(disk) / 1048576;			// Disk size in MiB
-		fseek(disk, 1024, SEEK_SET);				// Seek 1KiB in for disk information
-		retval = fread(DiskInfo, 512, 1, disk);			// Read 512 bytes to the DiskInfo buffer
-		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-		retval = fread(Directory, 4096, 1, disk);		// Read 4096 bytes to the Directory buffer
-		rewind(disk);
-
-		if (strcasecmp(DiskInfo, fs_tag) != 0)			// Is it a BMFS formatted disk?
+		if (bmfs_check_tag(disk) != 0)			// Is it a BMFS formatted disk?
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
@@ -145,7 +143,7 @@ int main(int argc, char *argv[])
 			else
 			{
 				printf("Maximum file size in MiB: ");
-				if (fgets(tempstring, 32, stdin) != NULL)	// Get up to 32 chars from the keyboard
+				if (fgets(tempstring, sizeof(tempstring), stdin) != NULL)	// Get up to 32 chars from the keyboard
 					filesize = atoi(tempstring);
 				if (filesize >= 1)
 					bmfs_create(filename, filesize);

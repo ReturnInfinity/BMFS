@@ -14,17 +14,87 @@ const unsigned int minimumDiskSize = (6 * 1024 * 1024);
 const unsigned int blockSize = 2 * 1024 * 1024;
 
 /* Global variables */
-FILE *file, *disk;
-unsigned int filesize, disksize, retval;
-char tempfilename[32], tempstring[32];
-char *filename, *diskname, *command;
-const char fs_tag[] = "BMFS";
-struct BMFSEntry entry;
-void *pentry = &entry;
-char *BlockMap;
-char *FileBlocks;
-char Directory[4096];
-char DiskInfo[512];
+FILE *disk;
+
+
+int bmfs_disk_bytes(FILE *diskfile, size_t *bytes)
+{
+	long disk_size;
+
+	if (fseek(diskfile, 0, SEEK_END) != 0)
+		return -errno;
+
+	disk_size = ftell(diskfile);
+	if (disk_size < 0)
+		return -errno;
+
+	if (bytes != NULL)
+		*bytes = disk_size;
+
+	return 0;
+}
+
+
+int bmfs_disk_mebibytes(FILE *diskfile, size_t *mebibytes)
+{
+	int err;
+
+	err = bmfs_disk_bytes(diskfile, mebibytes);
+	if (err != 0)
+		return err;
+
+	if (mebibytes != NULL)
+		*mebibytes /= (1024 * 1024);
+
+	return 0;
+}
+
+
+int bmfs_disk_blocks(FILE *diskfile, size_t *blocks)
+{
+	int err;
+
+	err = bmfs_disk_bytes(diskfile, blocks);
+	if (err != 0)
+		return err;
+
+	if (blocks != NULL)
+		*blocks /= blockSize;
+
+	return 0;
+}
+
+
+int bmfs_check_tag(FILE *diskfile)
+{
+	char tag[4];
+
+	if (fseek(diskfile, 1024, SEEK_SET) != 0)
+		return -errno;
+
+	if (fread(tag, 1, 4, diskfile) != 4)
+		return -EINVAL;
+
+	if ((tag[0] != 'B')
+	 || (tag[1] != 'M')
+	 || (tag[2] != 'F')
+	 || (tag[3] != 'S'))
+		return -EINVAL;
+
+	return 0;
+}
+
+
+int bmfs_write_tag(FILE *diskfile)
+{
+	if (fseek(diskfile, 1024, SEEK_SET) != 0)
+		return -errno;
+
+	if (fwrite("BMFS", 1, 4, diskfile) != 4)
+		return -errno;
+
+	return 0;
+}
 
 
 void bmfs_dir_zero(struct BMFSDir *dir)
@@ -38,7 +108,7 @@ int bmfs_opendir(struct BMFSDir *dir, const char *path)
 	disk = fopen(path, "r+b");
 	if (disk == NULL)
 		return ENOENT;
-	return bmfs_readdir(dir, file);
+	return bmfs_readdir(dir, disk);
 }
 
 
@@ -109,27 +179,34 @@ int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entryn
 }
 
 
-void bmfs_list()
+void bmfs_list(FILE *diskfile)
 {
 	int tint;
+	size_t disk_size;
 
-	printf("Disk Size: %d MiB\n", disksize);
+	struct BMFSDir dir;
+	bmfs_readdir(&dir, diskfile);
+
+
+	if (bmfs_disk_mebibytes(diskfile, &disk_size) == 0)
+		printf("Disk Size: %llu MiB\n", (unsigned long long)(disk_size));
+
 	printf("Name                            |            Size (B)|      Reserved (MiB)\n");
 	printf("==========================================================================\n");
 	for (tint = 0; tint < 64; tint++)				// Max 64 entries
 	{
-		memcpy(pentry, Directory+(tint*64), 64);
-		if (entry.FileName[0] == 0x00)				// End of directory, bail out
+		struct BMFSEntry *entry = &dir.Entries[tint];
+		if (entry->FileName[0] == 0x00)				// End of directory, bail out
 		{
 			tint = 64;
 		}
-		else if (entry.FileName[0] == 0x01)			// Emtpy entry
+		else if (entry->FileName[0] == 0x01)			// Emtpy entry
 		{
 			// Ignore
 		}
 		else							// Valid entry
 		{
-			printf("%-32s %20lld %20lld\n", entry.FileName, (long long int)entry.FileSize, (long long int)(entry.ReservedBlocks*2));
+			printf("%-32s %20lld %20lld\n", entry->FileName, (long long int)entry->FileSize, (long long int)(entry->ReservedBlocks*2));
 		}
 	}
 }
@@ -137,13 +214,15 @@ void bmfs_list()
 
 void bmfs_format()
 {
-	memset(DiskInfo, 0, 512);
-	memset(Directory, 0, 4096);
-	memcpy(DiskInfo, fs_tag, 4);                    // Add the 'BMFS' tag
-	fseek(disk, 1024, SEEK_SET);                    // Seek 1KiB in for disk information
-	fwrite(DiskInfo, 512, 1, disk);                 // Write 512 bytes for the DiskInfo
-	fseek(disk, 4096, SEEK_SET);                    // Seek 4KiB in for directory
-	fwrite(Directory, 4096, 1, disk);               // Write 4096 bytes for the Directory
+	bmfs_write_tag(disk);
+
+	struct BMFSDir dir;
+	bmfs_dir_zero(&dir);
+
+	if (fseek(disk, 4096, SEEK_SET) != 0)
+		return;
+
+	fwrite(dir.Entries, 1, sizeof(dir.Entries), disk);
 }
 
 
@@ -492,14 +571,19 @@ int bmfs_create(const char *filename, unsigned long long maxsize)
 	if (bmfs_findfile(filename, &tempentry, &slot))
 		return -EEXIST;
 
+	int err;
 	unsigned long long blocks_requested = maxsize / 2; // how many blocks to allocate
-	unsigned long long num_blocks = disksize / 2; // number of blocks in the disk
+	size_t num_blocks; // number of blocks in the disk
 	int num_used_entries = 0; // how many entries of Directory are either used or deleted
 	int first_free_entry = -1; // where to put new entry
 	int tint;
 	struct BMFSEntry *pEntry;
 	unsigned long long new_file_start = 0;
 	unsigned long long prev_file_end = 1;
+
+	err = bmfs_disk_blocks(disk, &num_blocks);
+	if (err != 0)
+		return err;
 
 	struct BMFSDir dir;
 	if (bmfs_readdir(&dir, disk) != 0)
@@ -721,84 +805,87 @@ int bmfs_write(const char *filename,
 // Write a file to a BMFS volume
 void bmfs_writefile(char *filename)
 {
-	struct BMFSEntry tempentry;
+	struct BMFSDir dir;
+	struct BMFSEntry *entry;
 	FILE *tfile;
-	int slot, retval;
+	int retval;
 	unsigned long long tempfilesize;
 	char *buffer;
 
-	if (0 == bmfs_findfile(filename, &tempentry, &slot))
+	if (bmfs_readdir(&dir, disk) != 0)
+		return;
+
+	entry = bmfs_find(&dir, filename);
+	if (entry == NULL)
 	{
-		printf("Error: File not found in BMFS. A file entry must first be created.\n");
+		printf("Error: File not found in BMFS\n");
+		printf("  A file must first be created\n");
+		return;
 	}
-	else
+
+	if ((tfile = fopen(filename, "rb")) == NULL)
 	{
-		if ((tfile = fopen(filename, "rb")) == NULL)
+		printf("Error: Could not open local file '%s'\n", entry->FileName);
+		return;
+	}
+
+	// Is there enough room in BMFS?
+	fseek(tfile, 0, SEEK_END);
+	tempfilesize = ftell(tfile);
+	rewind(tfile);
+	if ((entry->ReservedBlocks*blockSize) < tempfilesize)
+	{
+		fclose(tfile);
+		printf("Error: Not enough reserved space in BMFS.\n");
+		return;
+	}
+	fseek(disk, entry->StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
+
+	buffer = malloc(blockSize);
+	if (buffer == NULL)
+	{
+		fclose(tfile);
+		printf("Error: Unable to allocate enough memory for buffer.\n");
+	}
+
+	while (tempfilesize != 0)
+	{
+		if (tempfilesize >= blockSize)
 		{
-			printf("Error: Could not open local file '%s'\n", tempentry.FileName);
-		}
-		else
-		{
-			// Is there enough room in BMFS?
-			fseek(tfile, 0, SEEK_END);
-			tempfilesize = ftell(tfile);
-			rewind(tfile);
-			if ((tempentry.ReservedBlocks*blockSize) < tempfilesize)
+			retval = fread(buffer, blockSize, 1, tfile);
+			if (retval == 1)
 			{
-				printf("Error: Not enough reserved space in BMFS.\n");
+				fwrite(buffer, blockSize, 1, disk);
+				tempfilesize -= blockSize;
 			}
 			else
 			{
-				fseek(disk, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
-				buffer = malloc(blockSize);
-				if (buffer == NULL)
-				{
-					printf("Error: Unable to allocate enough memory for buffer.\n");
-				}
-				else
-				{
-					while (tempfilesize != 0)
-					{
-						if (tempfilesize >= blockSize)
-						{
-							retval = fread(buffer, blockSize, 1, tfile);
-							if (retval == 1)
-							{
-								fwrite(buffer, blockSize, 1, disk);
-								tempfilesize -= blockSize;
-							}
-							else
-							{
-								printf("Error: Unexpected read length detected.\n");
-								tempfilesize = 0;
-							}
-						}
-						else
-						{
-							retval = fread(buffer, tempfilesize, 1, tfile);
-							if (retval == 1)
-							{
-								memset(buffer+(tempfilesize), 0, (blockSize-tempfilesize)); // 0 the rest of the buffer
-								fwrite(buffer, blockSize, 1, disk);
-								tempfilesize = 0;
-							}
-							else
-							{
-								printf("Error: Unexpected read length detected.\n");
-								tempfilesize = 0;
-							}
-						}
-					}
-				}
-				// Update directory
-				tempfilesize = ftell(tfile);
-				memcpy(Directory+(slot*64)+48, &tempfilesize, 8);
-				fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-				fwrite(Directory, 4096, 1, disk);			// Write new directory to disk
+				printf("Error: Unexpected read length detected.\n");
+				tempfilesize = 0;
 			}
-			fclose(tfile);
+		}
+		else
+		{
+			retval = fread(buffer, tempfilesize, 1, tfile);
+			if (retval == 1)
+			{
+				memset(buffer+(tempfilesize), 0, (blockSize-tempfilesize)); // 0 the rest of the buffer
+				fwrite(buffer, blockSize, 1, disk);
+				tempfilesize = 0;
+			}
+			else
+			{
+				printf("Error: Unexpected read length detected.\n");
+				tempfilesize = 0;
+			}
 		}
 	}
+
+	// Update directory
+	tempfilesize = ftell(tfile);
+	entry->FileSize = tempfilesize;
+	bmfs_savedir(&dir);
+	fclose(tfile);
 }
 
 
