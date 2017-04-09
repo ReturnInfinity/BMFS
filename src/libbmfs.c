@@ -3,28 +3,8 @@
 /* v1.2.3 (2017 04 07) */
 
 /* Global includes */
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <ctype.h>
-
-/* Typedefs */
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-/* Global defines */
-struct BMFSEntry
-{
-	char FileName[32];
-	u64 StartingBlock;
-	u64 ReservedBlocks;
-	u64 FileSize;
-	u64 Unused;
-};
+#include "libbmfs.h"
+#include <errno.h>
 
 /* Global constants */
 // Min disk size is 6MiB (three blocks of 2MiB each.)
@@ -44,6 +24,24 @@ char *BlockMap;
 char *FileBlocks;
 char Directory[4096];
 char DiskInfo[512];
+
+
+int bmfs_opendir(struct BMFSDir *dir, const char *path)
+{
+	disk = fopen(path, "r+b");
+	if (disk == NULL)
+		return ENOENT;
+	return bmfs_readdir(dir, file);
+}
+
+
+int bmfs_readdir(struct BMFSDir *dir, FILE *file)
+{
+	fseek(file, 4096, SEEK_SET);
+	fread(dir->entries, 1, sizeof(dir->entries), file);
+	fseek(file, 0, SEEK_SET);
+	return 0;
+}
 
 
 int bmfs_findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
