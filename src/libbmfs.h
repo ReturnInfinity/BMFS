@@ -57,6 +57,7 @@ char DiskInfo[512];
 int bmfs_opendir(struct BMFSDir *dir, const char *path);
 int bmfs_readdir(struct BMFSDir *dir, FILE *file);
 int bmfs_savedir(const struct BMFSDir *dir);
+struct BMFSEntry * bmfs_find(struct BMFSDir *dir, const char *filename);
 int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 void bmfs_list();
 void bmfs_format();
@@ -73,7 +74,7 @@ int bmfs_write(const char *filename,
 
 void bmfs_readfile(char *filename);
 void bmfs_writefile(char *filename);
-void bmfs_delete(char *filename);
+void bmfs_delete(const char *filename);
 
 
 #endif /* LIBBMFS_H */

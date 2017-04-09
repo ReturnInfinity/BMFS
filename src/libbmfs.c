@@ -46,7 +46,6 @@ int bmfs_readdir(struct BMFSDir *dir, FILE *file)
 }
 
 
-
 int bmfs_savedir(const struct BMFSDir *dir)
 {
 	fseek(disk, 4096, SEEK_SET);
@@ -55,40 +54,51 @@ int bmfs_savedir(const struct BMFSDir *dir)
 }
 
 
-int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+struct BMFSEntry * bmfs_find(struct BMFSDir *dir, const char *filename)
 {
 	int tint;
+	for (tint = 0; tint < 64; tint++)
+	{
+		if (dir->Entries[tint].FileName[0] == 0)
+			/* end of directory */
+			break;
+		else if (dir->Entries[tint].FileName[0] == 1)
+			/* skip empty entry */
+			continue;
+		else if (strcmp(dir->Entries[tint].FileName, filename) != 0)
+			/* not a match, skip this file */
+			continue;
+
+		/* file was found */
+		return &dir->Entries[tint];
+	}
+
+	/* file not found */
+	return NULL;
+}
+
+
+int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+{
 	struct BMFSDir dir;
+	struct BMFSEntry *result;
 
 	if (bmfs_readdir(&dir, disk) != 0)
 		return 0;
 
-	for (tint = 0; tint < 64; tint++)
-	{
-		if (dir.Entries[tint].FileName[0] == 0)
-			/* end of directory */
-			break;
-		else if (dir.Entries[tint].FileName[0] == 1)
-			/* skip empty entry */
-			continue;
-		else if (strcmp(dir.Entries[tint].FileName, filename) != 0)
-			/* not a match, skip this file */
-			continue;
+	result = bmfs_find(&dir, filename);
+	if (result == NULL)
+		/* not found */
+		return 0;
 
-		/* found a match */
+	if (fileentry)
+		*fileentry = *result;
 
-		/* set entrynumber, if requested */
-		if (entrynumber != NULL)
-			*entrynumber = tint;
+	if (entrynumber)
+		*entrynumber = (result - &dir.Entries[0]) / sizeof(dir.Entries[0]);
 
-		/* copy entry data, if requested */
-		if (fileentry != NULL)
-			memcpy(fileentry, &dir.Entries[tint], sizeof(*fileentry));
-
-		return 1;
-	}
-	/* entry not found */
-	return 0;
+	/* entry found */
+	return 1;
 }
 
 
@@ -662,10 +672,13 @@ int bmfs_write(const char *filename,
                size_t len,
                off_t off)
 {
-	struct BMFSEntry tempentry;
-	int slot;
+	struct BMFSDir dir;
+	if (bmfs_readdir(&dir, disk) != 0)
+		return -ENOENT;
 
-	if (bmfs_findfile(filename, &tempentry, &slot) == 0)
+	struct BMFSEntry *entry;
+	entry = bmfs_find(&dir, filename);
+	if (entry == NULL)
 		return -ENOENT;
 
 	/* make sure fuse isn't
@@ -674,12 +687,12 @@ int bmfs_write(const char *filename,
 		off = 0;
 
 	/* Make sure the offset doesn't overflow */
-	if (off > (tempentry.ReservedBlocks*blockSize))
-		off = tempentry.ReservedBlocks*blockSize;
+	if (off > (entry->ReservedBlocks*blockSize))
+		off = entry->ReservedBlocks*blockSize;
 
 	/* Make sure the read length doesn't overflow */
-	if ((off+len) > (tempentry.ReservedBlocks*blockSize))
-		len = (tempentry.ReservedBlocks*blockSize) - off;
+	if ((off+len) > (entry->ReservedBlocks*blockSize))
+		len = (entry->ReservedBlocks*blockSize) - off;
 
 	/* must be able to distinguish between bytes
 	 * written and a negative error code */
@@ -687,14 +700,14 @@ int bmfs_write(const char *filename,
 		len = INT_MAX;
 
 	/* Skip to the starting block in the disk */
-	fseek(disk, (tempentry.StartingBlock*blockSize) + off, SEEK_SET);
+	fseek(disk, (entry->StartingBlock*blockSize) + off, SEEK_SET);
 
 	size_t write_count = fwrite(buf, 1, len, disk);
 
-	struct BMFSDir dir;
-	bmfs_readdir(&dir, disk);
-	dir.Entries[slot].FileSize += write_count;
+	entry->FileSize += write_count;
+
 	bmfs_savedir(&dir);
+
 	return write_count;
 }
 
@@ -782,23 +795,20 @@ void bmfs_writefile(char *filename)
 }
 
 
-void bmfs_delete(char *filename)
+void bmfs_delete(const char *filename)
 {
-	struct BMFSEntry tempentry;
-	char delmarker = 0x01;
-	int slot;
+	struct BMFSDir dir;
+	if (bmfs_readdir(&dir, disk) != 0)
+		return;
 
-	if (0 == bmfs_findfile(filename, &tempentry, &slot))
-	{
-		printf("Error: File not found in BMFS.\n");
-	}
-	else
-	{
-		// Update directory
-		memcpy(Directory+(slot*64), &delmarker, 1);
-		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-		fwrite(Directory, 4096, 1, disk);			// Write new directory to disk
-	}
+	struct BMFSEntry *entry;
+	entry = bmfs_find(&dir, filename);
+	if (entry == NULL)
+		return;
+
+	entry->FileName[0] = 1;
+
+	bmfs_savedir(&dir);
 }
 
 
