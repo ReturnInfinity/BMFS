@@ -28,6 +28,10 @@ struct BMFSEntry
 	u64 FileSize;
 	u64 Unused;
 };
+struct BMFSDir
+{
+	struct BMFSEntry entries[64];
+};
 
 /* Global constants */
 // Min disk size is 6MiB (three blocks of 2MiB each.)
@@ -49,6 +53,8 @@ char Directory[4096];
 char DiskInfo[512];
 
 /* Built-in functions */
+int bmfs_opendir(struct BMFSDir *dir, const char *path);
+int bmfs_readdir(struct BMFSDir *dir, FILE *file);
 int bmfs_findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 void bmfs_list();
 void bmfs_format();
