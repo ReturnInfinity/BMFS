@@ -100,14 +100,14 @@ static int bmfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler
 	/* list the entries */
 	for (int i = 0; i < 64; i++)
 	{
-		if (dir.entries[i].FileName[0] == 0)
+		if (dir.Entries[i].FileName[0] == 0)
 			/* end of entries */
 			break;
-		else if (dir.entries[i].FileName[0] == 1)
+		else if (dir.Entries[i].FileName[0] == 1)
 			/* empty entry */
 			continue;
 		/* found an entry */
-		filler(buf, dir.entries[i].FileName, NULL, 0);
+		filler(buf, dir.Entries[i].FileName, NULL, 0);
 	}
 
 	return 0;

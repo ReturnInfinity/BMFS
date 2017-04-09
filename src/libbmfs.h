@@ -30,7 +30,7 @@ struct BMFSEntry
 };
 struct BMFSDir
 {
-	struct BMFSEntry entries[64];
+	struct BMFSEntry Entries[64];
 };
 
 /* Global constants */

@@ -38,7 +38,7 @@ int bmfs_opendir(struct BMFSDir *dir, const char *path)
 int bmfs_readdir(struct BMFSDir *dir, FILE *file)
 {
 	fseek(file, 4096, SEEK_SET);
-	fread(dir->entries, 1, sizeof(dir->entries), file);
+	fread(dir->Entries, 1, sizeof(dir->Entries), file);
 	fseek(file, 0, SEEK_SET);
 	return 0;
 }
@@ -54,13 +54,13 @@ int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entryn
 
 	for (tint = 0; tint < 64; tint++)
 	{
-		if (dir.entries[tint].FileName[0] == 0)
+		if (dir.Entries[tint].FileName[0] == 0)
 			/* end of directory */
 			break;
-		else if (dir.entries[tint].FileName[0] == 1)
+		else if (dir.Entries[tint].FileName[0] == 1)
 			/* skip empty entry */
 			continue;
-		else if (strcmp(dir.entries[tint].FileName, filename) != 0)
+		else if (strcmp(dir.Entries[tint].FileName, filename) != 0)
 			/* not a match, skip this file */
 			continue;
 
@@ -72,7 +72,7 @@ int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entryn
 
 		/* copy entry data, if requested */
 		if (fileentry != NULL)
-			memcpy(fileentry, &dir.entries[tint], sizeof(*fileentry));
+			memcpy(fileentry, &dir.Entries[tint], sizeof(*fileentry));
 
 		return 1;
 	}
