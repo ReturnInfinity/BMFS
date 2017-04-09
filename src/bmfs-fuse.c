@@ -72,6 +72,13 @@ static int bmfs_fuse_getattr(const char *path, struct stat *stbuf)
 	return -ENOENT;
 }
 
+static int bmfs_fuse_utimens(const char *path, const struct timespec tv[2])
+{
+	(void) path;
+	(void) tv;
+	return 0;
+}
+
 /** Lists contents of a directory.
  * Since BMFS only has one directory,
  * this function basically lists all
@@ -113,6 +120,13 @@ static int bmfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler
 	return 0;
 }
 
+static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+	(void) mode;
+	(void) fi;
+	return bmfs_create(path + 1, 1);
+}
+
 /** This function opens a file.
  * Except, the way fuse is implemented,
  * it really just checks that it exists.
@@ -142,12 +156,22 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
 	return bmfs_read(path + 1, buf, size, offset);
 }
 
+static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t offset,
+                           struct fuse_file_info *fi)
+{
+	(void) fi;
+	return bmfs_write(path + 1, buf, size, offset);
+}
+
 static struct fuse_operations bmfs_fuse_operations = {
 	.init = bmfs_fuse_init,
 	.getattr = bmfs_fuse_getattr,
+	.utimens = bmfs_fuse_utimens,
 	.readdir = bmfs_fuse_readdir,
+	.create = bmfs_fuse_create,
 	.open = bmfs_fuse_open,
 	.read = bmfs_fuse_read,
+	.write = bmfs_fuse_write
 };
 
 static void show_help(const char *argv0)
