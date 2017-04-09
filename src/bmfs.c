@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_write, command) == 0)
 	{
-		bmfs_write(filename);
+		bmfs_writefile(filename);
 	}
 	else if (strcasecmp(s_delete, command) == 0)
 	{
