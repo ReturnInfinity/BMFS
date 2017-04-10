@@ -22,6 +22,8 @@ char s_delete[] = "delete";
 char s_version[] = "version";
 
 
+static void list_entries(FILE *diskfile);
+
 /* Program code */
 int main(int argc, char *argv[])
 {
@@ -100,7 +102,7 @@ int main(int argc, char *argv[])
 
 	if (strcasecmp(s_list, command) == 0)
 	{
-		bmfs_list(disk);
+		list_entries(disk);
 	}
 	else if (strcasecmp(s_format, command) == 0)
 	{
@@ -187,6 +189,33 @@ int main(int argc, char *argv[])
 		disk = NULL;
 	}
 	return 0;
+}
+
+
+static void list_entries(FILE *diskfile)
+{
+	struct BMFSDir dir;
+
+	int err = bmfs_readdir(&dir, diskfile);
+	if (err != 0)
+		return;
+
+	printf("| Name                             |             Size (B) |       Reserved (MiB) |\n");
+	printf("|----------------------------------|----------------------|----------------------|\n");
+	for (size_t i = 0; i < 64; i++)
+	{
+		const struct BMFSEntry *entry;
+		entry = &dir.Entries[i];
+		if (bmfs_entry_is_empty(entry))
+			continue;
+		else if (bmfs_entry_is_terminator(entry))
+			break;
+		else
+			printf("| %-32s | %20llu | %20llu |\n",
+			       entry->FileName,
+			       (unsigned long long)(entry->FileSize),
+			       (unsigned long long)(entry->ReservedBlocks * 2));
+	}
 }
 
 
