@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
-				bmfs_format();
+				bmfs_disk_format(disk);
 			}
 			else
 			{
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(argv[3], "/FORCE") == 0)
 			{
-				bmfs_format();
+				bmfs_disk_format(disk);
 			}
 			else
 			{
@@ -131,13 +131,17 @@ int main(int argc, char *argv[])
 			if (argc > 4)
 			{
 				int filesize = atoi(argv[4]);
-				if (filesize >= 1)
+				if (filesize < 1)
 				{
-					bmfs_create(filename, filesize);
+					printf("Error: Invalid file size.\n");
+					return EXIT_FAILURE;
 				}
-				else
+				int err = bmfs_disk_create_file(disk, filename, filesize);
+				if (err != 0)
 				{
-			  		printf("Error: Invalid file size.\n");
+					fprintf(stderr, "%s: Failed to create '%s'\n", argv[0], filename);
+					fprintf(stderr, "  %s\n", strerror(-err));
+					return EXIT_FAILURE;
 				}
 			}
 			else
@@ -145,10 +149,19 @@ int main(int argc, char *argv[])
 				printf("Maximum file size in MiB: ");
 				if (fgets(tempstring, sizeof(tempstring), stdin) != NULL)	// Get up to 32 chars from the keyboard
 					filesize = atoi(tempstring);
-				if (filesize >= 1)
-					bmfs_create(filename, filesize);
-				else
+				if (filesize < 1)
+				{
 					printf("Error: Invalid file size.\n");
+					return EXIT_FAILURE;
+				}
+
+				int err = bmfs_disk_create_file(disk, filename, filesize);
+				if (err != 0)
+				{
+					fprintf(stderr, "%s: Failed to create '%s'\n", argv[0], filename);
+					fprintf(stderr, "  %s\n", strerror(-err));
+					return EXIT_FAILURE;
+				}
 			}
 		}
 	}
