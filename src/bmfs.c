@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
 	if (strcasecmp(s_list, command) == 0)
 	{
-		bmfs_list();
+		bmfs_list(disk);
 	}
 	else if (strcasecmp(s_format, command) == 0)
 	{
