@@ -80,7 +80,6 @@ int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile);
 int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile);
 int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
-int bmfs_create(const char *filename, unsigned long long maxsize);
 unsigned long long bmfs_read(const char *filename,
                              void * buf,
                              unsigned long long len,
