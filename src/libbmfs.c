@@ -16,6 +16,103 @@ const unsigned int blockSize = 2 * 1024 * 1024;
 /* Global variables */
 FILE *disk;
 
+static int StartingBlockCmp(const void *pa, const void *pb);
+
+
+void bmfs_entry_zero(struct BMFSEntry *entry)
+{
+	memset(entry, 0, sizeof(*entry));
+}
+
+
+void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename)
+{
+	snprintf(entry->FileName, sizeof(entry->FileName), "%s", filename);
+}
+
+
+void bmfs_entry_set_starting_block(struct BMFSEntry *entry, size_t starting_block)
+{
+	entry->StartingBlock = starting_block;
+}
+
+
+void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry, size_t reserved_blocks)
+{
+	entry->ReservedBlocks = reserved_blocks;
+}
+
+
+int bmfs_entry_is_empty(const struct BMFSEntry *entry)
+{
+	return entry->FileName[0] == 1;
+}
+
+
+int bmfs_entry_is_terminator(const struct BMFSEntry *entry)
+{
+	return entry->FileName[0] == 0;
+}
+
+
+int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_block)
+{
+	if ((diskfile == NULL)
+	 || (starting_block == NULL))
+		return -EFAULT;
+
+	struct BMFSDir dir;
+
+	int err = bmfs_readdir(&dir, diskfile);
+	if (err != 0)
+		return err;
+
+	err = bmfs_sortdir(&dir);
+	if (err != 0)
+		return err;
+
+	size_t total_blocks;
+	err = bmfs_disk_blocks(diskfile, &total_blocks);
+	if (err != 0)
+		return err;
+	else if (total_blocks == 0)
+		return -ENOSPC;
+
+	size_t last_block = 0;
+	size_t next_block = total_blocks;
+
+	for (size_t i = 0; i < (64 - 1); i++)
+	{
+		struct BMFSEntry *entry = &dir.Entries[i];
+		if (!(bmfs_entry_is_empty(entry))
+		 && !(bmfs_entry_is_terminator(entry)))
+			last_block = entry->StartingBlock + entry->ReservedBlocks;
+
+		entry = &dir.Entries[i + 1];
+		if ((bmfs_entry_is_empty(entry))
+		 || (bmfs_entry_is_terminator(entry)))
+			next_block = total_blocks;
+		else
+			next_block = entry->StartingBlock;
+
+		size_t blocks_between = next_block - last_block;
+		if ((blocks_between * blockSize) >= bytes)
+		{
+			/* found a spot between entries */
+			*starting_block = entry->StartingBlock + entry->ReservedBlocks;
+			return 0;
+		}
+	}
+
+	return -ENOSPC;
+}
+
+
+int bmfs_disk_allocate_mebibytes(FILE *diskfile, size_t mebibytes, size_t *starting_block)
+{
+	return bmfs_disk_allocate_bytes(diskfile, mebibytes * 1024 * 1024, starting_block);
+}
+
 
 int bmfs_disk_bytes(FILE *diskfile, size_t *bytes)
 {
@@ -65,6 +162,66 @@ int bmfs_disk_blocks(FILE *diskfile, size_t *blocks)
 }
 
 
+int bmfs_disk_create_file(FILE *diskfile, const char *filename, size_t mebibytes)
+{
+	int err;
+	size_t starting_block;
+
+	err = bmfs_disk_allocate_mebibytes(diskfile, mebibytes, &starting_block);
+	if (err != 0)
+		return err;
+
+	struct BMFSEntry entry;
+	bmfs_entry_zero(&entry);
+	bmfs_entry_set_file_name(&entry, filename);
+	bmfs_entry_set_starting_block(&entry, starting_block);
+	bmfs_entry_set_reserved_blocks(&entry, mebibytes / 2);
+
+	struct BMFSDir dir;
+
+	err = bmfs_readdir(&dir, diskfile);
+	if (err != 0)
+		return err;
+
+	err = bmfs_dir_add(&dir, &entry);
+	if (err != 0)
+		return err;
+
+	err = bmfs_writedir(&dir, diskfile);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+
+int bmfs_disk_set_bytes(FILE *diskfile, size_t bytes)
+{
+	if (bytes < minimumDiskSize)
+		bytes = minimumDiskSize;
+
+	if (fseek(diskfile, bytes - 1, SEEK_SET) != 0)
+		return -errno;
+
+	if (fputc(0, diskfile) != 0)
+		return -errno;
+
+	return 0;
+}
+
+
+int bmfs_disk_set_mebibytes(FILE *diskfile, size_t mebibytes)
+{
+	return bmfs_disk_set_bytes(diskfile, mebibytes * 1024 * 1024);
+}
+
+
+int bmfs_disk_set_blocks(FILE *diskfile, size_t blocks)
+{
+	return bmfs_disk_set_blocks(diskfile, blocks * blockSize);
+}
+
+
 int bmfs_check_tag(FILE *diskfile)
 {
 	char tag[4];
@@ -100,6 +257,32 @@ int bmfs_write_tag(FILE *diskfile)
 void bmfs_dir_zero(struct BMFSDir *dir)
 {
 	memset(dir, 0, sizeof(*dir));
+}
+
+
+int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
+{
+	for (size_t i = 0; i < 64; i++)
+	{
+		struct BMFSEntry *dst;
+		dst = &dir->Entries[i];
+		if (bmfs_entry_is_empty(dst))
+		{
+			*dst = *entry;
+			return 0;
+		}
+		else if (bmfs_entry_is_terminator(dst))
+		{
+			*dst = *entry;
+			if ((i + 1) < 64)
+				/* make sure next entry
+				 * indicates end of directory */
+				dir->Entries[i + 1].FileName[0] = 0;
+			return 0;
+		}
+	}
+	/* ran out of entries */
+	return -ENOSPC;
 }
 
 
@@ -158,6 +341,22 @@ int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile)
 	if (fwrite(dir->Entries, 1, sizeof(dir->Entries), disk) != sizeof(dir->Entries))
 		return -errno;
 
+	return 0;
+}
+
+
+int bmfs_sortdir(struct BMFSDir *dir)
+{
+	if (dir == NULL)
+		return -EFAULT;
+	size_t i;
+	for (i = 0; i < 64; i++)
+	{
+		if (dir->Entries[i].FileName[0] == 0)
+			break;
+	}
+	/* i is the number of used entries */
+	qsort(dir->Entries, i, sizeof(dir->Entries[0]), StartingBlockCmp);
 	return 0;
 }
 
@@ -243,17 +442,25 @@ void bmfs_list(FILE *diskfile)
 }
 
 
-void bmfs_format()
+int bmfs_disk_format(FILE *diskfile)
 {
-	bmfs_write_tag(disk);
+	int err;
+
+	err = bmfs_disk_set_bytes(diskfile, 0);
+	if (err != 0)
+		return err;
+
+	err = bmfs_write_tag(disk);
+	if (err != 0)
+		return err;
 
 	struct BMFSDir dir;
 	bmfs_dir_zero(&dir);
-
 	if (fseek(disk, 4096, SEEK_SET) != 0)
-		return;
+		return -errno;
+	fwrite(dir.Entries, 1, sizeof(dir.Entries), diskfile);
 
-	fwrite(dir.Entries, 1, sizeof(dir.Entries), disk);
+	return 0;
 }
 
 
@@ -467,7 +674,7 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	if (ret == 0)
 	{
 		rewind(disk);
-		bmfs_format();
+		bmfs_disk_format(disk);
 	}
 
 	// Write the master boot record if it was specified by the caller.
@@ -646,7 +853,7 @@ int bmfs_create(const char *filename, unsigned long long maxsize)
 
 	// Find an area with enough free blocks
 	// Sort our copy of the directory by starting block number
-	qsort(dir.Entries, num_used_entries, 64, StartingBlockCmp);
+	bmfs_sortdir(&dir);
 
 	for (tint = 0; tint < num_used_entries + 1; tint++)
 	{
