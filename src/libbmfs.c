@@ -246,7 +246,7 @@ int bmfs_disk_set_blocks(FILE *diskfile, size_t blocks)
 }
 
 
-int bmfs_check_tag(FILE *diskfile)
+int bmfs_disk_check_tag(FILE *diskfile)
 {
 	char tag[4];
 
@@ -266,7 +266,7 @@ int bmfs_check_tag(FILE *diskfile)
 }
 
 
-int bmfs_write_tag(FILE *diskfile)
+int bmfs_disk_write_tag(FILE *diskfile)
 {
 	if (fseek(diskfile, 1024, SEEK_SET) != 0)
 		return -errno;
@@ -408,7 +408,7 @@ int bmfs_disk_format(FILE *diskfile)
 	if (err != 0)
 		return err;
 
-	err = bmfs_write_tag(disk);
+	err = bmfs_disk_write_tag(diskfile);
 	if (err != 0)
 		return err;
 
