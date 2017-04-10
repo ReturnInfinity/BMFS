@@ -61,7 +61,7 @@ static int bmfs_fuse_getattr(const char *path, struct stat *stbuf)
 	}
 
 	struct BMFSEntry entry;
-	if (bmfs_findfile(path + 1, &entry, NULL))
+	if (bmfs_disk_find_file(disk, path + 1, &entry, NULL))
 	{
 		stbuf->st_mode = S_IFREG | 0666;
 		stbuf->st_nlink = 1;
@@ -152,12 +152,7 @@ static int bmfs_fuse_unlink(const char *path)
 static int bmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
 	(void) fi;
-
-	if (bmfs_findfile(path + 1, NULL, NULL))
-		/* file was found */
-		return 0;
-
-	return -ENOENT;
+	return bmfs_disk_find_file(disk, path + 1, NULL, NULL);
 }
 
 /** Reads data from a file.
