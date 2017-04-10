@@ -46,7 +46,7 @@ static void *bmfs_fuse_init(struct fuse_conn_info *conn)
 static int bmfs_fuse_access(const char *filename, int mode)
 {
 	(void) mode;
-	if (bmfs_findfile(filename + 1, NULL, NULL) == 0)
+	if (bmfs_disk_find_file(disk, filename + 1, NULL, NULL) == 0)
 		return 0;
 	/* file not found */
 	return -ENOENT;
