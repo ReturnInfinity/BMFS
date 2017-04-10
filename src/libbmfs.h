@@ -20,20 +20,6 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-/* Global defines */
-struct BMFSEntry
-{
-	char FileName[32];
-	u64 StartingBlock;
-	u64 ReservedBlocks;
-	u64 FileSize;
-	u64 Unused;
-};
-struct BMFSDir
-{
-	struct BMFSEntry Entries[64];
-};
-
 /* Global constants */
 // Min disk size is 6MiB (three blocks of 2MiB each.)
 extern const unsigned int minimumDiskSize;
@@ -43,7 +29,17 @@ extern const unsigned int blockSize;
 /* Global variables */
 extern FILE *disk;
 
-/* Built-in functions */
+/* Entry API */
+
+struct BMFSEntry
+{
+	char FileName[32];
+	u64 StartingBlock;
+	u64 ReservedBlocks;
+	u64 FileSize;
+	u64 Unused;
+};
+
 void bmfs_entry_zero(struct BMFSEntry *entry);
 void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename);
 void bmfs_entry_set_file_size(struct BMFSEntry *entry, size_t file_size);
@@ -51,6 +47,22 @@ void bmfs_entry_set_starting_block(struct BMFSEntry *entry, size_t starting_bloc
 void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry, size_t reserved_blocks);
 int bmfs_entry_is_empty(const struct BMFSEntry *entry);
 int bmfs_entry_is_terminator(const struct BMFSEntry *entry);
+
+/* Directory API */
+
+struct BMFSDir
+{
+	struct BMFSEntry Entries[64];
+};
+
+void bmfs_dir_zero(struct BMFSDir *dir);
+int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
+int bmfs_dir_delete(struct BMFSDir *dir, const char *filename);
+int bmfs_sortdir(struct BMFSDir *dir);
+struct BMFSEntry * bmfs_find(struct BMFSDir *dir, const char *filename);
+
+/* Disk API */
+
 int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_block);
 int bmfs_disk_allocate_mebibytes(FILE *diskfile, size_t mebibytes, size_t *starting_block);
 int bmfs_disk_bytes(FILE *diskfile, size_t *bytes);
@@ -64,14 +76,8 @@ int bmfs_disk_set_mebibytes(FILE *diskfile, size_t mebibytes);
 int bmfs_disk_set_blocks(FILE *diskfile, size_t blocks);
 int bmfs_check_tag(FILE *diskfile);
 int bmfs_write_tag(FILE *diskfile);
-void bmfs_dir_zero(struct BMFSDir *dir);
-int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
-int bmfs_opendir(struct BMFSDir *dir, const char *path);
 int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile);
-int bmfs_savedir(const struct BMFSDir *dir, const char *path);
 int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile);
-int bmfs_sortdir(struct BMFSDir *dir);
-struct BMFSEntry * bmfs_find(struct BMFSDir *dir, const char *filename);
 int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 void bmfs_list();
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
