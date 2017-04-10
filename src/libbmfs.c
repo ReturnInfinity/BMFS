@@ -219,6 +219,31 @@ int bmfs_disk_delete_file(FILE *diskfile, const char *filename)
 }
 
 
+int bmfs_disk_find_file(FILE *diskfile, const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+{
+	int err;
+	struct BMFSDir dir;
+	struct BMFSEntry *result;
+
+	err = bmfs_readdir(&dir, diskfile);
+	if (err != 0)
+		return err;
+
+	result = bmfs_find(&dir, filename);
+	if (result == NULL)
+		/* not found */
+		return -ENOENT;
+
+	if (fileentry)
+		*fileentry = *result;
+
+	if (entrynumber)
+		*entrynumber = (result - &dir.Entries[0]) / sizeof(dir.Entries[0]);
+
+	return 0;
+}
+
+
 int bmfs_disk_set_bytes(FILE *diskfile, size_t bytes)
 {
 	if (bytes < minimumDiskSize)
@@ -373,30 +398,6 @@ struct BMFSEntry * bmfs_find(struct BMFSDir *dir, const char *filename)
 
 	/* file not found */
 	return NULL;
-}
-
-
-int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
-{
-	struct BMFSDir dir;
-	struct BMFSEntry *result;
-
-	if (bmfs_readdir(&dir, disk) != 0)
-		return 0;
-
-	result = bmfs_find(&dir, filename);
-	if (result == NULL)
-		/* not found */
-		return 0;
-
-	if (fileentry)
-		*fileentry = *result;
-
-	if (entrynumber)
-		*entrynumber = (result - &dir.Entries[0]) / sizeof(dir.Entries[0]);
-
-	/* entry found */
-	return 1;
 }
 
 
@@ -765,7 +766,7 @@ void bmfs_readfile(char *filename)
 	unsigned long long bytestoread;
 	char *buffer;
 
-	if (0 == bmfs_findfile(filename, &tempentry, &slot))
+	if (0 == bmfs_disk_find_file(disk, filename, &tempentry, &slot))
 	{
 		printf("Error: File not found in BMFS.\n");
 	}
@@ -830,7 +831,7 @@ unsigned long long bmfs_read(const char *filename,
 {
 	struct BMFSEntry tempentry;
 
-	if (bmfs_findfile(filename, &tempentry, NULL) == 0)
+	if (bmfs_disk_find_file(disk, filename, &tempentry, NULL) == 0)
 	{
 		memcpy(buf, "h", 1);
 		return 1;

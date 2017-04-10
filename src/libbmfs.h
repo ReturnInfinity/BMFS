@@ -71,6 +71,7 @@ int bmfs_disk_blocks(FILE *diskfile, size_t *blocks);
 int bmfs_disk_format(FILE *diskfile);
 int bmfs_disk_create_file(FILE *diskfile, const char *filename, size_t mebibytes);
 int bmfs_disk_delete_file(FILE *diskfile, const char *filename);
+int bmfs_disk_find_file(FILE *diskfile, const char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 int bmfs_disk_set_bytes(FILE *diskfile, size_t bytes);
 int bmfs_disk_set_mebibytes(FILE *diskfile, size_t mebibytes);
 int bmfs_disk_set_blocks(FILE *diskfile, size_t blocks);
@@ -78,7 +79,6 @@ int bmfs_disk_check_tag(FILE *diskfile);
 int bmfs_disk_write_tag(FILE *diskfile);
 int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile);
 int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile);
-int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entrynumber);
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
 unsigned long long bmfs_read(const char *filename,
                              void * buf,
