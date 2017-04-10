@@ -72,6 +72,11 @@ static int bmfs_fuse_getattr(const char *path, struct stat *stbuf)
 	return -ENOENT;
 }
 
+/** This function does not actually
+ * do anything, since BMFS does not
+ * support time stamps.
+ * */
+
 static int bmfs_fuse_utimens(const char *path, const struct timespec tv[2])
 {
 	(void) path;
@@ -120,12 +125,19 @@ static int bmfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler
 	return 0;
 }
 
+/** Creates a file, defaulting to the
+ * size of 2 MiB.
+ * */
+
 static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
 	(void) mode;
 	(void) fi;
 	return bmfs_create(path + 1, 1);
 }
+
+/** Deletes a file.
+ * */
 
 static int bmfs_fuse_unlink(const char *path)
 {
@@ -161,6 +173,11 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
 	return bmfs_read(path + 1, buf, size, offset);
 }
 
+/** Writes data to a file.
+ * This function's parameters are similar
+ * to that of bmfs_fuse_read.
+ * */
+
 static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t offset,
                            struct fuse_file_info *fi)
 {
@@ -182,7 +199,10 @@ static struct fuse_operations bmfs_fuse_operations = {
 
 static void show_help(const char *argv0)
 {
-	fprintf(stderr, "usage: %s <disk> <mountpoint> [options]\n", argv0);
+	fprintf(stderr, "usage: %s <mountpoint> [options]\n", argv0);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "BMFS Options:\n");
+	fprintf(stderr, "    --disk=<s>             The disk file to mount (defaults to 'disk.image')\n");
 	fprintf(stderr, "\n");
 }
 
