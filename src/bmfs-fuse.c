@@ -43,6 +43,15 @@ static void *bmfs_fuse_init(struct fuse_conn_info *conn)
 	return NULL;
 }
 
+static int bmfs_fuse_access(const char *filename, int mode)
+{
+	(void) mode;
+	if (bmfs_findfile(filename + 1, NULL, NULL) == 0)
+		return 0;
+	/* file not found */
+	return -ENOENT;
+}
+
 /** Gets permissions and size of a
  * specific file in the directory.
  * Currently, all files in BMFS have
@@ -171,6 +180,7 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
 
 static struct fuse_operations bmfs_fuse_operations = {
 	.init = bmfs_fuse_init,
+	.access = bmfs_fuse_access,
 	.getattr = bmfs_fuse_getattr,
 	.utimens = bmfs_fuse_utimens,
 	.readdir = bmfs_fuse_readdir,
