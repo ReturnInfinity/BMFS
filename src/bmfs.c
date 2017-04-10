@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_delete, command) == 0)
 	{
-		bmfs_delete(filename);
+		bmfs_disk_delete_file(disk, filename);
 	}
 	else
 	{
