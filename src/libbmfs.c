@@ -61,6 +61,9 @@ int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_bloc
 	 || (starting_block == NULL))
 		return -EFAULT;
 
+	if (bytes < blockSize)
+		bytes = blockSize;
+
 	struct BMFSDir dir;
 
 	int err = bmfs_readdir(&dir, diskfile);
@@ -78,7 +81,7 @@ int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_bloc
 	else if (total_blocks == 0)
 		return -ENOSPC;
 
-	size_t last_block = 0;
+	size_t last_block = 1;
 	size_t next_block = total_blocks;
 
 	for (size_t i = 0; i < (64 - 1); i++)
@@ -166,6 +169,9 @@ int bmfs_disk_create_file(FILE *diskfile, const char *filename, size_t mebibytes
 {
 	int err;
 	size_t starting_block;
+
+	if (mebibytes % 2 != 0)
+		mebibytes++;
 
 	err = bmfs_disk_allocate_mebibytes(diskfile, mebibytes, &starting_block);
 	if (err != 0)
@@ -416,7 +422,6 @@ void bmfs_list(FILE *diskfile)
 
 	struct BMFSDir dir;
 	bmfs_readdir(&dir, diskfile);
-
 
 	if (bmfs_disk_mebibytes(diskfile, &disk_size) == 0)
 		printf("Disk Size: %llu MiB\n", (unsigned long long)(disk_size));
