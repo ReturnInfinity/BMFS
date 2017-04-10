@@ -102,7 +102,7 @@ int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_bloc
 		if ((blocks_between * blockSize) >= bytes)
 		{
 			/* found a spot between entries */
-			*starting_block = entry->StartingBlock + entry->ReservedBlocks;
+			*starting_block = last_block;
 			return 0;
 		}
 	}
@@ -198,6 +198,24 @@ int bmfs_disk_create_file(FILE *diskfile, const char *filename, size_t mebibytes
 		return err;
 
 	return 0;
+}
+
+
+int bmfs_disk_delete_file(FILE *diskfile, const char *filename)
+{
+	struct BMFSDir dir;
+	int err = bmfs_readdir(&dir, diskfile);
+	if (err != 0)
+		return err;
+
+	struct BMFSEntry *entry;
+	entry = bmfs_find(&dir, filename);
+	if (entry == NULL)
+		return -ENOENT;
+
+	entry->FileName[0] = 1;
+
+	return bmfs_writedir(&dir, diskfile);
 }
 
 
@@ -1129,23 +1147,6 @@ void bmfs_writefile(char *filename)
 	entry->FileSize = tempfilesize;
 	bmfs_writedir(&dir, disk);
 	fclose(tfile);
-}
-
-
-void bmfs_delete(const char *filename)
-{
-	struct BMFSDir dir;
-	if (bmfs_readdir(&dir, disk) != 0)
-		return;
-
-	struct BMFSEntry *entry;
-	entry = bmfs_find(&dir, filename);
-	if (entry == NULL)
-		return;
-
-	entry->FileName[0] = 1;
-
-	bmfs_writedir(&dir, disk);
 }
 
 

@@ -58,6 +58,7 @@ int bmfs_disk_mebibytes(FILE *diskfile, size_t *mebibytes);
 int bmfs_disk_blocks(FILE *diskfile, size_t *blocks);
 int bmfs_disk_format(FILE *diskfile);
 int bmfs_disk_create_file(FILE *diskfile, const char *filename, size_t mebibytes);
+int bmfs_disk_delete_file(FILE *diskfile, const char *filename);
 int bmfs_disk_set_bytes(FILE *diskfile, size_t bytes);
 int bmfs_disk_set_mebibytes(FILE *diskfile, size_t mebibytes);
 int bmfs_disk_set_blocks(FILE *diskfile, size_t blocks);
@@ -85,7 +86,6 @@ int bmfs_write(const char *filename,
                off_t off);
 void bmfs_readfile(char *filename);
 void bmfs_writefile(char *filename);
-void bmfs_delete(const char *filename);
 
 
 #endif /* LIBBMFS_H */
