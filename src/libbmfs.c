@@ -400,38 +400,6 @@ int bmfs_findfile(const char *filename, struct BMFSEntry *fileentry, int *entryn
 }
 
 
-void bmfs_list(FILE *diskfile)
-{
-	int tint;
-	size_t disk_size;
-
-	struct BMFSDir dir;
-	bmfs_readdir(&dir, diskfile);
-
-	if (bmfs_disk_mebibytes(diskfile, &disk_size) == 0)
-		printf("Disk Size: %llu MiB\n", (unsigned long long)(disk_size));
-
-	printf("Name                            |            Size (B)|      Reserved (MiB)\n");
-	printf("==========================================================================\n");
-	for (tint = 0; tint < 64; tint++)				// Max 64 entries
-	{
-		struct BMFSEntry *entry = &dir.Entries[tint];
-		if (entry->FileName[0] == 0x00)				// End of directory, bail out
-		{
-			tint = 64;
-		}
-		else if (entry->FileName[0] == 0x01)			// Emtpy entry
-		{
-			// Ignore
-		}
-		else							// Valid entry
-		{
-			printf("%-32s %20lld %20lld\n", entry->FileName, (long long int)entry->FileSize, (long long int)(entry->ReservedBlocks*2));
-		}
-	}
-}
-
-
 int bmfs_disk_format(FILE *diskfile)
 {
 	int err;
