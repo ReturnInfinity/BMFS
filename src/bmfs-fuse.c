@@ -133,7 +133,7 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 {
 	(void) mode;
 	(void) fi;
-	return bmfs_create(path + 1, 1);
+	return bmfs_disk_create_file(disk, path + 1, 1);
 }
 
 /** Deletes a file.
