@@ -310,21 +310,6 @@ int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
 }
 
 
-int bmfs_opendir(struct BMFSDir *dir, const char *path)
-{
-	int err;
-	FILE *diskfile;
-	diskfile = fopen(path, "r+b");
-	if (diskfile == NULL)
-		return -ENOENT;
-	err = bmfs_readdir(dir, diskfile);
-	if (err != 0)
-		return err;
-	fclose(diskfile);
-	return 0;
-}
-
-
 int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile)
 {
 	bmfs_dir_zero(dir);
@@ -334,24 +319,6 @@ int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile)
 
 	if (fread(dir->Entries, 1, sizeof(dir->Entries), diskfile) != sizeof(dir->Entries))
 		return -errno;
-
-	return 0;
-}
-
-
-int bmfs_savedir(const struct BMFSDir *dir, const char *path)
-{
-	int err;
-	FILE * diskfile;
-	diskfile = fopen(path, "wb");
-	if (diskfile == NULL)
-		return -errno;
-
-	err = bmfs_writedir(dir, diskfile);
-	if (err != 0)
-		return err;
-
-	fclose(diskfile);
 
 	return 0;
 }
