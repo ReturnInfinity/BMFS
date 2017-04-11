@@ -54,6 +54,18 @@ struct BMFSEntry * bmfs_find(struct BMFSDir *dir, const char *filename);
 
 /* Disk API */
 
+struct BMFSDisk
+{
+	void *disk;
+	int (*seek)(void *disk, int64_t offset, int whence);
+	int (*tell)(void *disk, int64_t *offset);
+	int (*read)(void *disk, void *buf, uint64_t len, uint64_t *read_len);
+	int (*write)(void *disk, const void *buf, uint64_t len, uint64_t *write_len);
+};
+
+int bmfs_disk_init_data(struct BMFSDisk *disk, void *data, uint64_t data_len);
+int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file);
+
 int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_block);
 int bmfs_disk_allocate_mebibytes(FILE *diskfile, size_t mebibytes, size_t *starting_block);
 int bmfs_disk_bytes(FILE *diskfile, size_t *bytes);
