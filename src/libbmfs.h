@@ -63,7 +63,6 @@ struct BMFSDisk
 	int (*write)(void *disk, const void *buf, uint64_t len, uint64_t *write_len);
 };
 
-int bmfs_disk_init_data(struct BMFSDisk *disk, void *data, uint64_t data_len);
 int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file);
 
 int bmfs_disk_seek(struct BMFSDisk *disk, int64_t offset, int whence);

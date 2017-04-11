@@ -85,8 +85,6 @@ int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file)
 	return 0;
 }
 
-/* data disk functions */
-
 /* disk wrapper functions */
 
 int bmfs_disk_seek(struct BMFSDisk *disk, int64_t offset, int whence)
