@@ -381,33 +381,6 @@ int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFS
 }
 
 
-int bmfs_disk_set_bytes(FILE *diskfile, size_t bytes)
-{
-	if (bytes < minimumDiskSize)
-		bytes = minimumDiskSize;
-
-	if (fseek(diskfile, bytes - 1, SEEK_SET) != 0)
-		return -errno;
-
-	if (fputc(0, diskfile) != 0)
-		return -errno;
-
-	return 0;
-}
-
-
-int bmfs_disk_set_mebibytes(FILE *diskfile, size_t mebibytes)
-{
-	return bmfs_disk_set_bytes(diskfile, mebibytes * 1024 * 1024);
-}
-
-
-int bmfs_disk_set_blocks(FILE *diskfile, size_t blocks)
-{
-	return bmfs_disk_set_blocks(diskfile, blocks * blockSize);
-}
-
-
 int bmfs_disk_check_tag(struct BMFSDisk *disk)
 {
 	if (disk == NULL)

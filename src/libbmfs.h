@@ -84,9 +84,6 @@ int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, size_t me
 int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename);
 int bmfs_disk_format(struct BMFSDisk *disk);
 
-int bmfs_disk_set_bytes(FILE *diskfile, size_t bytes);
-int bmfs_disk_set_mebibytes(FILE *diskfile, size_t mebibytes);
-int bmfs_disk_set_blocks(FILE *diskfile, size_t blocks);
 int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile);
 int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile);
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
