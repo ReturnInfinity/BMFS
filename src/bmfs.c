@@ -195,9 +195,13 @@ int main(int argc, char *argv[])
 
 static void list_entries(FILE *diskfile)
 {
-	struct BMFSDir dir;
+	struct BMFSDisk disk;
+	int err = bmfs_disk_init_file(&disk, diskfile);
+	if (err != 0)
+		return;
 
-	int err = bmfs_readdir(&dir, diskfile);
+	struct BMFSDir dir;
+	err = bmfs_disk_read_dir(&disk, &dir);
 	if (err != 0)
 		return;
 
