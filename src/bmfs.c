@@ -160,6 +160,9 @@ int main(int argc, char *argv[])
 				printf("Maximum file size in MiB: ");
 				if (fgets(tempstring, sizeof(tempstring), stdin) != NULL)	// Get up to 32 chars from the keyboard
 					filesize = atoi(tempstring);
+				else
+					return EXIT_FAILURE;
+
 				if (filesize < 1)
 				{
 					printf("Error: Invalid file size.\n");
