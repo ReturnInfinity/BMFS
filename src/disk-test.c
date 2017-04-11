@@ -135,6 +135,8 @@ int main(void)
 	assert(dir.Entries[0].StartingBlock == 1);
 	assert(dir.Entries[0].ReservedBlocks == 1);
 	assert(dir.Entries[0].FileSize == 0);
+	/* make sure buffer is consistent */
+	assert(memcmp(&data.buf[4096], "a.txt", 5) == 0);
 	/* make sure next file marks end of directory */
 	assert(dir.Entries[1].FileName[0] == 0);
 
@@ -144,6 +146,9 @@ int main(void)
 	assert(dir.Entries[1].StartingBlock == 2);
 	assert(dir.Entries[1].ReservedBlocks == 1);
 	assert(dir.Entries[1].FileSize == 0);
+	/* make sure buffer is consistent */
+	assert(memcmp(&data.buf[4096], "a.txt", 5) == 0);
+	assert(memcmp(&data.buf[4096 + 64], "b.txt", 5) == 0);
 	/* make sure next file marks end of directory */
 	assert(dir.Entries[2].FileName[0] == 0);
 
