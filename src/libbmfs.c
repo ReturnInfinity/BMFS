@@ -871,7 +871,7 @@ int bmfs_write(const char *filename,
 		off = 0;
 
 	/* Make sure the offset doesn't overflow */
-	if (off > (entry->ReservedBlocks*blockSize))
+	if (off > (unsigned)(entry->ReservedBlocks*blockSize))
 		off = entry->ReservedBlocks*blockSize;
 
 	/* Make sure the read length doesn't overflow */
