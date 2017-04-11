@@ -401,33 +401,41 @@ int bmfs_disk_set_blocks(FILE *diskfile, size_t blocks)
 }
 
 
-int bmfs_disk_check_tag(FILE *diskfile)
+int bmfs_disk_check_tag(struct BMFSDisk *disk)
 {
+	if (disk == NULL)
+		return -EFAULT;
+
+	int err = bmfs_disk_seek(disk, 1024, SEEK_SET);
+	if (err != 0)
+		return err;
+
 	char tag[4];
-
-	if (fseek(diskfile, 1024, SEEK_SET) != 0)
-		return -errno;
-
-	if (fread(tag, 1, 4, diskfile) != 4)
-		return -EINVAL;
-
-	if ((tag[0] != 'B')
-	 || (tag[1] != 'M')
-	 || (tag[2] != 'F')
-	 || (tag[3] != 'S'))
+	err = bmfs_disk_read(disk, tag, 4, NULL);
+	if (err != 0)
+		return err;
+	else if ((tag[0] != 'B')
+	      || (tag[1] != 'M')
+	      || (tag[2] != 'F')
+	      || (tag[3] != 'S'))
 		return -EINVAL;
 
 	return 0;
 }
 
 
-int bmfs_disk_write_tag(FILE *diskfile)
+int bmfs_disk_write_tag(struct BMFSDisk *disk)
 {
-	if (fseek(diskfile, 1024, SEEK_SET) != 0)
-		return -errno;
+	if (disk == NULL)
+		return -EFAULT;
 
-	if (fwrite("BMFS", 1, 4, diskfile) != 4)
-		return -errno;
+	int err = bmfs_disk_seek(disk, 1024, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_write(disk, "BMFS", 4, NULL);
+	if (err != 0)
+		return err;
 
 	return 0;
 }
@@ -533,21 +541,25 @@ struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename)
 
 int bmfs_disk_format(FILE *diskfile)
 {
-	int err;
-
-	err = bmfs_disk_set_bytes(diskfile, 0);
+	int err = bmfs_disk_set_bytes(diskfile, 0);
 	if (err != 0)
 		return err;
 
-	err = bmfs_disk_write_tag(diskfile);
+	struct BMFSDisk disk;
+	err = bmfs_disk_init_file(&disk, diskfile);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_write_tag(&disk);
 	if (err != 0)
 		return err;
 
 	struct BMFSDir dir;
 	bmfs_dir_zero(&dir);
-	if (fseek(diskfile, 4096, SEEK_SET) != 0)
-		return -errno;
-	fwrite(dir.Entries, 1, sizeof(dir.Entries), diskfile);
+
+	err = bmfs_disk_write_dir(&disk, &dir);
+	if (err != 0)
+		return err;
 
 	return 0;
 }
