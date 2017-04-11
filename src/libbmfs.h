@@ -93,8 +93,8 @@ int bmfs_write(FILE *diskfile,
                const void *buf,
                size_t len,
                off_t off);
-void bmfs_readfile(char *filename);
-void bmfs_writefile(char *filename);
+void bmfs_readfile(FILE *diskfile, char *filename);
+void bmfs_writefile(FILE *diskfile, char *filename);
 
 
 #endif /* LIBBMFS_H */

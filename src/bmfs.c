@@ -170,11 +170,11 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_read, command) == 0)
 	{
-		bmfs_readfile(filename);
+		bmfs_readfile(disk, filename);
 	}
 	else if (strcasecmp(s_write, command) == 0)
 	{
-		bmfs_writefile(filename);
+		bmfs_writefile(disk, filename);
 	}
 	else if (strcasecmp(s_delete, command) == 0)
 	{
