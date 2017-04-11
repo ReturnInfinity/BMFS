@@ -49,8 +49,8 @@ struct BMFSDir
 void bmfs_dir_zero(struct BMFSDir *dir);
 int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
 int bmfs_dir_delete(struct BMFSDir *dir, const char *filename);
-int bmfs_sortdir(struct BMFSDir *dir);
-struct BMFSEntry * bmfs_find(struct BMFSDir *dir, const char *filename);
+int bmfs_dir_sort(struct BMFSDir *dir);
+struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename);
 
 /* Disk API */
 

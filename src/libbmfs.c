@@ -200,7 +200,7 @@ int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_bloc
 	if (err != 0)
 		return err;
 
-	err = bmfs_sortdir(&dir);
+	err = bmfs_dir_sort(&dir);
 	if (err != 0)
 		return err;
 
@@ -339,7 +339,7 @@ int bmfs_disk_delete_file(FILE *diskfile, const char *filename)
 		return err;
 
 	struct BMFSEntry *entry;
-	entry = bmfs_find(&dir, filename);
+	entry = bmfs_dir_find(&dir, filename);
 	if (entry == NULL)
 		return -ENOENT;
 
@@ -359,7 +359,7 @@ int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFS
 	if (err != 0)
 		return err;
 
-	result = bmfs_find(&dir, filename);
+	result = bmfs_dir_find(&dir, filename);
 	if (result == NULL)
 		/* not found */
 		return -ENOENT;
@@ -491,7 +491,7 @@ int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile)
 }
 
 
-int bmfs_sortdir(struct BMFSDir *dir)
+int bmfs_dir_sort(struct BMFSDir *dir)
 {
 	if (dir == NULL)
 		return -EFAULT;
@@ -507,7 +507,7 @@ int bmfs_sortdir(struct BMFSDir *dir)
 }
 
 
-struct BMFSEntry * bmfs_find(struct BMFSDir *dir, const char *filename)
+struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename)
 {
 	int tint;
 	for (tint = 0; tint < 64; tint++)
@@ -997,7 +997,7 @@ int bmfs_write(FILE *diskfile,
 		return -ENOENT;
 
 	struct BMFSEntry *entry;
-	entry = bmfs_find(&dir, filename);
+	entry = bmfs_dir_find(&dir, filename);
 	if (entry == NULL)
 		return -ENOENT;
 
@@ -1044,7 +1044,7 @@ void bmfs_writefile(FILE *diskfile, char *filename)
 	if (bmfs_readdir(&dir, diskfile) != 0)
 		return;
 
-	entry = bmfs_find(&dir, filename);
+	entry = bmfs_dir_find(&dir, filename);
 	if (entry == NULL)
 	{
 		printf("Error: File not found in BMFS\n");
