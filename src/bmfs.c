@@ -86,7 +86,9 @@ int main(int argc, char *argv[])
 	}
 	else								// Opened ok, is it a valid BMFS disk?
 	{
-		if (bmfs_disk_check_tag(disk) != 0)			// Is it a BMFS formatted disk?
+		struct BMFSDisk tmp_disk;
+		bmfs_disk_init_file(&tmp_disk, disk);
+		if (bmfs_disk_check_tag(&tmp_disk) != 0)			// Is it a BMFS formatted disk?
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
