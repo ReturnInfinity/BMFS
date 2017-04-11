@@ -57,7 +57,11 @@ static int bmfs_fuse_access(const char *filename, int mode)
 {
 	(void) mode;
 
+	if (strcmp(filename, "/") == 0)
+		return 0;
+
 	struct BMFSDisk tmp_disk;
+
 	bmfs_disk_init_file(&tmp_disk, disk);
 
 	if (bmfs_disk_find_file(&tmp_disk, filename + 1, NULL, NULL) == 0)
