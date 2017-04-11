@@ -56,8 +56,13 @@ static void *bmfs_fuse_init(struct fuse_conn_info *conn)
 static int bmfs_fuse_access(const char *filename, int mode)
 {
 	(void) mode;
-	if (bmfs_disk_find_file(disk, filename + 1, NULL, NULL) == 0)
+
+	struct BMFSDisk tmp_disk;
+	bmfs_disk_init_file(&tmp_disk, disk);
+
+	if (bmfs_disk_find_file(&tmp_disk, filename + 1, NULL, NULL) == 0)
 		return 0;
+
 	/* file not found */
 	return -ENOENT;
 }
@@ -79,8 +84,11 @@ static int bmfs_fuse_getattr(const char *path, struct stat *stbuf)
 		return 0;
 	}
 
+	struct BMFSDisk tmp_disk;
+	bmfs_disk_init_file(&tmp_disk, disk);
+
 	struct BMFSEntry entry;
-	if (bmfs_disk_find_file(disk, path + 1, &entry, NULL) != 0)
+	if (bmfs_disk_find_file(&tmp_disk, path + 1, &entry, NULL) != 0)
 		return -ENOENT;
 
 	stbuf->st_mode = S_IFREG | 0666;
@@ -169,7 +177,11 @@ static int bmfs_fuse_unlink(const char *path)
 static int bmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
 	(void) fi;
-	return bmfs_disk_find_file(disk, path + 1, NULL, NULL);
+
+	struct BMFSDisk tmp_disk;
+	bmfs_disk_init_file(&tmp_disk, disk);
+
+	return bmfs_disk_find_file(&tmp_disk, path + 1, NULL, NULL);
 }
 
 /** Reads data from a file.
