@@ -141,7 +141,10 @@ int main(int argc, char *argv[])
 					printf("Error: Invalid file size.\n");
 					return EXIT_FAILURE;
 				}
-				int err = bmfs_disk_create_file(disk, filename, filesize);
+
+				struct BMFSDisk tmp_disk;
+				bmfs_disk_init_file(&tmp_disk, disk);
+				int err = bmfs_disk_create_file(&tmp_disk, filename, filesize);
 				if (err != 0)
 				{
 					fprintf(stderr, "%s: Failed to create '%s'\n", argv[0], filename);
@@ -160,7 +163,9 @@ int main(int argc, char *argv[])
 					return EXIT_FAILURE;
 				}
 
-				int err = bmfs_disk_create_file(disk, filename, filesize);
+				struct BMFSDisk tmp_disk;
+				bmfs_disk_init_file(&tmp_disk, disk);
+				int err = bmfs_disk_create_file(&tmp_disk, filename, filesize);
 				if (err != 0)
 				{
 					fprintf(stderr, "%s: Failed to create '%s'\n", argv[0], filename);
