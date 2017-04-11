@@ -453,32 +453,6 @@ int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
 }
 
 
-int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile)
-{
-	bmfs_dir_zero(dir);
-
-	if (fseek(diskfile, 4096, SEEK_SET) != 0)
-		return -errno;
-
-	if (fread(dir->Entries, 1, sizeof(dir->Entries), diskfile) != sizeof(dir->Entries))
-		return -errno;
-
-	return 0;
-}
-
-
-int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile)
-{
-	if (fseek(diskfile, 4096, SEEK_SET) != 0)
-		return -errno;
-
-	if (fwrite(dir->Entries, 1, sizeof(dir->Entries), diskfile) != sizeof(dir->Entries))
-		return -errno;
-
-	return 0;
-}
-
-
 int bmfs_dir_sort(struct BMFSDir *dir)
 {
 	if (dir == NULL)
@@ -873,7 +847,7 @@ static int StartingBlockCmp(const void *pa, const void *pb)
 }
 
 // Read a file from a BMFS volume
-void bmfs_readfile(FILE *diskfile, char *filename)
+void bmfs_readfile(struct BMFSDisk *disk, const char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
@@ -881,9 +855,7 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 	unsigned long long bytestoread;
 	char *buffer;
 
-	struct BMFSDisk disk;
-	bmfs_disk_init_file(&disk, diskfile);
-	if (bmfs_disk_find_file(&disk, filename, &tempentry, &slot) != 0)
+	if (bmfs_disk_find_file(disk, filename, &tempentry, &slot) != 0)
 	{
 		printf("Error: File not found in BMFS.\n");
 	}
@@ -896,7 +868,7 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 		else
 		{
 			bytestoread = tempentry.FileSize;
-			bmfs_disk_seek(&disk, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
+			bmfs_disk_seek(disk, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
 			buffer = malloc(blockSize);
 			if (buffer == NULL)
 			{
@@ -908,7 +880,7 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 				{
 					if (bytestoread >= blockSize)
 					{
-						if (bmfs_disk_read(&disk, buffer, blockSize, NULL) == 0)
+						if (bmfs_disk_read(disk, buffer, blockSize, NULL) == 0)
 						{
 							fwrite(buffer, blockSize, 1, tfile);
 							bytestoread -= blockSize;
@@ -921,7 +893,7 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 					}
 					else
 					{
-						if (bmfs_disk_read(&disk, buffer, bytestoread, NULL) == 0)
+						if (bmfs_disk_read(disk, buffer, bytestoread, NULL) == 0)
 						{
 							fwrite(buffer, bytestoread, 1, tfile);
 							bytestoread = 0;
@@ -939,7 +911,7 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 	}
 }
 
-unsigned long long bmfs_read(FILE *diskfile,
+unsigned long long bmfs_read(struct BMFSDisk *disk,
                              const char *filename,
                              void *buf,
                              unsigned long long len,
@@ -947,13 +919,9 @@ unsigned long long bmfs_read(FILE *diskfile,
 {
 	struct BMFSEntry tempentry;
 
-	struct BMFSDisk disk;
-	bmfs_disk_init_file(&disk, diskfile);
-
-	if (bmfs_disk_find_file(&disk, filename, &tempentry, NULL) == 0)
+	if (bmfs_disk_find_file(disk, filename, &tempentry, NULL) == 0)
 	{
-		memcpy(buf, "h", 1);
-		return 1;
+		return 0;
 	}
 
 	/* Make sure the offset doesn't overflow */
@@ -965,19 +933,26 @@ unsigned long long bmfs_read(FILE *diskfile,
 		len = tempentry.FileSize - off;
 
 	/* Skip to the starting block in the disk */
-	fseek(diskfile, (tempentry.StartingBlock*blockSize) + off, SEEK_SET);
+	int err = bmfs_disk_seek(disk, (tempentry.StartingBlock*blockSize) + off, SEEK_SET);
+	if (err != 0)
+		return 0;
 
-	return fread(buf, 1, len, diskfile);
+	uint64_t read_len = 0;
+	err = bmfs_disk_read(disk, buf, len, &read_len);
+	if (err != 0)
+		return 0;
+
+	return read_len;
 }
 
-int bmfs_write(FILE *diskfile,
+int bmfs_write(struct BMFSDisk *disk,
                const char *filename,
                const void *buf,
                size_t len,
                off_t off)
 {
 	struct BMFSDir dir;
-	if (bmfs_readdir(&dir, diskfile) != 0)
+	if (bmfs_disk_read_dir(disk, &dir) != 0)
 		return -ENOENT;
 
 	struct BMFSEntry *entry;
@@ -1004,19 +979,21 @@ int bmfs_write(FILE *diskfile,
 		len = INT_MAX;
 
 	/* Skip to the starting block in the disk */
-	fseek(diskfile, (entry->StartingBlock*blockSize) + off, SEEK_SET);
+	bmfs_disk_seek(disk, (entry->StartingBlock*blockSize) + off, SEEK_SET);
 
-	size_t write_count = fwrite(buf, 1, len, diskfile);
+	uint64_t write_count = 0;
+	if (bmfs_disk_write(disk, buf, len, &write_count) != 0)
+		return 0;
 
 	entry->FileSize += write_count;
 
-	bmfs_writedir(&dir, diskfile);
+	bmfs_disk_write_dir(disk, &dir);
 
 	return write_count;
 }
 
 // Write a file to a BMFS volume
-void bmfs_writefile(FILE *diskfile, char *filename)
+void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 {
 	struct BMFSDir dir;
 	struct BMFSEntry *entry;
@@ -1025,7 +1002,7 @@ void bmfs_writefile(FILE *diskfile, char *filename)
 	unsigned long long tempfilesize;
 	char *buffer;
 
-	if (bmfs_readdir(&dir, diskfile) != 0)
+	if (bmfs_disk_read_dir(disk, &dir) != 0)
 		return;
 
 	entry = bmfs_dir_find(&dir, filename);
@@ -1052,7 +1029,10 @@ void bmfs_writefile(FILE *diskfile, char *filename)
 		printf("Error: Not enough reserved space in BMFS.\n");
 		return;
 	}
-	fseek(diskfile, entry->StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
+
+	retval = bmfs_disk_seek(disk, entry->StartingBlock*blockSize, SEEK_SET);
+	if (retval != 0)
+		return;
 
 	buffer = malloc(blockSize);
 	if (buffer == NULL)
@@ -1068,7 +1048,7 @@ void bmfs_writefile(FILE *diskfile, char *filename)
 			retval = fread(buffer, blockSize, 1, tfile);
 			if (retval == 1)
 			{
-				fwrite(buffer, blockSize, 1, diskfile);
+				bmfs_disk_write(disk, buffer, blockSize, NULL);
 				tempfilesize -= blockSize;
 			}
 			else
@@ -1083,7 +1063,7 @@ void bmfs_writefile(FILE *diskfile, char *filename)
 			if (retval == 1)
 			{
 				memset(buffer+(tempfilesize), 0, (blockSize-tempfilesize)); // 0 the rest of the buffer
-				fwrite(buffer, blockSize, 1, diskfile);
+				bmfs_disk_write(disk, buffer, blockSize, NULL);
 				tempfilesize = 0;
 			}
 			else
@@ -1097,7 +1077,7 @@ void bmfs_writefile(FILE *diskfile, char *filename)
 	// Update directory
 	tempfilesize = ftell(tfile);
 	entry->FileSize = tempfilesize;
-	bmfs_writedir(&dir, diskfile);
+	bmfs_disk_write_dir(disk, &dir);
 	fclose(tfile);
 }
 

@@ -129,9 +129,12 @@ static int bmfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 
+	struct BMFSDisk tmp_disk;
+	bmfs_disk_init_file(&tmp_disk, disk);
+
 	/* get the current directory entries */
 	struct BMFSDir dir;
-	if (bmfs_readdir(&dir, disk) != 0)
+	if (bmfs_disk_read_dir(&tmp_disk, &dir) != 0)
 		return -ENOENT;
 
 	/* list the entries */
@@ -203,7 +206,9 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
                           struct fuse_file_info *fi)
 {
 	(void) fi;
-	return bmfs_read(disk, path + 1, buf, size, offset);
+	struct BMFSDisk tmp_disk;
+	bmfs_disk_init_file(&tmp_disk, disk);
+	return bmfs_read(&tmp_disk, path + 1, buf, size, offset);
 }
 
 /** Writes data to a file.
@@ -215,7 +220,9 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
                            struct fuse_file_info *fi)
 {
 	(void) fi;
-	return bmfs_write(disk, path + 1, buf, size, offset);
+	struct BMFSDisk tmp_disk;
+	bmfs_disk_init_file(&tmp_disk, disk);
+	return bmfs_write(&tmp_disk, path + 1, buf, size, offset);
 }
 
 static struct fuse_operations bmfs_fuse_operations = {

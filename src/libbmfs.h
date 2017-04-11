@@ -84,21 +84,19 @@ int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, size_t me
 int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename);
 int bmfs_disk_format(struct BMFSDisk *disk);
 
-int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile);
-int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile);
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
-unsigned long long bmfs_read(FILE *diskfile,
+unsigned long long bmfs_read(struct BMFSDisk *disk,
                              const char *filename,
                              void * buf,
                              unsigned long long len,
                              unsigned long long off);
-int bmfs_write(FILE *diskfile,
+int bmfs_write(struct BMFSDisk *disk,
                const char *filename,
                const void *buf,
                size_t len,
                off_t off);
-void bmfs_readfile(FILE *diskfile, char *filename);
-void bmfs_writefile(FILE *diskfile, char *filename);
+void bmfs_readfile(struct BMFSDisk *disk, const char *filename);
+void bmfs_writefile(struct BMFSDisk *disk, const char *filename);
 
 
 #endif /* LIBBMFS_H */

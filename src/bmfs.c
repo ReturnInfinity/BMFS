@@ -180,11 +180,15 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_read, command) == 0)
 	{
-		bmfs_readfile(disk, filename);
+		struct BMFSDisk tmp_disk;
+		bmfs_disk_init_file(&tmp_disk, disk);
+		bmfs_readfile(&tmp_disk, filename);
 	}
 	else if (strcasecmp(s_write, command) == 0)
 	{
-		bmfs_writefile(disk, filename);
+		struct BMFSDisk tmp_disk;
+		bmfs_disk_init_file(&tmp_disk, disk);
+		bmfs_writefile(&tmp_disk, filename);
 	}
 	else if (strcasecmp(s_delete, command) == 0)
 	{
