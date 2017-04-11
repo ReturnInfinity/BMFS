@@ -16,6 +16,49 @@ const unsigned int blockSize = 2 * 1024 * 1024;
 
 static int StartingBlockCmp(const void *pa, const void *pb);
 
+/* file disk functions */
+
+static int bmfs_disk_file_seek(void *file_ptr, int64_t offset, int whence)
+{
+	if (file_ptr == NULL)
+		return -EFAULT;
+
+	if (fseek((FILE *)(file_ptr), offset, whence) != 0)
+		return -errno;
+
+	return 0;
+}
+
+static int bmfs_disk_file_tell(void *file_ptr, int64_t *offset_ptr)
+{
+	if (file_ptr == NULL)
+		return -EFAULT;
+
+	int64_t offset = ftell((FILE *)(file_ptr));
+	if (offset < 0)
+		return -errno;
+
+	if (offset_ptr != NULL)
+		*offset_ptr = offset;
+
+	return 0;
+}
+
+int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file)
+{
+	if ((disk == NULL)
+	 || (file == NULL))
+		return -EFAULT;
+
+	disk->disk = file;
+	disk->seek = bmfs_disk_file_seek;
+	disk->tell = bmfs_disk_file_tell;
+
+	return 0;
+}
+
+/* data disk functions */
+
 
 void bmfs_entry_zero(struct BMFSEntry *entry)
 {
