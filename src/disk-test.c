@@ -127,6 +127,28 @@ int main(void)
 	assert(starting_block == 1);
 	assert(bmfs_disk_allocate_bytes(&disk, (BMFS_BLOCK_SIZE * 2) + 1, &starting_block) == -ENOSPC);
 
+	/* test the creation of files */
+	assert(bmfs_disk_create_file(&disk, "a.txt", 1) == 0);
+	struct BMFSDir dir;
+	assert(bmfs_disk_read_dir(&disk, &dir) == 0);
+	assert(strcmp(dir.Entries[0].FileName, "a.txt") == 0);
+	assert(dir.Entries[0].StartingBlock == 1);
+	assert(dir.Entries[0].ReservedBlocks == 1);
+	assert(dir.Entries[0].FileSize == 0);
+	/* make sure next file marks end of directory */
+	assert(dir.Entries[1].FileName[0] == 0);
+
+	assert(bmfs_disk_create_file(&disk, "b.txt", 1) == 0);
+	assert(bmfs_disk_read_dir(&disk, &dir) == 0);
+	assert(strcmp(dir.Entries[1].FileName, "b.txt") == 0);
+	assert(dir.Entries[1].StartingBlock == 2);
+	assert(dir.Entries[1].ReservedBlocks == 1);
+	assert(dir.Entries[1].FileSize == 0);
+	/* make sure next file marks end of directory */
+	assert(dir.Entries[2].FileName[0] == 0);
+
+	assert(bmfs_disk_create_file(&disk, "c.txt", 1) == -ENOSPC);
+
 	free(data.buf);
 
 	return EXIT_SUCCESS;
