@@ -39,6 +39,32 @@ int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
 	return -ENOSPC;
 }
 
+int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename)
+{
+	if ((dir == NULL)
+	 || (filename == NULL))
+		return -EFAULT;
+
+	struct BMFSEntry entry;
+	bmfs_entry_zero(&entry);
+	bmfs_entry_set_file_name(&entry, filename);
+	bmfs_entry_set_starting_block(&entry, 1);
+	return bmfs_dir_add(dir, &entry);
+}
+
+int bmfs_dir_delete_file(struct BMFSDir *dir, const char *filename)
+{
+	struct BMFSEntry *entry;
+
+	entry = bmfs_dir_find(dir, filename);
+	if (entry == NULL)
+		return -ENOENT;
+
+	entry->FileName[0] = 1;
+
+	return 0;
+}
+
 int bmfs_dir_sort(struct BMFSDir *dir)
 {
 	if (dir == NULL)
