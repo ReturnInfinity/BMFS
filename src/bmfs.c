@@ -27,6 +27,7 @@ static void list_entries(FILE *diskfile);
 /* Program code */
 int main(int argc, char *argv[])
 {
+	FILE *disk;
 	char *diskname;
 	char *command;
 	char *filename;
