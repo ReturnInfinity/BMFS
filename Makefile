@@ -8,13 +8,15 @@ CFLAGS += -O3
 endif
 
 .PHONY: all
-all: bmfs disk-test
+all: bmfs dir-test disk-test
 
 ifndef NO_FUSE
 all: bmfs-fuse
 endif
 
 bmfs: bmfs.c libbmfs.a
+
+dir-test: dir-test.c libbmfs.a
 
 disk-test: disk-test.c libbmfs.a
 
