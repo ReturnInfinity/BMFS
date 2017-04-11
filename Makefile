@@ -1,14 +1,22 @@
 CFLAGS = -Wall -W -pedantic -std=c99
 VPATH = src
 
+ifndef BMFS_RELEASE
+CFLAGS += -g -O2
+else
+CFLAGS += -O3
+endif
+
 .PHONY: all
-all: bmfs
+all: bmfs disk-test
 
 ifndef NO_FUSE
 all: bmfs-fuse
 endif
 
 bmfs: bmfs.c libbmfs.a
+
+disk-test: disk-test.c libbmfs.a
 
 entry.o: entry.c entry.h
 
