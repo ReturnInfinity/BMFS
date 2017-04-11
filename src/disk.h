@@ -2,57 +2,14 @@
 /* Written by Ian Seyler of Return Infinity */
 /* v1.2.3 (2017 04 07) */
 
-#ifndef LIBBMFS_H
-#define LIBBMFS_H
+#ifndef BMFS_DISK_H
+#define BMFS_DISK_H
 
-/* Global includes */
+#include "entry.h"
+#include "dir.h"
+
 #include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <ctype.h>
 #include <sys/types.h>
-
-/* Global constants */
-// Min disk size is 6MiB (three blocks of 2MiB each.)
-extern const unsigned int minimumDiskSize;
-// Block size is 2MiB
-extern const unsigned int blockSize;
-
-/* Entry API */
-
-struct BMFSEntry
-{
-	char FileName[32];
-	uint64_t StartingBlock;
-	uint64_t ReservedBlocks;
-	uint64_t FileSize;
-	uint64_t Unused;
-};
-
-void bmfs_entry_zero(struct BMFSEntry *entry);
-void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename);
-void bmfs_entry_set_file_size(struct BMFSEntry *entry, size_t file_size);
-void bmfs_entry_set_starting_block(struct BMFSEntry *entry, size_t starting_block);
-void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry, size_t reserved_blocks);
-int bmfs_entry_is_empty(const struct BMFSEntry *entry);
-int bmfs_entry_is_terminator(const struct BMFSEntry *entry);
-
-/* Directory API */
-
-struct BMFSDir
-{
-	struct BMFSEntry Entries[64];
-};
-
-void bmfs_dir_zero(struct BMFSDir *dir);
-int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
-int bmfs_dir_delete(struct BMFSDir *dir, const char *filename);
-int bmfs_dir_sort(struct BMFSDir *dir);
-struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename);
-
-/* Disk API */
 
 struct BMFSDisk
 {
@@ -98,8 +55,5 @@ int bmfs_write(struct BMFSDisk *disk,
 void bmfs_readfile(struct BMFSDisk *disk, const char *filename);
 void bmfs_writefile(struct BMFSDisk *disk, const char *filename);
 
+#endif /* BMFS_DISK_H */
 
-#endif /* LIBBMFS_H */
-
-
-/* EOF */

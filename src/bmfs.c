@@ -10,8 +10,8 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
-#include "libbmfs.h"
 
+#include "bmfs.h"
 
 char s_list[] = "list";
 char s_format[] = "format";
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
-				format_file(disk, minimumDiskSize);
+				format_file(disk, BMFS_MINIMUM_DISK_SIZE);
 			}
 			else
 			{
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(argv[3], "/FORCE") == 0)
 			{
-				format_file(disk, minimumDiskSize);
+				format_file(disk, BMFS_MINIMUM_DISK_SIZE);
 			}
 			else
 			{
