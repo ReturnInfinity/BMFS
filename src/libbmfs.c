@@ -123,6 +123,31 @@ int bmfs_disk_write(struct BMFSDisk *disk, const void *buf, uint64_t len, uint64
 	return disk->write(disk->disk, buf, len, write_len);
 }
 
+int bmfs_disk_read_dir(struct BMFSDisk *disk, struct BMFSDir *dir)
+{
+	int err = bmfs_disk_seek(disk, 4096, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_read(disk, dir->Entries, sizeof(dir->Entries), NULL);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+int bmfs_disk_write_dir(struct BMFSDisk *disk, const struct BMFSDir *dir)
+{
+	int err = bmfs_disk_seek(disk, 4096, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_write(disk, dir->Entries, sizeof(dir->Entries), NULL);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
 
 void bmfs_entry_zero(struct BMFSEntry *entry)
 {

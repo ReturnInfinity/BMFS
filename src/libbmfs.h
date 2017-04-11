@@ -70,6 +70,9 @@ int bmfs_disk_tell(struct BMFSDisk *disk, int64_t *offset);
 int bmfs_disk_read(struct BMFSDisk *disk, void *buf, uint64_t len, uint64_t *read_len);
 int bmfs_disk_write(struct BMFSDisk *disk, const void *buf, uint64_t len, uint64_t *write_len);
 
+int bmfs_disk_read_dir(struct BMFSDisk *disk, struct BMFSDir *dir);
+int bmfs_disk_write_dir(struct BMFSDisk *disk, const struct BMFSDir *dir);
+
 int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_block);
 int bmfs_disk_allocate_mebibytes(FILE *diskfile, size_t mebibytes, size_t *starting_block);
 int bmfs_disk_bytes(FILE *diskfile, size_t *bytes);
