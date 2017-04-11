@@ -96,7 +96,8 @@ static int zerocmp(const void *a, size_t size)
 	return cmp_result;
 }
 
-int main(void){
+int main(void)
+{
 
 	struct DiskData data;
 
