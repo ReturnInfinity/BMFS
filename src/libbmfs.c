@@ -13,8 +13,6 @@ const unsigned int minimumDiskSize = (6 * 1024 * 1024);
 // Block size is 2MiB
 const unsigned int blockSize = 2 * 1024 * 1024;
 
-/* Global variables */
-FILE *disk;
 
 static int StartingBlockCmp(const void *pa, const void *pb);
 
