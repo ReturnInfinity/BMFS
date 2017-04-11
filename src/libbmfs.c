@@ -546,18 +546,9 @@ struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename)
 }
 
 
-int bmfs_disk_format(FILE *diskfile)
+int bmfs_disk_format(struct BMFSDisk *disk)
 {
-	int err = bmfs_disk_set_bytes(diskfile, 0);
-	if (err != 0)
-		return err;
-
-	struct BMFSDisk disk;
-	err = bmfs_disk_init_file(&disk, diskfile);
-	if (err != 0)
-		return err;
-
-	err = bmfs_disk_write_tag(&disk);
+	int err = bmfs_disk_write_tag(disk);
 	if (err != 0)
 		return err;
 
