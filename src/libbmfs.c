@@ -349,13 +349,13 @@ int bmfs_disk_delete_file(FILE *diskfile, const char *filename)
 }
 
 
-int bmfs_disk_find_file(FILE *diskfile, const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 {
 	int err;
 	struct BMFSDir dir;
 	struct BMFSEntry *result;
 
-	err = bmfs_readdir(&dir, diskfile);
+	err = bmfs_disk_read_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -893,11 +893,13 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
-	int slot, retval;
+	int slot;
 	unsigned long long bytestoread;
 	char *buffer;
 
-	if (0 == bmfs_disk_find_file(diskfile, filename, &tempentry, &slot))
+	struct BMFSDisk disk;
+	bmfs_disk_init_file(&disk, diskfile);
+	if (bmfs_disk_find_file(&disk, filename, &tempentry, &slot) != 0)
 	{
 		printf("Error: File not found in BMFS.\n");
 	}
@@ -910,7 +912,7 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 		else
 		{
 			bytestoread = tempentry.FileSize;
-			fseek(diskfile, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
+			bmfs_disk_seek(&disk, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
 			buffer = malloc(blockSize);
 			if (buffer == NULL)
 			{
@@ -922,8 +924,7 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 				{
 					if (bytestoread >= blockSize)
 					{
-						retval = fread(buffer, blockSize, 1, diskfile);
-						if (retval == 1)
+						if (bmfs_disk_read(&disk, buffer, blockSize, NULL) == 0)
 						{
 							fwrite(buffer, blockSize, 1, tfile);
 							bytestoread -= blockSize;
@@ -936,8 +937,7 @@ void bmfs_readfile(FILE *diskfile, char *filename)
 					}
 					else
 					{
-						retval = fread(buffer, bytestoread, 1, diskfile);
-						if (retval == 1)
+						if (bmfs_disk_read(&disk, buffer, bytestoread, NULL) == 0)
 						{
 							fwrite(buffer, bytestoread, 1, tfile);
 							bytestoread = 0;
@@ -963,7 +963,10 @@ unsigned long long bmfs_read(FILE *diskfile,
 {
 	struct BMFSEntry tempentry;
 
-	if (bmfs_disk_find_file(diskfile, filename, &tempentry, NULL) == 0)
+	struct BMFSDisk disk;
+	bmfs_disk_init_file(&disk, diskfile);
+
+	if (bmfs_disk_find_file(&disk, filename, &tempentry, NULL) == 0)
 	{
 		memcpy(buf, "h", 1);
 		return 1;
