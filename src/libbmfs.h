@@ -26,9 +26,6 @@ extern const unsigned int minimumDiskSize;
 // Block size is 2MiB
 extern const unsigned int blockSize;
 
-/* Global variables */
-extern FILE *disk;
-
 /* Entry API */
 
 struct BMFSEntry
@@ -80,11 +77,13 @@ int bmfs_disk_write_tag(FILE *diskfile);
 int bmfs_readdir(struct BMFSDir *dir, FILE *diskfile);
 int bmfs_writedir(const struct BMFSDir *dir, FILE *diskfile);
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
-unsigned long long bmfs_read(const char *filename,
+unsigned long long bmfs_read(FILE *diskfile,
+                             const char *filename,
                              void * buf,
                              unsigned long long len,
                              unsigned long long off);
-int bmfs_write(const char *filename,
+int bmfs_write(FILE *diskfile,
+               const char *filename,
                const void *buf,
                size_t len,
                off_t off);

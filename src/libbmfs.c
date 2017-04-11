@@ -824,14 +824,15 @@ void bmfs_readfile(char *filename)
 	}
 }
 
-unsigned long long bmfs_read(const char *filename,
+unsigned long long bmfs_read(FILE *diskfile,
+                             const char *filename,
                              void *buf,
                              unsigned long long len,
                              unsigned long long off)
 {
 	struct BMFSEntry tempentry;
 
-	if (bmfs_disk_find_file(disk, filename, &tempentry, NULL) == 0)
+	if (bmfs_disk_find_file(diskfile, filename, &tempentry, NULL) == 0)
 	{
 		memcpy(buf, "h", 1);
 		return 1;
@@ -846,18 +847,19 @@ unsigned long long bmfs_read(const char *filename,
 		len = tempentry.FileSize - off;
 
 	/* Skip to the starting block in the disk */
-	fseek(disk, (tempentry.StartingBlock*blockSize) + off, SEEK_SET);
+	fseek(diskfile, (tempentry.StartingBlock*blockSize) + off, SEEK_SET);
 
-	return fread(buf, 1, len, disk);
+	return fread(buf, 1, len, diskfile);
 }
 
-int bmfs_write(const char *filename,
+int bmfs_write(FILE *diskfile,
+               const char *filename,
                const void *buf,
                size_t len,
                off_t off)
 {
 	struct BMFSDir dir;
-	if (bmfs_readdir(&dir, disk) != 0)
+	if (bmfs_readdir(&dir, diskfile) != 0)
 		return -ENOENT;
 
 	struct BMFSEntry *entry;
@@ -886,11 +888,11 @@ int bmfs_write(const char *filename,
 	/* Skip to the starting block in the disk */
 	fseek(disk, (entry->StartingBlock*blockSize) + off, SEEK_SET);
 
-	size_t write_count = fwrite(buf, 1, len, disk);
+	size_t write_count = fwrite(buf, 1, len, diskfile);
 
 	entry->FileSize += write_count;
 
-	bmfs_writedir(&dir, disk);
+	bmfs_writedir(&dir, diskfile);
 
 	return write_count;
 }
