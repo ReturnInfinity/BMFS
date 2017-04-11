@@ -1,6 +1,8 @@
 .PHONY: all
 all:
 	$(MAKE) -C src all
+	cp --update src/bmfs bmfs
+	cp --update src/bmfs-fuse bmfs-fuse
 
 .PHONY: clean
 clean:
