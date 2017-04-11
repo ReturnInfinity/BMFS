@@ -338,10 +338,10 @@ int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, size_t me
 }
 
 
-int bmfs_disk_delete_file(FILE *diskfile, const char *filename)
+int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename)
 {
 	struct BMFSDir dir;
-	int err = bmfs_readdir(&dir, diskfile);
+	int err = bmfs_disk_read_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -352,7 +352,7 @@ int bmfs_disk_delete_file(FILE *diskfile, const char *filename)
 
 	entry->FileName[0] = 1;
 
-	return bmfs_writedir(&dir, diskfile);
+	return bmfs_disk_write_dir(disk, &dir);
 }
 
 
@@ -555,7 +555,7 @@ int bmfs_disk_format(struct BMFSDisk *disk)
 	struct BMFSDir dir;
 	bmfs_dir_zero(&dir);
 
-	err = bmfs_disk_write_dir(&disk, &dir);
+	err = bmfs_disk_write_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -773,8 +773,9 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	// Format the disk.
 	if (ret == 0)
 	{
-		rewind(disk);
-		bmfs_disk_format(disk);
+		struct BMFSDisk tmp_disk;
+		bmfs_disk_init_file(&tmp_disk, disk);
+		bmfs_disk_format(&tmp_disk);
 	}
 
 	// Write the master boot record if it was specified by the caller.
