@@ -11,6 +11,10 @@ In Ubuntu this can be completed with the following command:
 
 	sudo apt-get install gcc
 
+Optionally, you can also install the Filesystem in Userspace (FUSE) headers. 
+
+	sudo apt-get install libfuse-dev
+
 
 ## Building BMFS
 
