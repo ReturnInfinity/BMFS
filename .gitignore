@@ -15,5 +15,6 @@ disk.image
 # UNIX/Linux/Mac Executable
 bmfs
 bmfs-fuse
+disk-test
 # Mac crap
 .DS_Store
