@@ -13,6 +13,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+/** The disk file to use
+ * in fuse operations. Fuse
+ * doesn't have a way of passing
+ * data to the operations, so
+ * a global variable is required
+ * here.
+ */
+
+FILE *disk;
+
 /** These are options read from
  * the command line. */
 
@@ -172,7 +182,7 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
                           struct fuse_file_info *fi)
 {
 	(void) fi;
-	return bmfs_read(path + 1, buf, size, offset);
+	return bmfs_read(disk, path + 1, buf, size, offset);
 }
 
 /** Writes data to a file.
@@ -184,7 +194,7 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
                            struct fuse_file_info *fi)
 {
 	(void) fi;
-	return bmfs_write(path + 1, buf, size, offset);
+	return bmfs_write(disk, path + 1, buf, size, offset);
 }
 
 static struct fuse_operations bmfs_fuse_operations = {
