@@ -3,6 +3,7 @@
 /* v1.2.3 (2017 04 07) */
 
 /* Global includes */
+#include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -21,6 +22,8 @@ char s_write[] = "write";
 char s_delete[] = "delete";
 char s_version[] = "version";
 
+
+static int format_file(FILE *diskfile, long bytes);
 
 static void list_entries(FILE *diskfile);
 
@@ -92,7 +95,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
-				bmfs_disk_format(disk);
+				format_file(disk, minimumDiskSize);
 			}
 			else
 			{
@@ -113,7 +116,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(argv[3], "/FORCE") == 0)
 			{
-				bmfs_disk_format(disk);
+				format_file(disk, minimumDiskSize);
 			}
 			else
 			{
@@ -199,6 +202,26 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+
+int format_file(FILE *file, long bytes)
+{
+	if (fseek(file, bytes - 1, SEEK_SET) != 0)
+		return -errno;
+
+	if (fputc(0, file) != 0)
+		return -errno;
+
+	struct BMFSDisk disk;
+	int err = bmfs_disk_init_file(&disk, file);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_format(&disk);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
 
 static void list_entries(FILE *diskfile)
 {
