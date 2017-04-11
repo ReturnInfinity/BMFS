@@ -14,12 +14,6 @@
 #include <ctype.h>
 #include <sys/types.h>
 
-/* Typedefs */
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
 /* Global constants */
 // Min disk size is 6MiB (three blocks of 2MiB each.)
 extern const unsigned int minimumDiskSize;
@@ -31,10 +25,10 @@ extern const unsigned int blockSize;
 struct BMFSEntry
 {
 	char FileName[32];
-	u64 StartingBlock;
-	u64 ReservedBlocks;
-	u64 FileSize;
-	u64 Unused;
+	uint64_t StartingBlock;
+	uint64_t ReservedBlocks;
+	uint64_t FileSize;
+	uint64_t Unused;
 };
 
 void bmfs_entry_zero(struct BMFSEntry *entry);
