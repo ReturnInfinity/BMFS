@@ -70,15 +70,13 @@ static int bmfs_fuse_getattr(const char *path, struct stat *stbuf)
 	}
 
 	struct BMFSEntry entry;
-	if (bmfs_disk_find_file(disk, path + 1, &entry, NULL))
-	{
-		stbuf->st_mode = S_IFREG | 0666;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = entry.FileSize;
-		return 0;
-	}
+	if (bmfs_disk_find_file(disk, path + 1, &entry, NULL) != 0)
+		return -ENOENT;
 
-	return -ENOENT;
+	stbuf->st_mode = S_IFREG | 0666;
+	stbuf->st_nlink = 1;
+	stbuf->st_size = entry.FileSize;
+	return 0;
 }
 
 /** This function does not actually
@@ -236,6 +234,7 @@ int main(int argc, char *argv[])
 
 		/* allow fuse_main() to run, so that the help
 		 * message is displayed */
+		return fuse_main(args.argc, args.argv, &bmfs_fuse_operations, NULL);
 	}
 
 	disk = fopen(options.disk, "r+b");
