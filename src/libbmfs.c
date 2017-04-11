@@ -185,9 +185,9 @@ int bmfs_entry_is_terminator(const struct BMFSEntry *entry)
 }
 
 
-int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_block)
+int bmfs_disk_allocate_bytes(struct BMFSDisk *disk, size_t bytes, size_t *starting_block)
 {
-	if ((diskfile == NULL)
+	if ((disk == NULL)
 	 || (starting_block == NULL))
 		return -EFAULT;
 
@@ -196,7 +196,7 @@ int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_bloc
 
 	struct BMFSDir dir;
 
-	int err = bmfs_readdir(&dir, diskfile);
+	int err = bmfs_disk_read_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -205,7 +205,7 @@ int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_bloc
 		return err;
 
 	size_t total_blocks;
-	err = bmfs_disk_blocks(diskfile, &total_blocks);
+	err = bmfs_disk_blocks(disk, &total_blocks);
 	if (err != 0)
 		return err;
 	else if (total_blocks == 0)
@@ -241,22 +241,25 @@ int bmfs_disk_allocate_bytes(FILE *diskfile, size_t bytes, size_t *starting_bloc
 }
 
 
-int bmfs_disk_allocate_mebibytes(FILE *diskfile, size_t mebibytes, size_t *starting_block)
+int bmfs_disk_allocate_mebibytes(struct BMFSDisk *disk, size_t mebibytes, size_t *starting_block)
 {
-	return bmfs_disk_allocate_bytes(diskfile, mebibytes * 1024 * 1024, starting_block);
+	return bmfs_disk_allocate_bytes(disk, mebibytes * 1024 * 1024, starting_block);
 }
 
 
-int bmfs_disk_bytes(FILE *diskfile, size_t *bytes)
+int bmfs_disk_bytes(struct BMFSDisk *disk, size_t *bytes)
 {
-	long disk_size;
+	if (disk == NULL)
+		return -EFAULT;
 
-	if (fseek(diskfile, 0, SEEK_END) != 0)
-		return -errno;
+	int err = bmfs_disk_seek(disk, 0, SEEK_END);
+	if (err != 0)
+		return err;
 
-	disk_size = ftell(diskfile);
-	if (disk_size < 0)
-		return -errno;
+	int64_t disk_size;
+	err = bmfs_disk_tell(disk, &disk_size);
+	if (err != 0)
+		return err;
 
 	if (bytes != NULL)
 		*bytes = disk_size;
@@ -265,11 +268,12 @@ int bmfs_disk_bytes(FILE *diskfile, size_t *bytes)
 }
 
 
-int bmfs_disk_mebibytes(FILE *diskfile, size_t *mebibytes)
+int bmfs_disk_mebibytes(struct BMFSDisk *disk, size_t *mebibytes)
 {
-	int err;
+	if (disk == NULL)
+		return -EFAULT;
 
-	err = bmfs_disk_bytes(diskfile, mebibytes);
+	int err = bmfs_disk_bytes(disk, mebibytes);
 	if (err != 0)
 		return err;
 
@@ -280,11 +284,12 @@ int bmfs_disk_mebibytes(FILE *diskfile, size_t *mebibytes)
 }
 
 
-int bmfs_disk_blocks(FILE *diskfile, size_t *blocks)
+int bmfs_disk_blocks(struct BMFSDisk *disk, size_t *blocks)
 {
-	int err;
+	if (disk == NULL)
+		return -EFAULT;
 
-	err = bmfs_disk_bytes(diskfile, blocks);
+	int err = bmfs_disk_bytes(disk, blocks);
 	if (err != 0)
 		return err;
 
@@ -295,15 +300,17 @@ int bmfs_disk_blocks(FILE *diskfile, size_t *blocks)
 }
 
 
-int bmfs_disk_create_file(FILE *diskfile, const char *filename, size_t mebibytes)
+int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, size_t mebibytes)
 {
-	int err;
-	size_t starting_block;
+	if ((disk == NULL)
+	 || (filename == NULL))
+		return -EFAULT;
 
 	if (mebibytes % 2 != 0)
 		mebibytes++;
 
-	err = bmfs_disk_allocate_mebibytes(diskfile, mebibytes, &starting_block);
+	size_t starting_block;
+	int err = bmfs_disk_allocate_mebibytes(disk, mebibytes, &starting_block);
 	if (err != 0)
 		return err;
 
@@ -315,7 +322,7 @@ int bmfs_disk_create_file(FILE *diskfile, const char *filename, size_t mebibytes
 
 	struct BMFSDir dir;
 
-	err = bmfs_readdir(&dir, diskfile);
+	err = bmfs_disk_read_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -323,7 +330,7 @@ int bmfs_disk_create_file(FILE *diskfile, const char *filename, size_t mebibytes
 	if (err != 0)
 		return err;
 
-	err = bmfs_writedir(&dir, diskfile);
+	err = bmfs_disk_write_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
