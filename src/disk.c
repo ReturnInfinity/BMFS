@@ -152,8 +152,10 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk, size_t bytes, size_t *starti
 	 || (starting_block == NULL))
 		return -EFAULT;
 
-	if (bytes < BMFS_BLOCK_SIZE)
-		bytes = BMFS_BLOCK_SIZE;
+	/* make bytes % BMFS_BLOCK_SIZE == 0
+	 * by rounding up */
+	if ((bytes % BMFS_BLOCK_SIZE) != 0)
+		bytes += BMFS_BLOCK_SIZE - (bytes % BMFS_BLOCK_SIZE);
 
 	struct BMFSDir dir;
 
