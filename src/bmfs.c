@@ -188,7 +188,9 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_delete, command) == 0)
 	{
-		bmfs_disk_delete_file(disk, filename);
+		struct BMFSDisk tmp_disk;
+		bmfs_disk_init_file(&tmp_disk, disk);
+		bmfs_disk_delete_file(&tmp_disk, filename);
 	}
 	else
 	{
