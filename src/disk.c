@@ -776,85 +776,62 @@ void bmfs_readfile(struct BMFSDisk *disk, const char *filename)
 	}
 }
 
-unsigned long long bmfs_read(struct BMFSDisk *disk,
-                             const char *filename,
-                             void *buf,
-                             unsigned long long len,
-                             unsigned long long off)
+int bmfs_read(struct BMFSDisk *disk,
+              const char *filename,
+              void *buf,
+              uint64_t len,
+              uint64_t off)
 {
-	struct BMFSEntry tempentry;
+	struct BMFSEntry entry;
 
-	if (bmfs_disk_find_file(disk, filename, &tempentry, NULL) == 0)
-	{
-		return 0;
-	}
-
-	/* Make sure the offset doesn't overflow */
-	if (off > tempentry.FileSize)
-		off = tempentry.FileSize;
-
-	/* Make sure the read length doesn't overflow */
-	if ((off + len) > tempentry.FileSize)
-		len = tempentry.FileSize - off;
-
-	/* Skip to the starting block in the disk */
-	int err = bmfs_disk_seek(disk, (tempentry.StartingBlock*BMFS_BLOCK_SIZE) + off, SEEK_SET);
+	int err = bmfs_disk_find_file(disk, filename, &entry, NULL);
 	if (err != 0)
-		return 0;
+		return err;
 
-	uint64_t read_len = 0;
-	err = bmfs_disk_read(disk, buf, len, &read_len);
+	uint64_t file_offset;
+
+	err = bmfs_entry_get_offset(&entry, &file_offset);
 	if (err != 0)
-		return 0;
+		return err;
 
-	return read_len;
+	err = bmfs_disk_seek(disk, file_offset + off, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_read(disk, buf, len, NULL);
+	if (err != 0)
+		return err;
+
+	return 0;
 }
 
 int bmfs_write(struct BMFSDisk *disk,
                const char *filename,
                const void *buf,
-               size_t len,
-               off_t off)
+               uint64_t len,
+               uint64_t off)
 {
-	struct BMFSDir dir;
-	if (bmfs_disk_read_dir(disk, &dir) != 0)
-		return -ENOENT;
+	struct BMFSEntry entry;
 
-	struct BMFSEntry *entry;
-	entry = bmfs_dir_find(&dir, filename);
-	if (entry == NULL)
-		return -ENOENT;
+	int err = bmfs_disk_find_file(disk, filename, &entry, NULL);
+	if (err != 0)
+		return err;
 
-	/* make sure fuse isn't
-	 * screwing anything up */
-	if (off < 0)
-		off = 0;
+	uint64_t file_offset;
 
-	/* Make sure the offset doesn't overflow */
-	if (off > (unsigned)(entry->ReservedBlocks*BMFS_BLOCK_SIZE))
-		off = entry->ReservedBlocks*BMFS_BLOCK_SIZE;
+	err = bmfs_entry_get_offset(&entry, &file_offset);
+	if (err != 0)
+		return err;
 
-	/* Make sure the read length doesn't overflow */
-	if ((off+len) > (entry->ReservedBlocks*BMFS_BLOCK_SIZE))
-		len = (entry->ReservedBlocks*BMFS_BLOCK_SIZE) - off;
+	err = bmfs_disk_seek(disk, file_offset + off, SEEK_SET);
+	if (err != 0)
+		return err;
 
-	/* must be able to distinguish between bytes
-	 * written and a negative error code */
-	if (len > INT_MAX)
-		len = INT_MAX;
+	err = bmfs_disk_write(disk, buf, len, NULL);
+	if (err != 0)
+		return err;
 
-	/* Skip to the starting block in the disk */
-	bmfs_disk_seek(disk, (entry->StartingBlock*BMFS_BLOCK_SIZE) + off, SEEK_SET);
-
-	uint64_t write_count = 0;
-	if (bmfs_disk_write(disk, buf, len, &write_count) != 0)
-		return 0;
-
-	entry->FileSize += write_count;
-
-	bmfs_disk_write_dir(disk, &dir);
-
-	return write_count;
+	return 0;
 }
 
 // Write a file to a BMFS volume
