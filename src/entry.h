@@ -19,6 +19,8 @@ struct BMFSEntry
 
 void bmfs_entry_zero(struct BMFSEntry *entry);
 
+int bmfs_entry_get_offset(const struct BMFSEntry *entry, uint64_t *offset);
+
 void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename);
 
 void bmfs_entry_set_file_size(struct BMFSEntry *entry, size_t file_size);
