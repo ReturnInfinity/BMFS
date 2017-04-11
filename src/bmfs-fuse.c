@@ -173,7 +173,9 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 
 static int bmfs_fuse_unlink(const char *path)
 {
-	return bmfs_disk_delete_file(disk, path + 1);
+	struct BMFSDisk tmp_disk;
+	bmfs_disk_init_file(&tmp_disk, disk);
+	return bmfs_disk_delete_file(&tmp_disk, path + 1);
 }
 
 /** This function opens a file.
