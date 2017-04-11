@@ -44,6 +44,32 @@ static int bmfs_disk_file_tell(void *file_ptr, int64_t *offset_ptr)
 	return 0;
 }
 
+static int bmfs_disk_file_read(void *file_ptr, void *buf, uint64_t len, uint64_t *read_len_ptr)
+{
+	if ((file_ptr == NULL)
+	 || (buf == NULL))
+		return -EFAULT;
+
+	size_t read_len = fread(buf, 1, len, (FILE *)(file_ptr));
+	if (read_len_ptr != NULL)
+		*read_len_ptr = read_len;
+
+	return 0;
+}
+
+static int bmfs_disk_file_write(void *file_ptr, const void *buf, uint64_t len, uint64_t *write_len_ptr)
+{
+	if ((file_ptr == NULL)
+	 || (buf == NULL))
+		return -EFAULT;
+
+	size_t write_len = fwrite(buf, 1, len, (FILE *)(file_ptr));
+	if (write_len_ptr != NULL)
+		*write_len_ptr = write_len;
+
+	return 0;
+}
+
 int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file)
 {
 	if ((disk == NULL)
@@ -53,6 +79,8 @@ int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file)
 	disk->disk = file;
 	disk->seek = bmfs_disk_file_seek;
 	disk->tell = bmfs_disk_file_tell;
+	disk->read = bmfs_disk_file_read;
+	disk->write = bmfs_disk_file_write;
 
 	return 0;
 }
