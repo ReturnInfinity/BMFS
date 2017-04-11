@@ -23,7 +23,7 @@ dir-test: dir-test.c libbmfs.a
 
 disk-test: disk-test.c libbmfs.a
 
-entry.o: entry.c entry.h
+entry.o: entry.c entry.h limits.h
 
 dir.o: dir.c dir.h entry.h
 
