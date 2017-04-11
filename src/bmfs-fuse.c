@@ -158,7 +158,14 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 {
 	(void) mode;
 	(void) fi;
-	return bmfs_disk_create_file(disk, path + 1, 1);
+
+	struct BMFSDisk tmp_disk;
+
+	int err = bmfs_disk_init_file(&tmp_disk, disk);
+	if (err != 0)
+		return err;
+
+	return bmfs_disk_create_file(&tmp_disk, path + 1, 1);
 }
 
 /** Deletes a file.
