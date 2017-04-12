@@ -21,7 +21,7 @@
  * here.
  */
 
-FILE *disk;
+struct BMFSDisk disk;
 
 /** These are options read from
  * the command line. */
@@ -60,11 +60,7 @@ static int bmfs_fuse_access(const char *filename, int mode)
 	if (strcmp(filename, "/") == 0)
 		return 0;
 
-	struct BMFSDisk tmp_disk;
-
-	bmfs_disk_init_file(&tmp_disk, disk);
-
-	if (bmfs_disk_find_file(&tmp_disk, filename + 1, NULL, NULL) == 0)
+	if (bmfs_disk_find_file(&disk, filename + 1, NULL, NULL) == 0)
 		return 0;
 
 	/* file not found */
@@ -88,11 +84,8 @@ static int bmfs_fuse_getattr(const char *path, struct stat *stbuf)
 		return 0;
 	}
 
-	struct BMFSDisk tmp_disk;
-	bmfs_disk_init_file(&tmp_disk, disk);
-
 	struct BMFSEntry entry;
-	if (bmfs_disk_find_file(&tmp_disk, path + 1, &entry, NULL) != 0)
+	if (bmfs_disk_find_file(&disk, path + 1, &entry, NULL) != 0)
 		return -ENOENT;
 
 	stbuf->st_mode = S_IFREG | 0666;
@@ -133,12 +126,9 @@ static int bmfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 
-	struct BMFSDisk tmp_disk;
-	bmfs_disk_init_file(&tmp_disk, disk);
-
 	/* get the current directory entries */
 	struct BMFSDir dir;
-	if (bmfs_disk_read_dir(&tmp_disk, &dir) != 0)
+	if (bmfs_disk_read_dir(&disk, &dir) != 0)
 		return -ENOENT;
 
 	/* list the entries */
@@ -166,13 +156,7 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 	(void) mode;
 	(void) fi;
 
-	struct BMFSDisk tmp_disk;
-
-	int err = bmfs_disk_init_file(&tmp_disk, disk);
-	if (err != 0)
-		return err;
-
-	return bmfs_disk_create_file(&tmp_disk, path + 1, 1);
+	return bmfs_disk_create_file(&disk, path + 1, 1);
 }
 
 /** Deletes a file.
@@ -180,9 +164,7 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 
 static int bmfs_fuse_unlink(const char *path)
 {
-	struct BMFSDisk tmp_disk;
-	bmfs_disk_init_file(&tmp_disk, disk);
-	return bmfs_disk_delete_file(&tmp_disk, path + 1);
+	return bmfs_disk_delete_file(&disk, path + 1);
 }
 
 /** This function opens a file.
@@ -194,10 +176,7 @@ static int bmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
 	(void) fi;
 
-	struct BMFSDisk tmp_disk;
-	bmfs_disk_init_file(&tmp_disk, disk);
-
-	return bmfs_disk_find_file(&tmp_disk, path + 1, NULL, NULL);
+	return bmfs_disk_find_file(&disk, path + 1, NULL, NULL);
 }
 
 /** Reads data from a file.
@@ -210,9 +189,7 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
                           struct fuse_file_info *fi)
 {
 	(void) fi;
-	struct BMFSDisk tmp_disk;
-	bmfs_disk_init_file(&tmp_disk, disk);
-	return bmfs_read(&tmp_disk, path + 1, buf, size, offset);
+	return bmfs_read(&disk, path + 1, buf, size, offset);
 }
 
 /** Writes data to a file.
@@ -224,9 +201,7 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
                            struct fuse_file_info *fi)
 {
 	(void) fi;
-	struct BMFSDisk tmp_disk;
-	bmfs_disk_init_file(&tmp_disk, disk);
-	return bmfs_write(&tmp_disk, path + 1, buf, size, offset);
+	return bmfs_write(&disk, path + 1, buf, size, offset);
 }
 
 static struct fuse_operations bmfs_fuse_operations = {
@@ -279,12 +254,20 @@ int main(int argc, char *argv[])
 		return fuse_main(args.argc, args.argv, &bmfs_fuse_operations, NULL);
 	}
 
-	disk = fopen(options.disk, "r+b");
-	if (disk == NULL)
+	FILE *diskfile = fopen(options.disk, "r+b");
+	if (diskfile == NULL)
 	{
 		fprintf(stderr, "%s: Failed to open '%s': %s\n", argv[0], options.disk, strerror(errno));
 		return EXIT_FAILURE;
 	}
 
-	return fuse_main(args.argc, args.argv, &bmfs_fuse_operations, NULL);
+	bmfs_disk_init_file(&disk, diskfile);
+
+	int retval = fuse_main(args.argc, args.argv, &bmfs_fuse_operations, NULL);
+
+	if (diskfile != NULL)
+		fclose(diskfile);
+
+	return retval;
 }
+
