@@ -3,14 +3,15 @@
 /* v1.2.3 (2017 04 07) */
 
 /* Global includes */
+#include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
-#include "libbmfs.h"
 
+#include "bmfs.h"
 
 char s_list[] = "list";
 char s_format[] = "format";
@@ -22,11 +23,15 @@ char s_delete[] = "delete";
 char s_version[] = "version";
 
 
-static void list_entries(FILE *diskfile);
+static int format_file(struct BMFSDisk *disk, long bytes);
+
+static void list_entries(struct BMFSDisk *disk);
 
 /* Program code */
 int main(int argc, char *argv[])
 {
+	struct BMFSDisk disk;
+	FILE *diskfile;
 	char *diskname;
 	char *command;
 	char *filename;
@@ -78,31 +83,33 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if ((disk = fopen(diskname, "r+b")) == NULL)			// Open for read/write in binary mode
+	if ((diskfile = fopen(diskname, "r+b")) == NULL)			// Open for read/write in binary mode
 	{
 		printf("Error: Unable to open disk '%s'\n", diskname);
 		exit(0);
 	}
 	else								// Opened ok, is it a valid BMFS disk?
 	{
-		if (bmfs_disk_check_tag(disk) != 0)			// Is it a BMFS formatted disk?
+		bmfs_disk_init_file(&disk, diskfile);
+
+		if (bmfs_disk_check_tag(&disk) != 0)			// Is it a BMFS formatted disk?
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
-				bmfs_disk_format(disk);
+				format_file(&disk, BMFS_MINIMUM_DISK_SIZE);
 			}
 			else
 			{
 				printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
 			}
-			fclose(disk);
+			fclose(diskfile);
 			return 0;
 		}
 	}
 
 	if (strcasecmp(s_list, command) == 0)
 	{
-		list_entries(disk);
+		list_entries(&disk);
 	}
 	else if (strcasecmp(s_format, command) == 0)
 	{
@@ -110,7 +117,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(argv[3], "/FORCE") == 0)
 			{
-				bmfs_disk_format(disk);
+				format_file(&disk, BMFS_MINIMUM_DISK_SIZE);
 			}
 			else
 			{
@@ -138,7 +145,8 @@ int main(int argc, char *argv[])
 					printf("Error: Invalid file size.\n");
 					return EXIT_FAILURE;
 				}
-				int err = bmfs_disk_create_file(disk, filename, filesize);
+
+				int err = bmfs_disk_create_file(&disk, filename, filesize);
 				if (err != 0)
 				{
 					fprintf(stderr, "%s: Failed to create '%s'\n", argv[0], filename);
@@ -151,13 +159,16 @@ int main(int argc, char *argv[])
 				printf("Maximum file size in MiB: ");
 				if (fgets(tempstring, sizeof(tempstring), stdin) != NULL)	// Get up to 32 chars from the keyboard
 					filesize = atoi(tempstring);
+				else
+					return EXIT_FAILURE;
+
 				if (filesize < 1)
 				{
 					printf("Error: Invalid file size.\n");
 					return EXIT_FAILURE;
 				}
 
-				int err = bmfs_disk_create_file(disk, filename, filesize);
+				int err = bmfs_disk_create_file(&disk, filename, filesize);
 				if (err != 0)
 				{
 					fprintf(stderr, "%s: Failed to create '%s'\n", argv[0], filename);
@@ -169,34 +180,48 @@ int main(int argc, char *argv[])
 	}
 	else if (strcasecmp(s_read, command) == 0)
 	{
-		bmfs_readfile(filename);
+		bmfs_readfile(&disk, filename);
 	}
 	else if (strcasecmp(s_write, command) == 0)
 	{
-		bmfs_writefile(filename);
+		bmfs_writefile(&disk, filename);
 	}
 	else if (strcasecmp(s_delete, command) == 0)
 	{
-		bmfs_disk_delete_file(disk, filename);
+		bmfs_disk_delete_file(&disk, filename);
 	}
 	else
 	{
 		printf("Error: Unknown command\n");
 	}
-	if (disk != NULL)
+	if (diskfile != NULL)
 	{
-		fclose( disk );
-		disk = NULL;
+		fclose(diskfile);
 	}
 	return 0;
 }
 
 
-static void list_entries(FILE *diskfile)
+int format_file(struct BMFSDisk *disk, long bytes)
+{
+	int err = bmfs_disk_seek(disk, bytes - 1, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	if (fputc(0, (FILE*)(disk->disk)) != 0)
+		return -errno;
+
+	err = bmfs_disk_format(disk);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+static void list_entries(struct BMFSDisk *disk)
 {
 	struct BMFSDir dir;
-
-	int err = bmfs_readdir(&dir, diskfile);
+	int err = bmfs_disk_read_dir(disk, &dir);
 	if (err != 0)
 		return;
 
