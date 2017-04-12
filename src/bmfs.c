@@ -242,10 +242,20 @@ static void list_entries(struct BMFSDisk *disk)
 
 static void print_usage(const char *argv0)
 {
-	printf("Usage: %s disk function file\n", argv0);
-	printf("\tDisk: the name of the disk file\n");
-	printf("\tFunction: list, read, write, create, delete, format, initialize\n");
-	printf("\tFile: (if applicable)\n");
+	printf("Usage: %s disk function [file]\n", argv0);
+	printf("\n");
+	printf("Disk: the name of the disk file\n");
+	printf("\n");
+	printf("Functions:\n");
+	printf("\tlist   : lists entries in the BMFS file system\n");
+	printf("\tread   : reads a file from the BMFS file system to the host file system\n");
+	printf("\twrite  : writes a file from the host file system to BMFS file system\n");
+	printf("\tcreate : creates a file within a BMFS file system\n");
+	printf("\tdelete : deletes a file within a BMFS file system\n");
+	printf("\tformat : formats an existing file with BMFS\n");
+	printf("\tinitialize : creates an image for the BareMetal operating system\n");
+	printf("\n");
+	printf("File: may be used in a read, write, create or delete operation\n");
 }
 
 static void print_version(void)
