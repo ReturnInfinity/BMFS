@@ -177,7 +177,7 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk, size_t bytes, size_t *starti
 	size_t prev_block = 1;
 	size_t next_block = total_blocks;
 
-	for (size_t i = 0; i < (64 - 1); i++)
+	for (size_t i = 0; i < 64; i++)
 	{
 		struct BMFSEntry *entry = &dir.Entries[i];
 		if (!(bmfs_entry_is_empty(entry))
