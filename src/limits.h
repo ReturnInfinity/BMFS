@@ -1,0 +1,11 @@
+#ifndef BMFS_LIMITS_H
+#define BMFS_LIMITS_H
+
+#define BMFS_FILE_NAME_MAX 32
+
+#define BMFS_BLOCK_SIZE (1024 * 1024 * 2)
+
+#define BMFS_MINIMUM_DISK_SIZE (BMFS_BLOCK_SIZE * 3)
+
+#endif /* BMFS_LIMITS_H */
+

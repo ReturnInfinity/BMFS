@@ -1,14 +1,21 @@
 # Object files
 *.o
-
+# Linux libraries
+*.a
+*.so
+# Windows libraries
+*.lib
+*.dll
+# Default image path
+disk.image
 # Executables
 *.exe
 *.out
 *.app
-
 # UNIX/Linux/Mac Executable
 bmfs
 bmfs-fuse
-
+disk-test
+dir-test
 # Mac crap
 .DS_Store
