@@ -53,7 +53,10 @@ int main(int argc, char *argv[])
 		{
 			print_usage(argv[0]);
 		}
-		exit(0);
+		/* the program wasn't called
+		 * properly, should be considered
+		 * a program failure */
+		return EXIT_FAILURE;
 	}
 
 	diskname = argv[1];
@@ -69,21 +72,24 @@ int main(int argc, char *argv[])
 			char *boot = (argc > 5 ? argv[5] : NULL);   	// Opt.
 			char *kernel = (argc > 6 ? argv[6] : NULL); 	// Opt.
 			int ret = bmfs_initialize(diskname, size, mbr, boot, kernel);
-			exit(ret);
+			if (ret != 0)
+				return EXIT_FAILURE;
+			else
+				return EXIT_SUCCESS;
 		}
 		else
 		{
 			printf("Usage: %s disk %s ", argv[0], command);
 			printf("size [mbr_file] ");
 			printf("[bootloader_file] [kernel_file]\n");
-			exit(1);
+			return EXIT_FAILURE;
 		}
 	}
 
 	if ((diskfile = fopen(diskname, "r+b")) == NULL)			// Open for read/write in binary mode
 	{
 		printf("Error: Unable to open disk '%s'\n", diskname);
-		exit(0);
+		return EXIT_FAILURE;
 	}
 	else								// Opened ok, is it a valid BMFS disk?
 	{
@@ -100,7 +106,7 @@ int main(int argc, char *argv[])
 				printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
 			}
 			fclose(diskfile);
-			return 0;
+			return EXIT_FAILURE;
 		}
 	}
 
@@ -195,7 +201,7 @@ int main(int argc, char *argv[])
 	{
 		fclose(diskfile);
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
