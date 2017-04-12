@@ -174,7 +174,7 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk, size_t bytes, size_t *starti
 	else if (total_blocks == 0)
 		return -ENOSPC;
 
-	size_t last_block = 1;
+	size_t prev_block = 1;
 	size_t next_block = total_blocks;
 
 	for (size_t i = 0; i < (64 - 1); i++)
@@ -182,22 +182,18 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk, size_t bytes, size_t *starti
 		struct BMFSEntry *entry = &dir.Entries[i];
 		if (!(bmfs_entry_is_empty(entry))
 		 && !(bmfs_entry_is_terminator(entry)))
-			last_block = entry->StartingBlock + entry->ReservedBlocks;
-
-		entry = &dir.Entries[i + 1];
-		if ((bmfs_entry_is_empty(entry))
-		 || (bmfs_entry_is_terminator(entry)))
-			next_block = total_blocks;
-		else
 			next_block = entry->StartingBlock;
 
-		size_t blocks_between = next_block - last_block;
+		size_t blocks_between = next_block - prev_block;
 		if ((blocks_between * BMFS_BLOCK_SIZE) >= bytes)
 		{
 			/* found a spot between entries */
-			*starting_block = last_block;
+			*starting_block = prev_block;
 			return 0;
 		}
+
+		prev_block = next_block + entry->ReservedBlocks;
+		next_block = total_blocks;
 	}
 
 	return -ENOSPC;
