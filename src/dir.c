@@ -16,6 +16,9 @@ void bmfs_dir_zero(struct BMFSDir *dir)
 
 int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
 {
+	if (bmfs_dir_find(dir, entry->FileName) != NULL)
+		return -EEXIST;
+
 	for (size_t i = 0; i < 64; i++)
 	{
 		struct BMFSEntry *dst;
