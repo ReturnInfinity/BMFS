@@ -45,6 +45,8 @@ int main(void)
 	assert(strcmp(dir.Entries[1].FileName, "c.txt") == 0);
 	assert(bmfs_entry_is_empty(&dir.Entries[2]));
 
+	assert(bmfs_dir_add_file(&dir, "a.txt") == -EEXIST);
+
 	return EXIT_SUCCESS;
 }
 
