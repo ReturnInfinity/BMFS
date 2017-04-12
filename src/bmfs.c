@@ -26,6 +26,8 @@ static int format_file(struct BMFSDisk *disk, long bytes);
 
 static void list_entries(struct BMFSDisk *disk);
 
+static void print_usage(const char *argv0);
+
 static void print_version(void);
 
 /* Program code */
@@ -49,10 +51,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			printf("Usage: %s disk function file\n", argv[0]);
-			printf("\tDisk: the name of the disk file\n");
-			printf("\tFunction: list, read, write, create, delete, format, initialize\n");
-			printf("\tFile: (if applicable)\n");
+			print_usage(argv[0]);
 		}
 		exit(0);
 	}
@@ -239,6 +238,14 @@ static void list_entries(struct BMFSDisk *disk)
 			       (unsigned long long)(entry->FileSize),
 			       (unsigned long long)(entry->ReservedBlocks * 2));
 	}
+}
+
+static void print_usage(const char *argv0)
+{
+	printf("Usage: %s disk function file\n", argv0);
+	printf("\tDisk: the name of the disk file\n");
+	printf("\tFunction: list, read, write, create, delete, format, initialize\n");
+	printf("\tFile: (if applicable)\n");
 }
 
 static void print_version(void)
