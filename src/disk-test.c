@@ -171,10 +171,13 @@ int main(void)
 	assert(strcmp(dir.Entries[1].FileName, "b.txt") == 0);
 	assert(dir.Entries[0].StartingBlock == 1);
 	assert(dir.Entries[1].StartingBlock == 2);
-
 	/* verify by buffer */
 	assert(memcmp(&data.buf[4096], "c.txt", 5) == 0);
 	assert(memcmp(&data.buf[4096 + 64], "b.txt", 5) == 0);
+
+	/* test to make sure the same file can't be created */
+	assert(bmfs_disk_delete_file(&disk, "b.txt") == 0);
+	assert(bmfs_disk_create_file(&disk, "c.txt", 2) == -EEXIST);
 
 	free(data.buf);
 
