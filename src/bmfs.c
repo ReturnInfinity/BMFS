@@ -22,10 +22,11 @@ char s_write[] = "write";
 char s_delete[] = "delete";
 char s_version[] = "version";
 
-
 static int format_file(struct BMFSDisk *disk, long bytes);
 
 static void list_entries(struct BMFSDisk *disk);
+
+static void print_version(void);
 
 /* Program code */
 int main(int argc, char *argv[])
@@ -44,10 +45,7 @@ int main(int argc, char *argv[])
 		if (argc > 1)
 		{
 			if (strcasecmp(s_version, argv[1]) == 0)
-			{
-				printf("BareMetal File System Utility v1.2.3 (2017 04 07)\n");
-				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
-			}
+				print_version();
 		}
 		else
 		{
@@ -243,5 +241,10 @@ static void list_entries(struct BMFSDisk *disk)
 	}
 }
 
+static void print_version(void)
+{
+	printf("BareMetal File System Utility v1.2.3 (2017 04 07)\n");
+	printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
+}
 
 /* EOF */
