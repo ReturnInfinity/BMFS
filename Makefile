@@ -4,11 +4,14 @@
 all:
 	$(MAKE) -C src all
 	cp --update src/bmfs bmfs
+ifndef NO_FUSE
 	cp --update src/bmfs-fuse bmfs-fuse
+endif
 
 .PHONY: clean
 clean:
 	$(MAKE) -C src clean
+	$(RM) bmfs bmfs-fuse
 
 .PHONY: help
 help:
