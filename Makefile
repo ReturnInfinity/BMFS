@@ -11,6 +11,7 @@ endif
 .PHONY: clean
 clean:
 	$(MAKE) -C src clean
+	$(RM) bmfs bmfs-fuse
 
 .PHONY: help
 help:
