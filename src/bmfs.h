@@ -9,6 +9,7 @@
 #include "dir.h"
 #include "disk.h"
 #include "limits.h"
+#include "version.h"
 
 #endif /* BMFS_H */
 
