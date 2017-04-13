@@ -17,5 +17,6 @@ bmfs
 bmfs-fuse
 disk-test
 dir-test
+sspec-test
 # Mac crap
 .DS_Store
