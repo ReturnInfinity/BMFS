@@ -91,23 +91,21 @@ int main(int argc, char *argv[])
 		printf("Error: Unable to open disk '%s'\n", diskname);
 		return EXIT_FAILURE;
 	}
-	else								// Opened ok, is it a valid BMFS disk?
-	{
-		bmfs_disk_init_file(&disk, diskfile);
 
-		if (bmfs_disk_check_tag(&disk) != 0)			// Is it a BMFS formatted disk?
+	bmfs_disk_init_file(&disk, diskfile);
+
+	/* Opened ok, is it a valid BMFS disk? */
+	if (bmfs_disk_check_tag(&disk) != 0)
+	{
+		if (strcasecmp(s_format, command) == 0)
 		{
-			if (strcasecmp(s_format, command) == 0)
-			{
-				format_file(&disk, BMFS_MINIMUM_DISK_SIZE);
-			}
-			else
-			{
-				printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
-			}
+			format_file(&disk, BMFS_MINIMUM_DISK_SIZE);
 			fclose(diskfile);
-			return EXIT_FAILURE;
+			return EXIT_SUCCESS;
 		}
+		printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
+		fclose(diskfile);
+		return EXIT_FAILURE;
 	}
 
 	if (strcasecmp(s_list, command) == 0)
