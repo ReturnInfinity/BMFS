@@ -5,6 +5,7 @@
 
 enum bmfs_sspec_type
 {
+	BMFS_SSPEC_NONE,
 	/* 1024 ^ 4 */
 	BMFS_SSPEC_TEBI,
 	/* 1024 ^ 3 */
