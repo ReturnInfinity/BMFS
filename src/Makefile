@@ -21,6 +21,7 @@ headers += limits.h
 headers += sspec.h
 
 utils += bmfs
+utils += bmfs-cat
 utils += bmfs-create
 utils += bmfs-ls
 utils += bmfs-rm
@@ -41,6 +42,8 @@ endif
 all: $(tests) $(utils)
 
 bmfs: bmfs.c libbmfs.a
+
+bmfs-cat: bmfs-cat.c libbmfs.a
 
 bmfs-create: bmfs-create.c libbmfs.a
 
