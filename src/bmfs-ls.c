@@ -14,7 +14,6 @@ static void help(const char *argv0)
 	printf("options:\n");
 	printf("  --disk,      -d : specify disk image to use\n");
 	printf("  --help,      -h : display this help message\n");
-	printf("  --long-list, -l : print using long list format\n");
 	printf("  --version,   -v : display version information\n");
 	printf("\n");
 	printf("environment variables:\n");
