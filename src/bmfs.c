@@ -22,10 +22,13 @@ char s_write[] = "write";
 char s_delete[] = "delete";
 char s_version[] = "version";
 
-
 static int format_file(struct BMFSDisk *disk, long bytes);
 
 static void list_entries(struct BMFSDisk *disk);
+
+static void print_usage(const char *argv0);
+
+static void print_version(void);
 
 /* Program code */
 int main(int argc, char *argv[])
@@ -44,19 +47,16 @@ int main(int argc, char *argv[])
 		if (argc > 1)
 		{
 			if (strcasecmp(s_version, argv[1]) == 0)
-			{
-				printf("BareMetal File System Utility v1.2.3 (2017 04 07)\n");
-				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
-			}
+				print_version();
 		}
 		else
 		{
-			printf("Usage: %s disk function file\n", argv[0]);
-			printf("\tDisk: the name of the disk file\n");
-			printf("\tFunction: list, read, write, create, delete, format, initialize\n");
-			printf("\tFile: (if applicable)\n");
+			print_usage(argv[0]);
 		}
-		exit(0);
+		/* the program wasn't called
+		 * properly, should be considered
+		 * a program failure */
+		return EXIT_FAILURE;
 	}
 
 	diskname = argv[1];
@@ -72,39 +72,40 @@ int main(int argc, char *argv[])
 			char *boot = (argc > 5 ? argv[5] : NULL);   	// Opt.
 			char *kernel = (argc > 6 ? argv[6] : NULL); 	// Opt.
 			int ret = bmfs_initialize(diskname, size, mbr, boot, kernel);
-			exit(ret);
+			if (ret != 0)
+				return EXIT_FAILURE;
+			else
+				return EXIT_SUCCESS;
 		}
 		else
 		{
 			printf("Usage: %s disk %s ", argv[0], command);
 			printf("size [mbr_file] ");
 			printf("[bootloader_file] [kernel_file]\n");
-			exit(1);
+			return EXIT_FAILURE;
 		}
 	}
 
 	if ((diskfile = fopen(diskname, "r+b")) == NULL)			// Open for read/write in binary mode
 	{
 		printf("Error: Unable to open disk '%s'\n", diskname);
-		exit(0);
+		return EXIT_FAILURE;
 	}
-	else								// Opened ok, is it a valid BMFS disk?
-	{
-		bmfs_disk_init_file(&disk, diskfile);
 
-		if (bmfs_disk_check_tag(&disk) != 0)			// Is it a BMFS formatted disk?
+	bmfs_disk_init_file(&disk, diskfile);
+
+	/* Opened ok, is it a valid BMFS disk? */
+	if (bmfs_disk_check_tag(&disk) != 0)
+	{
+		if (strcasecmp(s_format, command) == 0)
 		{
-			if (strcasecmp(s_format, command) == 0)
-			{
-				format_file(&disk, BMFS_MINIMUM_DISK_SIZE);
-			}
-			else
-			{
-				printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
-			}
+			format_file(&disk, BMFS_MINIMUM_DISK_SIZE);
 			fclose(diskfile);
-			return 0;
+			return EXIT_SUCCESS;
 		}
+		printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
+		fclose(diskfile);
+		return EXIT_FAILURE;
 	}
 
 	if (strcasecmp(s_list, command) == 0)
@@ -198,7 +199,7 @@ int main(int argc, char *argv[])
 	{
 		fclose(diskfile);
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
@@ -243,5 +244,28 @@ static void list_entries(struct BMFSDisk *disk)
 	}
 }
 
+static void print_usage(const char *argv0)
+{
+	printf("Usage: %s disk function [file]\n", argv0);
+	printf("\n");
+	printf("Disk: the name of the disk file\n");
+	printf("\n");
+	printf("Functions:\n");
+	printf("\tlist   : lists entries in the BMFS file system\n");
+	printf("\tread   : reads a file from the BMFS file system to the host file system\n");
+	printf("\twrite  : writes a file from the host file system to BMFS file system\n");
+	printf("\tcreate : creates a file within a BMFS file system\n");
+	printf("\tdelete : deletes a file within a BMFS file system\n");
+	printf("\tformat : formats an existing file with BMFS\n");
+	printf("\tinitialize : creates an image for the BareMetal operating system\n");
+	printf("\n");
+	printf("File: may be used in a read, write, create or delete operation\n");
+}
+
+static void print_version(void)
+{
+	printf("BareMetal File System Utility v1.2.3 (2017 04 07)\n");
+	printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
+}
 
 /* EOF */

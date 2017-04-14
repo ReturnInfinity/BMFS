@@ -14,8 +14,14 @@ disk.image
 *.app
 # UNIX/Linux/Mac Executable
 bmfs
+bmfs-cat
+bmfs-cp
+bmfs-create
+bmfs-ls
+bmfs-rm
 bmfs-fuse
 disk-test
 dir-test
+sspec-test
 # Mac crap
 .DS_Store

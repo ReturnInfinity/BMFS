@@ -500,7 +500,7 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	{
 		if (diskSize < BMFS_MINIMUM_DISK_SIZE)
 		{
-			printf( "Error: Disk size must be at least %d bytes (%dMiB)\n", BMFS_MINIMUM_DISK_SIZE, BMFS_MINIMUM_DISK_SIZE / (1024*1024));
+			printf( "Error: Disk size must be at least %llu bytes (%lluMiB)\n", BMFS_MINIMUM_DISK_SIZE, BMFS_MINIMUM_DISK_SIZE / (1024*1024));
 			ret = 1;
 		}
 	}
