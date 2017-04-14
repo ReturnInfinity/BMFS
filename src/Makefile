@@ -22,6 +22,7 @@ headers += sspec.h
 
 utils += bmfs
 utils += bmfs-create
+utils += bmfs-rm
 
 ifndef NO_FUSE
 utils += bmfs-fuse
@@ -41,6 +42,8 @@ all: $(tests) $(utils)
 bmfs: bmfs.c libbmfs.a
 
 bmfs-create: bmfs-create.c libbmfs.a
+
+bmfs-rm: bmfs-rm.c libbmfs.a
 
 dir-test: dir-test.c libbmfs.a
 
