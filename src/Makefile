@@ -8,22 +8,45 @@ else
 CFLAGS += -O3
 endif
 
+libfiles += dir.o
+libfiles += disk.o
+libfiles += entry.o
+libfiles += sspec.o
+
+headers += bmfs.h
+headers += dir.h
+headers += disk.h
+headers += entry.h
+headers += limits.h
+headers += sspec.h
+
+utils += bmfs
+utils += bmfs-create
+
+ifndef NO_FUSE
+utils += bmfs-fuse
+endif
+
+tests += dir-test
+tests += disk-test
+tests += sspec-test
+
 ifndef NO_VALGRIND
 VALGRIND = valgrind --error-exitcode=1 --quiet
 endif
 
 .PHONY: all
-all: bmfs dir-test disk-test
-
-ifndef NO_FUSE
-all: bmfs-fuse
-endif
+all: $(tests) $(utils)
 
 bmfs: bmfs.c libbmfs.a
+
+bmfs-create: bmfs-create.c libbmfs.a
 
 dir-test: dir-test.c libbmfs.a
 
 disk-test: disk-test.c libbmfs.a
+
+sspec-test: sspec-test.c libbmfs.a
 
 entry.o: entry.c entry.h limits.h
 
@@ -31,7 +54,9 @@ dir.o: dir.c dir.h entry.h
 
 disk.o: disk.c disk.h dir.h entry.h limits.h
 
-libbmfs.a: disk.o dir.o entry.o
+sspec.o: sspec.c sspec.h
+
+libbmfs.a: $(libfiles)
 	$(AR) $(ARFLAGS) $@ $^
 
 bmfs-fuse: bmfs-fuse.c libbmfs.a
@@ -41,15 +66,16 @@ bmfs-fuse: CFLAGS += -std=gnu99
 
 .PHONY: clean
 clean:
-	$(RM) bmfs bmfs-fuse
 	$(RM) libbmfs.a
-	$(RM) disk.o dir.o entry.o
-	$(RM) disk-test dir-test
+	$(RM) $(libfiles)
+	$(RM) $(tests)
+	$(RM) $(utils)
 
 .PHONY: test
 test:
 	$(VALGRIND) ./dir-test
 	$(VALGRIND) ./disk-test
+	$(VALGRIND) ./sspec-test
 
 .PHONY: install
 install:
