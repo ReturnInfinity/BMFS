@@ -10,6 +10,8 @@ static void help(const char *argv0)
 {
 	printf("usage: %s [options] file...\n", argv0);
 	printf("\n");
+	printf("Removes an entry from a BMFS formatted file or drive.\n");
+	printf("\n");
 	printf("options:\n");
 	printf("  --disk,    -d : specify disk image to use\n");
 	printf("  --force,   -f : ignore non-existant files\n");
