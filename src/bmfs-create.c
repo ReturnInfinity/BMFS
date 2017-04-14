@@ -10,6 +10,12 @@ static void help(const char *argv0)
 {
 	printf("usage: %s [options] file...\n", argv0);
 	printf("\n");
+	printf("Creates a file in a BMFS formatted\n");
+	printf("disk or file. By default, a file is\n");
+	printf("created with 2MiB reserved for it.\n");
+	printf("This may be changed by using the\n");
+	printf("--reserved-storage option.\n");
+	printf("\n");
 	printf("options:\n");
 	printf("  --disk, -d             : specify disk image to use\n");
 	printf("  --help, -h             : display this help message\n");
