@@ -47,10 +47,6 @@ int main(int argc, char **argv)
 			help(argv[0]);
 			return EXIT_FAILURE;
 		}
-		else if (c == 'l')
-		{
-			use_long_list = 1;
-		}
 		else if (c == 'v')
 		{
 			version();
