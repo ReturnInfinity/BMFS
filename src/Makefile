@@ -94,7 +94,7 @@ install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	mkdir -p $(DESTDIR)$(PREFIX)/lib
 	mkdir -p $(DESTDIR)$(PREFIX)/include/bmfs
-	cp bmfs $(DESTDIR)$(PREFIX)/bin/
+	cp $(utils) $(DESTDIR)$(PREFIX)/bin/
 	cp --update libbmfs.a $(DESTDIR)$(PREFIX)/lib/
 	cp --update limits.h entry.h dir.h disk.h bmfs.h $(DESTDIR)$(PREFIX)/include/bmfs/
 
