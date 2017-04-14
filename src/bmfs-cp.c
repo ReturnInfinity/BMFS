@@ -5,6 +5,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
+
+static volatile int keep_reading = 1;
+
+void handle_interrupt(int sig)
+{
+	if (sig == SIGINT)
+		keep_reading = 0;
+}
 
 /* Returns the basename of the path.
  * This function is similar to the
@@ -36,8 +45,16 @@ static const char * basename_(const char *src)
 
 static int copy_file(struct BMFSDisk *disk, const char *src, const char *dst, uint64_t reserved_mebibytes)
 {
+	if (src == NULL)
+		src = "-";
+
 	if (dst == NULL)
 	{
+		/* must specify destination
+		 * if stdin is being used */
+		if (strcmp(src, "-") == 0)
+			return -EINVAL;
+
 		dst = basename_(src);
 		if (dst == NULL)
 			/* src was an empty string */
@@ -88,34 +105,50 @@ static int copy_file(struct BMFSDisk *disk, const char *src, const char *dst, ui
 	if (err != 0)
 		return err;
 
-	FILE *srcfile = fopen(src, "rb");
-	if (srcfile == NULL)
-		return -errno;
+	FILE *srcfile = stdin;
+	if (strcmp(src, "-") != 0)
+	{
+		srcfile = fopen(src, "rb");
+		if (srcfile == NULL)
+			return -errno;
+	}
 
 	uint64_t entry_size = entry->ReservedBlocks * BMFS_BLOCK_SIZE;
 	uint64_t i = 0;
+
 	char buf[32];
-	while (!feof(srcfile))
+	size_t buf_size = sizeof(buf);
+
+	if (srcfile == stdin)
+		/* only rely on reading one
+		 * byte at a time if using
+		 * standard input */
+		buf_size = 1;
+
+	while (!feof(srcfile) && keep_reading)
 	{
-		size_t read_count = fread(buf, 1, sizeof(buf), srcfile);
+		size_t read_count = fread(buf, 1, buf_size, srcfile);
 		if ((i + read_count) > entry_size)
 		{
 			/* not enough blocks reserved for file */
-			fclose(srcfile);
+			if (srcfile != stdin)
+				fclose(srcfile);
 			return -ENOSPC;
 		}
 
 		err = bmfs_disk_write(disk, buf, read_count, NULL);
 		if (err != 0)
 		{
-			fclose(srcfile);
+			if (srcfile != stdin)
+				fclose(srcfile);
 			return err;
 		}
 
 		i += read_count;
 	}
 
-	fclose(srcfile);
+	if (srcfile != stdin)
+		fclose(srcfile);
 
 	entry->FileSize = i;
 
@@ -152,6 +185,8 @@ static void version(void)
 
 int main(int argc, char **argv)
 {
+	signal(SIGINT, handle_interrupt);
+
 	struct option opts[] =
 	{
 		{ "disk", required_argument, NULL, 'd' },
