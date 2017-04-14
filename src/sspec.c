@@ -11,7 +11,6 @@ int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *str)
 
 	uint64_t value = 0;
 	uint64_t base = 1;
-	uint64_t i = 0;
 	while (*str)
 	{
 		char c = *str;
