@@ -10,6 +10,12 @@ static void help(const char *argv0)
 {
 	printf("usage: %s [options]\n", argv0);
 	printf("\n");
+	printf("Sends the contents of a file in a\n");
+	printf("BMFS formatted file drive to the standard\n");
+	printf("output. A file may be specified instead of\n");
+	printf("the standard output by using the --output-file\n");
+	printf("option.\n");
+	printf("\n");
 	printf("options:\n");
 	printf("  --disk,        -d : specify disk image to use\n");
 	printf("  --help,        -h : display this help message\n");
