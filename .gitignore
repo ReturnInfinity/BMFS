@@ -15,6 +15,7 @@ disk.image
 # UNIX/Linux/Mac Executable
 bmfs
 bmfs-create
+bmfs-ls
 bmfs-rm
 bmfs-fuse
 disk-test
