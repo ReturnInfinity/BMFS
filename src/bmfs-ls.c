@@ -11,6 +11,8 @@ static void help(const char *argv0)
 {
 	printf("usage: %s [options]\n", argv0);
 	printf("\n");
+	printf("Lists entries in a BMFS formatted file or disk.\n");
+	printf("\n");
 	printf("options:\n");
 	printf("  --disk,      -d : specify disk image to use\n");
 	printf("  --help,      -h : display this help message\n");
