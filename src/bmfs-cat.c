@@ -11,9 +11,10 @@ static void help(const char *argv0)
 	printf("usage: %s [options]\n", argv0);
 	printf("\n");
 	printf("options:\n");
-	printf("  --disk,      -d : specify disk image to use\n");
-	printf("  --help,      -h : display this help message\n");
-	printf("  --version,   -v : display version information\n");
+	printf("  --disk,        -d : specify disk image to use\n");
+	printf("  --help,        -h : display this help message\n");
+	printf("  --output-file, -o : pipe contents into this file ('-' means stdout)\n");
+	printf("  --version,     -v : display version information\n");
 	printf("\n");
 	printf("environment variables:\n");
 	printf("    BMFS_DISK : the disk image to use\n");
@@ -24,7 +25,7 @@ static void version(void)
 	printf("%s\n", BMFS_VERSION_STRING);
 }
 
-static int cat_file(struct BMFSDisk *disk, const char *filename)
+static int cat_file(struct BMFSDisk *disk, const char *filename, FILE *output_file)
 {
 	struct BMFSEntry entry;
 
@@ -51,7 +52,7 @@ static int cat_file(struct BMFSDisk *disk, const char *filename)
 		if (err != 0)
 			return err;
 
-		fwrite(buf, read_count, 1, stdout);
+		fwrite(buf, read_count, 1, output_file);
 
 		i += read_count;
 	}
@@ -61,10 +62,13 @@ static int cat_file(struct BMFSDisk *disk, const char *filename)
 
 int main(int argc, char **argv)
 {
+	const char *output_filename = "-";
+
 	struct option opts[] =
 	{
 		{ "disk", required_argument, NULL, 'd' },
 		{ "help", no_argument, NULL, 'h' },
+		{ "output-file", required_argument, NULL, 'f' },
 		{ "version", no_argument, NULL, 'v' },
 		{ 0, 0, 0, 0 }
 	};
@@ -73,7 +77,7 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-		int c = getopt_long(argc, argv, "d:n:r:hv", opts, NULL);
+		int c = getopt_long(argc, argv, "d:n:r:o:hv", opts, NULL);
 		if (c == 'd')
 			diskname = optarg;
 		else if (c == 'h')
@@ -81,6 +85,8 @@ int main(int argc, char **argv)
 			help(argv[0]);
 			return EXIT_FAILURE;
 		}
+		else if (c == 'o')
+			output_filename = optarg;
 		else if (c == 'v')
 		{
 			version();
@@ -127,17 +133,38 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+	if (output_filename == NULL)
+		output_filename = "-";
+
+	FILE *output_file = stdout;
+
+	if (strcmp(output_filename, "-") != 0)
+	{
+		output_file = fopen(output_filename, "wb");
+		if (output_file == NULL)
+		{
+			fprintf(stderr, "%s: failed to open '%s': %s\n", argv[0], output_filename, strerror(errno));
+			fclose(diskfile);
+			return EXIT_FAILURE;
+		}
+	}
+
 	while (optind < argc)
 	{
-		err = cat_file(&disk, argv[optind]);
+		err = cat_file(&disk, argv[optind], output_file);
 		if (err != 0)
 		{
 			fprintf(stderr, "%s: failed to cat '%s': %s\n", argv[0], argv[optind], strerror(-err));
+			if (output_file != stdout)
+				fclose(output_file);
 			fclose(diskfile);
 			return EXIT_FAILURE;
 		}
 		optind++;
 	}
+
+	if (output_file != stdout)
+		fclose(output_file);
 
 	fclose(diskfile);
 
