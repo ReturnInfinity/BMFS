@@ -15,6 +15,7 @@ disk.image
 # UNIX/Linux/Mac Executable
 bmfs
 bmfs-cat
+bmfs-cp
 bmfs-create
 bmfs-ls
 bmfs-rm
