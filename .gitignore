@@ -17,6 +17,7 @@ bmfs
 bmfs-cat
 bmfs-cp
 bmfs-create
+bmfs-init
 bmfs-ls
 bmfs-rm
 bmfs-fuse
