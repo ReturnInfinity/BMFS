@@ -32,6 +32,10 @@ struct bmfs_sspec
 
 int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *arg);
 
+char * bmfs_sspec_to_string(const struct bmfs_sspec *spsec);
+
+int bmfs_sspec_set_bytes(struct bmfs_sspec *sspec, uint64_t bytes);
+
 int bmfs_sspec_bytes(const struct bmfs_sspec *sspec, uint64_t *bytes);
 
 int bmfs_sspec_mebibytes(const struct bmfs_sspec *sspec, uint64_t *mebibytes);

@@ -16,10 +16,33 @@ static void help(const char *argv0)
 	printf("options:\n");
 	printf("  --disk,      -d : specify disk image to use\n");
 	printf("  --help,      -h : display this help message\n");
+	printf("               -l : show file size and reserved size\n");
+	printf("  --show-size     : show the file size (on|off)\n");
+	printf("  --show-reserved : show the reserved size (on|off)\n");
 	printf("  --version,   -v : display version information\n");
 	printf("\n");
 	printf("environment variables:\n");
 	printf("    BMFS_DISK : the disk image to use\n");
+}
+
+static int parse_bool(const char *str)
+{
+	if (str == NULL)
+		return -EFAULT;
+
+	if ((strcmp(str, "yes") == 0)
+	 || (strcmp(str, "on") == 0)
+	 || (strcmp(str, "1") == 0))
+		return 1;
+
+	if ((strcmp(str, "no") == 0)
+	 || (strcmp(str, "off") == 0)
+	 || (strcmp(str, "0") == 0))
+		return 0;
+
+	/* value not understood */
+
+	return -EINVAL;
 }
 
 static void version(void)
@@ -29,10 +52,15 @@ static void version(void)
 
 int main(int argc, char **argv)
 {
+	int show_size = 0;
+	int show_reserved = 0;
+
 	struct option opts[] =
 	{
 		{ "disk", required_argument, NULL, 'd' },
 		{ "help", no_argument, NULL, 'h' },
+		{ "show-size", required_argument, NULL, 's' },
+		{ "show-reserved", required_argument, NULL, 'r' },
 		{ "version", no_argument, NULL, 'v' },
 		{ 0, 0, 0, 0 }
 	};
@@ -41,13 +69,36 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-		int c = getopt_long(argc, argv, "d:n:r:hv", opts, NULL);
+		int c = getopt_long(argc, argv, "d:n:r:hlv", opts, NULL);
 		if (c == 'd')
 			diskname = optarg;
 		else if (c == 'h')
 		{
 			help(argv[0]);
 			return EXIT_FAILURE;
+		}
+		else if (c == 'l')
+		{
+			show_size = 1;
+			show_reserved = 1;
+		}
+		else if (c == 'r')
+		{
+			show_reserved = parse_bool(optarg);
+			if (show_reserved < 0)
+			{
+				fprintf(stderr, "%s: unknown setting '%s'\n", argv[0], optarg);
+				return EXIT_FAILURE;
+			}
+		}
+		else if (c == 's')
+		{
+			show_size = parse_bool(optarg);
+			if (show_size < 0)
+			{
+				fprintf(stderr, "%s: unknown setting '%s'\n", argv[0], optarg);
+				return EXIT_FAILURE;
+			}
 		}
 		else if (c == 'v')
 		{
@@ -106,7 +157,25 @@ int main(int argc, char **argv)
 			continue;
 		else if (bmfs_entry_is_terminator(entry))
 			break;
-	
+
+		if (show_size)
+		{
+			struct bmfs_sspec entry_storage;
+			bmfs_sspec_set_bytes(&entry_storage, entry->FileSize);
+			char *entry_size = bmfs_sspec_to_string(&entry_storage);
+			printf("%-7s ", entry_size);
+			free(entry_size);
+		}
+
+		if (show_reserved)
+		{
+			struct bmfs_sspec reserved_storage;
+			bmfs_sspec_set_bytes(&reserved_storage, entry->ReservedBlocks * BMFS_BLOCK_SIZE);
+			char *entry_reserved = bmfs_sspec_to_string(&reserved_storage);
+			printf("%-7s ", entry_reserved);
+			free(entry_reserved);
+		}
+
 		printf("%s\n", entry->FileName);
 	}
 

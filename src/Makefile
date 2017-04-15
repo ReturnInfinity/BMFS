@@ -24,6 +24,7 @@ utils += bmfs
 utils += bmfs-cat
 utils += bmfs-cp
 utils += bmfs-create
+utils += bmfs-init
 utils += bmfs-ls
 utils += bmfs-rm
 
@@ -49,6 +50,8 @@ bmfs-cat: bmfs-cat.c libbmfs.a
 bmfs-cp: bmfs-cp.c libbmfs.a
 
 bmfs-create: bmfs-create.c libbmfs.a
+
+bmfs-init: bmfs-init.c libbmfs.a
 
 bmfs-ls: bmfs-ls.c libbmfs.a
 

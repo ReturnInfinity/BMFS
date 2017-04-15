@@ -1,8 +1,10 @@
 #include "sspec.h"
 
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *str)
 {
@@ -47,6 +49,55 @@ int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *str)
 
 	sspec->value = value;
 
+	return 0;
+}
+
+char * bmfs_sspec_to_string(const struct bmfs_sspec *sspec)
+{
+	uint64_t bytes = 0;
+
+	int err = bmfs_sspec_bytes(sspec, &bytes);
+	if (err != 0)
+		return NULL;
+
+	size_t str_len = 32;
+	/* calloc instead of malloc,
+	 * just for safe measure */
+	char *str = calloc(1, str_len);
+	if (str == NULL)
+		return NULL;
+
+	uint64_t value = sspec->value;
+	if (value >= 1024ULL * 1024ULL * 1024ULL * 1024ULL)
+	{
+		value /= 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+		snprintf(str, str_len, "%" PRIu64 "TiB", value);
+	}
+	else if (value >= 1024ULL * 1024ULL * 1024ULL)
+	{
+		value /= 1024ULL * 1024ULL * 1024ULL;
+		snprintf(str, str_len, "%" PRIu64 "GiB", value);
+	}
+	else if (value >= 1024ULL * 1024ULL)
+	{
+		value /= 1024ULL * 1024ULL;
+		snprintf(str, str_len, "%" PRIu64 "MiB", value);
+	}
+	else if (value >= 1024ULL)
+	{
+		value /= 1024ULL;
+		snprintf(str, str_len, "%" PRIu64 "KiB", value);
+	}
+	else
+		snprintf(str, str_len, "%" PRIu64 "B", value);
+
+	return str;
+}
+
+int bmfs_sspec_set_bytes(struct bmfs_sspec *sspec, uint64_t bytes)
+{
+	sspec->type = BMFS_SSPEC_NONE;
+	sspec->value = bytes;
 	return 0;
 }
 
