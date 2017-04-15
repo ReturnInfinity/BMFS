@@ -111,21 +111,11 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%s: failed to calculate reserved MiB: %s\n", argv[0], strerror(-err));
 		return EXIT_FAILURE;
 	}
-	else if (reserved_bytes < BMFS_BLOCK_SIZE)
-	{
-		fprintf(stderr, "%s: reserved storage must be at least one block size (%lluB)\n", argv[0], BMFS_BLOCK_SIZE);
-		return EXIT_FAILURE;
-	}
 
-	/* calculate the number of mebibytes
-	 * each file will have */
-	uint64_t reserved_mebibytes;
-	err = bmfs_sspec_mebibytes(&reserved_storage, &reserved_mebibytes);
-	if (err != 0)
-	{
-		fprintf(stderr, "%s: failed to calculate reserved MiB: %s\n", argv[0], strerror(-err));
-		return EXIT_FAILURE;
-	}
+	if ((reserved_bytes % BMFS_BLOCK_SIZE) != 0)
+		reserved_bytes += BMFS_BLOCK_SIZE - (reserved_bytes % BMFS_BLOCK_SIZE);
+
+	uint64_t reserved_mebibytes = reserved_bytes / (1024 * 1024);
 
 	FILE *diskfile;
 	diskfile = fopen(diskname, "r+b");
