@@ -1,6 +1,7 @@
 DESTDIR ?=
 PREFIX ?= /usr/local
 CFLAGS = -Wall -W -pedantic -std=c99
+NO_UNIX_UTILS = 1
 
 ifndef BMFS_RELEASE
 CFLAGS += -g -O2
@@ -21,12 +22,14 @@ headers += limits.h
 headers += sspec.h
 
 utils += bmfs
+ifndef NO_UNIX_UTILS
 utils += bmfs-cat
 utils += bmfs-cp
 utils += bmfs-create
 utils += bmfs-init
 utils += bmfs-ls
 utils += bmfs-rm
+endif
 
 ifndef NO_FUSE
 utils += bmfs-fuse
