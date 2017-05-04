@@ -400,7 +400,7 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	size_t chunkSize = 0;
 	int ret = 0;
 	size_t i;
-	FILE *disk;
+	FILE *disk = NULL;
 
 	// Determine how the second file will be described in output messages.
 	// If a kernel file is specified too, then assume the second file is the
