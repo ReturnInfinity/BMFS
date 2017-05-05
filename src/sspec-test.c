@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 static int test_string(const char *str, uint64_t value);
 
@@ -20,6 +21,8 @@ int main(void)
 	test("2KB",  2ULL * 1000ULL);
 	test("1B", 1ULL);
 	test("1",  1ULL);
+	test("0B", 0ULL);
+	test("0",  0ULL);
 	return EXIT_SUCCESS;
 }
 
