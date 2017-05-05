@@ -94,7 +94,7 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk, size_t bytes, size_t *starti
 	if (err != 0)
 		return err;
 
-	err = bmfs_dir_sort(&dir);
+	err = bmfs_dir_sort(&dir, bmfs_entry_cmp_by_starting_block);
 	if (err != 0)
 		return err;
 
