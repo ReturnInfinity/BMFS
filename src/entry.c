@@ -17,6 +17,36 @@ void bmfs_entry_init(struct BMFSEntry *entry)
 	entry->ReservedBlocks = 0;
 }
 
+int bmfs_entry_cmp_by_filename(const struct BMFSEntry *a,
+                               const struct BMFSEntry *b)
+{
+	if (bmfs_entry_is_empty(a)
+	 && bmfs_entry_is_empty(b))
+		return 0;
+
+	if (bmfs_entry_is_empty(a))
+		return 1;
+	else if (bmfs_entry_is_empty(b))
+		return -1;
+
+	return bmfs_entry_cmp_filename(a, b->FileName);
+}
+
+int bmfs_entry_cmp_by_starting_block(const struct BMFSEntry *a,
+                                     const struct BMFSEntry *b)
+{
+	if (bmfs_entry_is_empty(a)
+	 && bmfs_entry_is_empty(b))
+		return 0;
+
+	if (bmfs_entry_is_empty(a))
+		return 1;
+	else if (bmfs_entry_is_empty(b))
+		return -1;
+
+	return bmfs_entry_cmp_starting_block(a, b->StartingBlock);
+}
+
 int bmfs_entry_cmp_filename(const struct BMFSEntry *entry, const char *filename)
 {
 	uint64_t i = 0;
@@ -34,6 +64,15 @@ int bmfs_entry_cmp_filename(const struct BMFSEntry *entry, const char *filename)
 			i++;
 	}
 
+	return 0;
+}
+
+int bmfs_entry_cmp_starting_block(const struct BMFSEntry *entry, uint64_t starting_block)
+{
+	if (entry->StartingBlock > starting_block)
+		return 1;
+	else if (entry->StartingBlock < starting_block)
+		return -1;
 	return 0;
 }
 
