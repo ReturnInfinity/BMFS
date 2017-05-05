@@ -25,6 +25,7 @@ headers += disk.h
 headers += entry.h
 headers += limits.h
 headers += sspec.h
+headers += version.h
 
 utils += bmfs
 ifndef NO_UNIX_UTILS
