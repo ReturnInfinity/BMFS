@@ -9,6 +9,8 @@ else
 CFLAGS += -O3
 endif
 
+CFLAGS += -fno-stack-protector
+
 libfiles += dir.o
 libfiles += disk.o
 libfiles += entry.o
