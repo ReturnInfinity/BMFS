@@ -17,7 +17,9 @@ struct BMFSEntry
 	uint64_t Unused;
 };
 
-void bmfs_entry_zero(struct BMFSEntry *entry);
+void bmfs_entry_init(struct BMFSEntry *entry);
+
+int bmfs_entry_cmp_filename(const struct BMFSEntry *entry, const char *filename);
 
 int bmfs_entry_get_offset(const struct BMFSEntry *entry, uint64_t *offset);
 
