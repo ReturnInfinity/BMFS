@@ -20,7 +20,7 @@ int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename);
 
 int bmfs_dir_delete_file(struct BMFSDir *dir, const char *filename);
 
-int bmfs_dir_sort(struct BMFSDir *dir);
+int bmfs_dir_sort(struct BMFSDir *dir, int (*entry_cmp)(const struct BMFSEntry *a, const struct BMFSEntry *b));
 
 struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename);
 

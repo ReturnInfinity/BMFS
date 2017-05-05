@@ -6,7 +6,10 @@
 
 #include <errno.h>
 
-static int StartingBlockCmp(const void *pa, const void *pb);
+static int sort_entries(struct BMFSEntry *a,
+                        struct BMFSEntry *b,
+                        int (*entry_cmp)(const struct BMFSEntry *a,
+                                         const struct BMFSEntry *b));
 
 void bmfs_dir_init(struct BMFSDir *dir)
 {
@@ -70,18 +73,32 @@ int bmfs_dir_delete_file(struct BMFSDir *dir, const char *filename)
 	return 0;
 }
 
-int bmfs_dir_sort(struct BMFSDir *dir)
+int bmfs_dir_sort(struct BMFSDir *dir, int (*entry_cmp)(const struct BMFSEntry *a, const struct BMFSEntry *b))
 {
-	if (dir == NULL)
-		return -EFAULT;
+	if (entry_cmp == NULL)
+		entry_cmp = bmfs_entry_cmp_by_filename;
+
 	size_t i;
-	for (i = 0; i < 64; i++)
-	{
-		if (dir->Entries[i].FileName[0] == 0)
-			break;
-	}
-	/* i is the number of used entries */
-	qsort(dir->Entries, i, sizeof(dir->Entries[0]), StartingBlockCmp);
+	struct BMFSEntry *a;
+	struct BMFSEntry *b;
+	int mod_flag = 0;
+
+	do {
+		mod_flag = 0;
+		for (i = 0; i < 64 - 1; i++)
+		{
+			a = &dir->Entries[i];
+			if (bmfs_entry_is_terminator(a))
+				break;
+
+			b = &dir->Entries[i + 1];
+			if (bmfs_entry_is_terminator(b))
+				break;
+
+			mod_flag |= sort_entries(a, b, entry_cmp);
+		}
+	} while (mod_flag);
+
 	return 0;
 }
 
@@ -111,17 +128,21 @@ struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename)
 	return NULL;
 }
 
-// helper function for qsort, sorts by StartingBlock field
-static int StartingBlockCmp(const void *pa, const void *pb)
+static int sort_entries(struct BMFSEntry *a,
+                        struct BMFSEntry *b,
+                        int (*entry_cmp)(const struct BMFSEntry *a,
+                                         const struct BMFSEntry *b))
 {
-	struct BMFSEntry *ea = (struct BMFSEntry *)pa;
-	struct BMFSEntry *eb = (struct BMFSEntry *)pb;
-	// empty records go to the end
-	if (ea->FileName[0] == 0x01)
+	int res;
+	struct BMFSEntry tmp;
+	res = entry_cmp(a, b);
+	if (res > 0)
+	{
+		tmp = *a;
+		*a = *b;
+		*b = tmp;
 		return 1;
-	if (eb->FileName[0] == 0x01)
-		return -1;
-	// compare non-empty records by their starting blocks number
-	return (ea->StartingBlock - eb->StartingBlock);
+	}
+	return 0;
 }
 
