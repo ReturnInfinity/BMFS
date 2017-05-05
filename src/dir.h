@@ -12,7 +12,7 @@ struct BMFSDir
 	struct BMFSEntry Entries[64];
 };
 
-void bmfs_dir_zero(struct BMFSDir *dir);
+void bmfs_dir_init(struct BMFSDir *dir);
 
 int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
 

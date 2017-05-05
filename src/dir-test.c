@@ -9,7 +9,7 @@ int main(void)
 {
 	struct BMFSDir dir;
 
-	bmfs_dir_zero(&dir);
+	bmfs_dir_init(&dir);
 
 	assert(bmfs_dir_add_file(&dir, "a.txt") == 0);
 	assert(strcmp(dir.Entries[0].FileName, "a.txt") == 0);

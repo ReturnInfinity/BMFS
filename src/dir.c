@@ -5,13 +5,15 @@
 #include "dir.h"
 
 #include <errno.h>
-#include <string.h>
 
 static int StartingBlockCmp(const void *pa, const void *pb);
 
-void bmfs_dir_zero(struct BMFSDir *dir)
+void bmfs_dir_init(struct BMFSDir *dir)
 {
-	memset(dir, 0, sizeof(*dir));
+	for (uint64_t i = 0; i < 64; i++)
+	{
+		bmfs_entry_init(&dir->Entries[i]);
+	}
 }
 
 int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
@@ -49,7 +51,7 @@ int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename)
 		return -EFAULT;
 
 	struct BMFSEntry entry;
-	bmfs_entry_zero(&entry);
+	bmfs_entry_init(&entry);
 	bmfs_entry_set_file_name(&entry, filename);
 	bmfs_entry_set_starting_block(&entry, 1);
 	return bmfs_dir_add(dir, &entry);
@@ -86,20 +88,23 @@ int bmfs_dir_sort(struct BMFSDir *dir)
 struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename)
 {
 	int tint;
+	struct BMFSEntry *entry;
+
 	for (tint = 0; tint < 64; tint++)
 	{
-		if (dir->Entries[tint].FileName[0] == 0)
+		entry = &dir->Entries[tint];
+		if (bmfs_entry_is_terminator(entry))
 			/* end of directory */
 			break;
-		else if (dir->Entries[tint].FileName[0] == 1)
+		else if (bmfs_entry_is_empty(entry))
 			/* skip empty entry */
 			continue;
-		else if (strcmp(dir->Entries[tint].FileName, filename) != 0)
+		else if (bmfs_entry_cmp_filename(&dir->Entries[tint], filename) != 0)
 			/* not a match, skip this file */
 			continue;
 
 		/* file was found */
-		return &dir->Entries[tint];
+		return entry;
 	}
 
 	/* file not found */
