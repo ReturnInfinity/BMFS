@@ -40,12 +40,22 @@ int main(void)
 
 	assert(bmfs_dir_delete_file(&dir, "missing.txt") == -ENOENT);
 
-	assert(bmfs_dir_sort(&dir) == 0);
-	assert(strcmp(dir.Entries[0].FileName, "a.txt") == 0);
-	assert(strcmp(dir.Entries[1].FileName, "c.txt") == 0);
+	assert(bmfs_dir_add_file(&dir, "a.txt") == -EEXIST);
+
+	/* a.txt */
+	dir.Entries[0].StartingBlock = 42;
+	/* c.txt */
+	dir.Entries[2].StartingBlock = 41;
+	assert(bmfs_dir_sort(&dir, bmfs_entry_cmp_by_starting_block) == 0);
+	assert(strcmp(dir.Entries[0].FileName, "c.txt") == 0);
+	assert(strcmp(dir.Entries[1].FileName, "a.txt") == 0);
 	assert(bmfs_entry_is_empty(&dir.Entries[2]));
 
-	assert(bmfs_dir_add_file(&dir, "a.txt") == -EEXIST);
+	assert(bmfs_dir_add_file(&dir, "a.txt.gz") == 0);
+	assert(bmfs_dir_sort(&dir, bmfs_entry_cmp_by_filename) == 0);
+	assert(strcmp(dir.Entries[0].FileName, "a.txt") == 0);
+	assert(strcmp(dir.Entries[1].FileName, "a.txt.gz") == 0);
+	assert(strcmp(dir.Entries[2].FileName, "c.txt") == 0);
 
 	return EXIT_SUCCESS;
 }
