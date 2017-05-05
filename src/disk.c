@@ -200,7 +200,7 @@ int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, size_t me
 		return err;
 
 	struct BMFSEntry entry;
-	bmfs_entry_zero(&entry);
+	bmfs_entry_init(&entry);
 	bmfs_entry_set_file_name(&entry, filename);
 	bmfs_entry_set_starting_block(&entry, starting_block);
 	bmfs_entry_set_reserved_blocks(&entry, mebibytes / 2);
@@ -308,7 +308,7 @@ int bmfs_disk_format(struct BMFSDisk *disk)
 		return err;
 
 	struct BMFSDir dir;
-	bmfs_dir_zero(&dir);
+	bmfs_dir_init(&dir);
 
 	err = bmfs_disk_write_dir(disk, &dir);
 	if (err != 0)
