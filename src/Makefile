@@ -14,6 +14,11 @@ libfiles += disk.o
 libfiles += entry.o
 libfiles += sspec.o
 
+stdlibfiles += stdlib.o
+
+libs += libbmfs.a
+libs += libbmfs-stdlib.a
+
 headers += bmfs.h
 headers += dir.h
 headers += disk.h
@@ -44,27 +49,27 @@ VALGRIND = valgrind --error-exitcode=1 --quiet
 endif
 
 .PHONY: all
-all: $(tests) $(utils)
+all: $(libs) $(tests) $(utils)
 
-bmfs: bmfs.c libbmfs.a
+bmfs: bmfs.c $(libs)
 
-bmfs-cat: bmfs-cat.c libbmfs.a
+bmfs-cat: bmfs-cat.c $(libs)
 
-bmfs-cp: bmfs-cp.c libbmfs.a
+bmfs-cp: bmfs-cp.c $(libs)
 
-bmfs-create: bmfs-create.c libbmfs.a
+bmfs-create: bmfs-create.c $(libs)
 
-bmfs-init: bmfs-init.c libbmfs.a
+bmfs-init: bmfs-init.c $(libs)
 
-bmfs-ls: bmfs-ls.c libbmfs.a
+bmfs-ls: bmfs-ls.c $(libs)
 
-bmfs-rm: bmfs-rm.c libbmfs.a
+bmfs-rm: bmfs-rm.c $(libs)
 
-dir-test: dir-test.c libbmfs.a
+dir-test: dir-test.c $(libs)
 
-disk-test: disk-test.c libbmfs.a
+disk-test: disk-test.c $(libs)
 
-sspec-test: sspec-test.c libbmfs.a
+sspec-test: sspec-test.c $(libs)
 
 entry.o: entry.c entry.h limits.h
 
@@ -74,10 +79,15 @@ disk.o: disk.c disk.h dir.h entry.h limits.h
 
 sspec.o: sspec.c sspec.h
 
+stdlib.o: stdlib.c stdlib.h
+
 libbmfs.a: $(libfiles)
 	$(AR) $(ARFLAGS) $@ $^
 
-bmfs-fuse: bmfs-fuse.c libbmfs.a
+libbmfs-stdlib.a: $(stdlibfiles)
+	$(AR) $(ARFLAGS) $@ $^
+
+bmfs-fuse: bmfs-fuse.c $(libs)
 bmfs-fuse: LDLIBS += $(shell pkg-config --libs fuse)
 bmfs-fuse: CFLAGS += $(shell pkg-config --cflags fuse)
 bmfs-fuse: CFLAGS += -std=gnu99
@@ -85,6 +95,7 @@ bmfs-fuse: CFLAGS += -std=gnu99
 .PHONY: clean
 clean:
 	$(RM) libbmfs.a
+	$(RM) libbmfs-stdlib.a
 	$(RM) $(libfiles)
 	$(RM) $(tests)
 	$(RM) $(utils)
