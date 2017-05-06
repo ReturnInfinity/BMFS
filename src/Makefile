@@ -1,7 +1,5 @@
-DESTDIR ?=
-PREFIX ?= /usr/local
-CFLAGS = -Wall -W -pedantic -std=c99
-NO_UNIX_UTILS = 1
+include ../make/config.mk
+include ../make/patterns.mk
 
 VPATH += ../include/bmfs
 
@@ -80,10 +78,8 @@ sspec.o: sspec.c sspec.h
 stdlib.o: stdlib.c stdlib.h
 
 libbmfs.a: $(libfiles)
-	$(AR) $(ARFLAGS) $@ $^
 
 libbmfs-stdlib.a: $(stdlibfiles)
-	$(AR) $(ARFLAGS) $@ $^
 
 bmfs-fuse: bmfs-fuse.c $(libs)
 bmfs-fuse: LDLIBS += $(shell pkg-config --libs fuse)
