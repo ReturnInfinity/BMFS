@@ -11,6 +11,10 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct BMFSDisk
 {
 	void *disk;
@@ -54,6 +58,10 @@ int bmfs_write(struct BMFSDisk *disk,
                uint64_t off);
 void bmfs_readfile(struct BMFSDisk *disk, const char *filename);
 void bmfs_writefile(struct BMFSDisk *disk, const char *filename);
+
+#ifdef __cplusplus
+} /* extern "C" { */
+#endif
 
 #endif /* BMFS_DISK_H */
 
