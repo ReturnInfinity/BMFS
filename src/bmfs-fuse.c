@@ -1,4 +1,5 @@
 #include "bmfs.h"
+#include "stdlib.h"
 
 #define FUSE_USE_VERSION 30
 
