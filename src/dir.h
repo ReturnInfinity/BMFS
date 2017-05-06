@@ -12,7 +12,7 @@ struct BMFSDir
 	struct BMFSEntry Entries[64];
 };
 
-void bmfs_dir_zero(struct BMFSDir *dir);
+void bmfs_dir_init(struct BMFSDir *dir);
 
 int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
 
@@ -20,7 +20,7 @@ int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename);
 
 int bmfs_dir_delete_file(struct BMFSDir *dir, const char *filename);
 
-int bmfs_dir_sort(struct BMFSDir *dir);
+int bmfs_dir_sort(struct BMFSDir *dir, int (*entry_cmp)(const struct BMFSEntry *a, const struct BMFSEntry *b));
 
 struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename);
 

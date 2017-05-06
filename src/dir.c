@@ -5,13 +5,18 @@
 #include "dir.h"
 
 #include <errno.h>
-#include <string.h>
 
-static int StartingBlockCmp(const void *pa, const void *pb);
+static int sort_entries(struct BMFSEntry *a,
+                        struct BMFSEntry *b,
+                        int (*entry_cmp)(const struct BMFSEntry *a,
+                                         const struct BMFSEntry *b));
 
-void bmfs_dir_zero(struct BMFSDir *dir)
+void bmfs_dir_init(struct BMFSDir *dir)
 {
-	memset(dir, 0, sizeof(*dir));
+	for (uint64_t i = 0; i < 64; i++)
+	{
+		bmfs_entry_init(&dir->Entries[i]);
+	}
 }
 
 int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
@@ -49,7 +54,7 @@ int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename)
 		return -EFAULT;
 
 	struct BMFSEntry entry;
-	bmfs_entry_zero(&entry);
+	bmfs_entry_init(&entry);
 	bmfs_entry_set_file_name(&entry, filename);
 	bmfs_entry_set_starting_block(&entry, 1);
 	return bmfs_dir_add(dir, &entry);
@@ -68,55 +73,76 @@ int bmfs_dir_delete_file(struct BMFSDir *dir, const char *filename)
 	return 0;
 }
 
-int bmfs_dir_sort(struct BMFSDir *dir)
+int bmfs_dir_sort(struct BMFSDir *dir, int (*entry_cmp)(const struct BMFSEntry *a, const struct BMFSEntry *b))
 {
-	if (dir == NULL)
-		return -EFAULT;
+	if (entry_cmp == NULL)
+		entry_cmp = bmfs_entry_cmp_by_filename;
+
 	size_t i;
-	for (i = 0; i < 64; i++)
-	{
-		if (dir->Entries[i].FileName[0] == 0)
-			break;
-	}
-	/* i is the number of used entries */
-	qsort(dir->Entries, i, sizeof(dir->Entries[0]), StartingBlockCmp);
+	struct BMFSEntry *a;
+	struct BMFSEntry *b;
+	int mod_flag = 0;
+
+	do {
+		mod_flag = 0;
+		for (i = 0; i < 64 - 1; i++)
+		{
+			a = &dir->Entries[i];
+			if (bmfs_entry_is_terminator(a))
+				break;
+
+			b = &dir->Entries[i + 1];
+			if (bmfs_entry_is_terminator(b))
+				break;
+
+			mod_flag |= sort_entries(a, b, entry_cmp);
+		}
+	} while (mod_flag);
+
 	return 0;
 }
 
 struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename)
 {
 	int tint;
+	struct BMFSEntry *entry;
+
 	for (tint = 0; tint < 64; tint++)
 	{
-		if (dir->Entries[tint].FileName[0] == 0)
+		entry = &dir->Entries[tint];
+		if (bmfs_entry_is_terminator(entry))
 			/* end of directory */
 			break;
-		else if (dir->Entries[tint].FileName[0] == 1)
+		else if (bmfs_entry_is_empty(entry))
 			/* skip empty entry */
 			continue;
-		else if (strcmp(dir->Entries[tint].FileName, filename) != 0)
+		else if (bmfs_entry_cmp_filename(&dir->Entries[tint], filename) != 0)
 			/* not a match, skip this file */
 			continue;
 
 		/* file was found */
-		return &dir->Entries[tint];
+		return entry;
 	}
 
 	/* file not found */
 	return NULL;
 }
 
-// helper function for qsort, sorts by StartingBlock field
-static int StartingBlockCmp(const void *pa, const void *pb)
+static int sort_entries(struct BMFSEntry *a,
+                        struct BMFSEntry *b,
+                        int (*entry_cmp)(const struct BMFSEntry *a,
+                                         const struct BMFSEntry *b))
 {
-	struct BMFSEntry *ea = (struct BMFSEntry *)pa;
-	struct BMFSEntry *eb = (struct BMFSEntry *)pb;
-	// empty records go to the end
-	if (ea->FileName[0] == 0x01)
+	int res;
+	struct BMFSEntry tmp;
+	res = entry_cmp(a, b);
+	if (res > 0)
+	{
+		tmp = *a;
+		*a = *b;
+		*b = tmp;
 		return 1;
-	if (eb->FileName[0] == 0x01)
-		return -1;
-	// compare non-empty records by their starting blocks number
-	return (ea->StartingBlock - eb->StartingBlock);
+	}
+	return 0;
 }
 

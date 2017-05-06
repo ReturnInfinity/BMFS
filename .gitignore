@@ -26,3 +26,7 @@ dir-test
 sspec-test
 # Mac crap
 .DS_Store
+# Doxygen crap
+doc/html
+doc/man
+doc/latex

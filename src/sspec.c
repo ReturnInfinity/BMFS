@@ -1,10 +1,12 @@
 #include "sspec.h"
 
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <inttypes.h>
+
+static int to_string(uint64_t bytes, char *str, uint64_t str_len);
+
+static int to_type(const char *suffix, enum bmfs_sspec_type *type);
 
 int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *str)
 {
@@ -24,74 +26,24 @@ int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *str)
 		str++;
 	}
 
-	if (str[0] == 0)
-		sspec->type = BMFS_SSPEC_NONE;
-	else if (strcmp(str, "B") == 0)
-		sspec->type = BMFS_SSPEC_NONE;
-	else if (strcmp(str, "TiB") == 0)
-		sspec->type = BMFS_SSPEC_TEBI;
-	else if (strcmp(str, "TB") == 0)
-		sspec->type = BMFS_SSPEC_TERA;
-	else if (strcmp(str, "GiB") == 0)
-		sspec->type = BMFS_SSPEC_GIBI;
-	else if (strcmp(str, "GB") == 0)
-		sspec->type = BMFS_SSPEC_GIGA;
-	else if (strcmp(str, "MiB") == 0)
-		sspec->type = BMFS_SSPEC_MEBI;
-	else if (strcmp(str, "MB") == 0)
-		sspec->type = BMFS_SSPEC_MEGA;
-	else if (strcmp(str, "KiB") == 0)
-		sspec->type = BMFS_SSPEC_KIBI;
-	else if (strcmp(str, "KB") == 0)
-		sspec->type = BMFS_SSPEC_KILO;
-	else
-		return -EINVAL;
+	int err = to_type(str, &sspec->type);
+	if (err != 0)
+		return err;
 
 	sspec->value = value;
 
 	return 0;
 }
 
-char * bmfs_sspec_to_string(const struct bmfs_sspec *sspec)
+int bmfs_sspec_to_string(const struct bmfs_sspec *sspec, char *str, uint64_t str_len)
 {
 	uint64_t bytes = 0;
 
 	int err = bmfs_sspec_bytes(sspec, &bytes);
 	if (err != 0)
-		return NULL;
+		return err;
 
-	size_t str_len = 32;
-	/* calloc instead of malloc,
-	 * just for safe measure */
-	char *str = calloc(1, str_len);
-	if (str == NULL)
-		return NULL;
-
-	uint64_t value = sspec->value;
-	if (value >= 1024ULL * 1024ULL * 1024ULL * 1024ULL)
-	{
-		value /= 1024ULL * 1024ULL * 1024ULL * 1024ULL;
-		snprintf(str, str_len, "%" PRIu64 "TiB", value);
-	}
-	else if (value >= 1024ULL * 1024ULL * 1024ULL)
-	{
-		value /= 1024ULL * 1024ULL * 1024ULL;
-		snprintf(str, str_len, "%" PRIu64 "GiB", value);
-	}
-	else if (value >= 1024ULL * 1024ULL)
-	{
-		value /= 1024ULL * 1024ULL;
-		snprintf(str, str_len, "%" PRIu64 "MiB", value);
-	}
-	else if (value >= 1024ULL)
-	{
-		value /= 1024ULL;
-		snprintf(str, str_len, "%" PRIu64 "KiB", value);
-	}
-	else
-		snprintf(str, str_len, "%" PRIu64 "B", value);
-
-	return str;
+	return to_string(bytes, str, str_len);
 }
 
 int bmfs_sspec_set_bytes(struct bmfs_sspec *sspec, uint64_t bytes)
@@ -141,5 +93,175 @@ int bmfs_sspec_mebibytes(const struct bmfs_sspec *sspec, uint64_t *mebibytes)
 	*mebibytes /= 1024ULL * 1024ULL;
 
 	return 0;
+}
+
+static int to_string(uint64_t bytes, char *str, uint64_t str_len)
+{
+	uint64_t base = 0;
+	uint64_t i = 0;
+	uint64_t n = 0;
+	const char *suffix = NULL;
+
+	/* max string: "1024YiB" plus '\0' = 8 */
+	if (str_len < 8)
+		return -EINVAL;
+
+	while (bytes > 1024)
+	{
+		bytes /= 1024;
+		base++;
+	}
+
+	if (base == 0)
+		suffix = "B";
+	else if (base == 1)
+		suffix = "KiB";
+	else if (base == 2)
+		suffix = "MiB";
+	else if (base == 3)
+		suffix = "GiB";
+	else if (base == 4)
+		suffix = "TiB";
+	else if (base == 5)
+		suffix = "PiB";
+	else if (base == 6)
+		suffix = "EiB";
+	else if (base == 7)
+		suffix = "ZiB";
+	else if (base == 8)
+		suffix = "YiB";
+	else
+		return -EINVAL;
+
+	if (bytes == 0)
+	{
+		str[i] = '0';
+		i++;
+	}
+
+	n = bytes / 1000;
+	if (n > 0)
+	{
+		str[i] = '0' + n;
+		i++;
+		bytes %= 1000;
+	}
+
+	n = bytes / 100;
+	if (n > 0)
+	{
+		str[i] = '0' + n;
+		i++;
+		bytes %= 100;
+	}
+
+	n = bytes / 10;
+	if (n > 0)
+	{
+		str[i] = '0' + n;
+		i++;
+		bytes %= 10;
+	}
+
+	n = bytes;
+	str[i] = '0' + n;
+	i++;
+
+	while (*suffix)
+	{
+		str[i] = *suffix;
+		suffix++;
+		i++;
+	}
+
+	str[i] = 0;
+
+	return 0;
+}
+
+static int to_type(const char *suffix, enum bmfs_sspec_type *type)
+{
+	if (suffix[0] == 0)
+	{
+		*type = BMFS_SSPEC_NONE;
+		return 0;
+	}
+
+	if ((suffix[0] == 'B')
+	 && (suffix[1] == 0))
+	{
+		*type = BMFS_SSPEC_NONE;
+		return 0;
+	}
+
+	if ((suffix[0] == 'K')
+	 && (suffix[1] == 'B')
+	 && (suffix[2] == 0))
+	{
+		*type = BMFS_SSPEC_KILO;
+		return 0;
+	}
+
+	if ((suffix[0] == 'M')
+	 && (suffix[1] == 'B')
+	 && (suffix[2] == 0))
+	{
+		*type = BMFS_SSPEC_MEGA;
+		return 0;
+	}
+
+	if ((suffix[0] == 'G')
+	 && (suffix[1] == 'B')
+	 && (suffix[2] == 0))
+	{
+		*type = BMFS_SSPEC_GIGA;
+		return 0;
+	}
+
+	if ((suffix[0] == 'T')
+	 && (suffix[1] == 'B')
+	 && (suffix[2] == 0))
+	{
+		*type = BMFS_SSPEC_TERA;
+		return 0;
+	}
+
+	if ((suffix[0] == 'K')
+	 && (suffix[1] == 'i')
+	 && (suffix[2] == 'B')
+	 && (suffix[3] == 0))
+	{
+		*type = BMFS_SSPEC_KIBI;
+		return 0;
+	}
+
+	if ((suffix[0] == 'M')
+	 && (suffix[1] == 'i')
+	 && (suffix[2] == 'B')
+	 && (suffix[3] == 0))
+	{
+		*type = BMFS_SSPEC_MEBI;
+		return 0;
+	}
+
+	if ((suffix[0] == 'G')
+	 && (suffix[1] == 'i')
+	 && (suffix[2] == 'B')
+	 && (suffix[3] == 0))
+	{
+		*type = BMFS_SSPEC_GIBI;
+		return 0;
+	}
+
+	if ((suffix[0] == 'T')
+	 && (suffix[1] == 'i')
+	 && (suffix[2] == 'B')
+	 && (suffix[3] == 0))
+	{
+		*type = BMFS_SSPEC_TEBI;
+		return 0;
+	}
+
+	return -EINVAL;
 }
 
