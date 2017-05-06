@@ -8,6 +8,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 struct BMFSEntry
 {
 	char FileName[32];
@@ -43,6 +47,10 @@ void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry, size_t reserved_blo
 int bmfs_entry_is_empty(const struct BMFSEntry *entry);
 
 int bmfs_entry_is_terminator(const struct BMFSEntry *entry);
+
+#ifdef __cplusplus
+} /* extern "C" { */
+#endif
 
 #endif /* BMFS_ENTRY_H */
 
