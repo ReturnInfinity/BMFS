@@ -24,14 +24,6 @@ stdlibfiles += stdlib.o
 libs += libbmfs.a
 libs += libbmfs-stdlib.a
 
-headers += bmfs.h
-headers += dir.h
-headers += disk.h
-headers += entry.h
-headers += limits.h
-headers += sspec.h
-headers += version.h
-
 utils += bmfs
 ifndef NO_UNIX_UTILS
 utils += bmfs-cat
