@@ -1,7 +1,7 @@
-include ../make/config.mk
-include ../make/patterns.mk
+include $(TOP)/make/config.mk
+include $(TOP)/make/patterns.mk
 
-VPATH += ../include/bmfs
+VPATH += $(TOP)/include/bmfs
 
 ifndef BMFS_RELEASE
 CFLAGS += -g -O2
@@ -10,7 +10,7 @@ CFLAGS += -O3
 endif
 
 CFLAGS += -fno-stack-protector
-CFLAGS += -I../include
+CFLAGS += -I$(TOP)/include
 
 libfiles += dir.o
 libfiles += disk.o
