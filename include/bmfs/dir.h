@@ -13,8 +13,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/** @defgroup dir-api Directory API
+ * Directory traversal, entry addition
+ * or deletion and sorting.
+ */
+
 /** A BMFS directory.
  * Contains up to sixty-four entries.
+ * @ingroup dir-api
  */
 
 struct BMFSDir
@@ -27,6 +33,7 @@ struct BMFSDir
  * through and initializing all sixty
  * four entries.
  * @param dir An uninitialized directory.
+ * @ingroup dir-api
  */
 
 void bmfs_dir_init(struct BMFSDir *dir);
@@ -39,6 +46,7 @@ void bmfs_dir_init(struct BMFSDir *dir);
  * @param entry The entry to add to the directory.
  * @returns Zero on success, a negative error code
  *  on failure.
+ * @ingroup dir-api
  */
 
 int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
@@ -50,6 +58,7 @@ int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
  * @param dir An initialized directory.
  * @param filename An ASCII, null-terminated filename.
  * @returns Zero on success, a negative error code on failure.
+ * @ingroup dir-api
  */
 
 int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename);
@@ -59,6 +68,7 @@ int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename);
  * @param dir An initialized directory.
  * @param filename An ASCII, null-terminated filename.
  * @returns Zero on success, a negative error code on failure.
+ * @ingroup dir-api
  */
 
 int bmfs_dir_delete_file(struct BMFSDir *dir, const char *filename);
@@ -70,6 +80,7 @@ int bmfs_dir_delete_file(struct BMFSDir *dir, const char *filename);
  *  parameter is NULL, then the directory
  *  is sorted alphabetically.
  * @returns Zero on success, a negative error code on failure.
+ * @ingroup dir-api
  */
 
 int bmfs_dir_sort(struct BMFSDir *dir, int (*entry_cmp)(const struct BMFSEntry *a, const struct BMFSEntry *b));
@@ -81,6 +92,7 @@ int bmfs_dir_sort(struct BMFSDir *dir, int (*entry_cmp)(const struct BMFSEntry *
  * @returns If the entry is found, a pointer
  *  to the structure is returned. If it is not
  *  found, NULL is returned instead.
+ * @ingroup dir-api
  */
 
 struct BMFSEntry * bmfs_dir_find(struct BMFSDir *dir, const char *filename);
