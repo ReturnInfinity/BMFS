@@ -15,12 +15,29 @@
 extern "C" {
 #endif
 
+/** An abstract disk structure.
+ * This structure allows a disk
+ * to be represented by anything
+ * that can read and write data.
+ */
+
 struct BMFSDisk
 {
+	/** A pointer used by the disk implementation to
+	 * pass to the seek, tell, read and write methods.
+	 */
 	void *disk;
+	/** Points the disk to a particular location.
+	 */
 	int (*seek)(void *disk, int64_t offset, int whence);
+	/** Retrieves the current location of the disk.
+	 */
 	int (*tell)(void *disk, int64_t *offset);
+	/** Reads data from the disk.
+	 */
 	int (*read)(void *disk, void *buf, uint64_t len, uint64_t *read_len);
+	/** Writes data to the disk.
+	 */
 	int (*write)(void *disk, const void *buf, uint64_t len, uint64_t *write_len);
 };
 
