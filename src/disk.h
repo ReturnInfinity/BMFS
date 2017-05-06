@@ -45,7 +45,6 @@ int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, size_t me
 int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename);
 int bmfs_disk_format(struct BMFSDisk *disk);
 
-int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
 int bmfs_read(struct BMFSDisk *disk,
               const char *filename,
               void * buf,
@@ -56,8 +55,6 @@ int bmfs_write(struct BMFSDisk *disk,
                const void *buf,
                uint64_t len,
                uint64_t off);
-void bmfs_readfile(struct BMFSDisk *disk, const char *filename);
-void bmfs_writefile(struct BMFSDisk *disk, const char *filename);
 
 #ifdef __cplusplus
 } /* extern "C" { */
