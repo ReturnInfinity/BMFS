@@ -19,7 +19,7 @@ PREFIX ?= /usr/local
 #   to some of the traditional unix
 #   tools (for example, cp). These
 #   are not built by default.
-NO_UNIX_UTILS ?=
+NO_UNIX_UTILS ?= 1
 
 # NO_FUSE:
 #   BMFS comes with a fuse binding,
@@ -29,7 +29,7 @@ NO_UNIX_UTILS ?=
 #   whether or not the fuse library
 #   and headers are available to build
 #   the BMFS fuse program.
-NO_FUSE = 1
+NO_FUSE ?= 1
 
 # VALGRIND:
 #   Path to the valgrind executable.
