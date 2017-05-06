@@ -8,16 +8,35 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+/* @file */
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/** An entry within a BMFS directory.
+ * Contains information on a file, such
+ * as name, size and more.
+ */
+
 struct BMFSEntry
 {
+	/** The name of the entry. */
 	char FileName[32];
+	/** The block that the file data
+	 * starts at. */
 	uint64_t StartingBlock;
+	/** The number of blocks that have
+	 * been reserved for the file to grow.
+	 */
 	uint64_t ReservedBlocks;
+	/** The number of bytes in the file
+	 * that contain valid data.
+	 */
 	uint64_t FileSize;
+	/** Reserved for future use. Do not
+	 * read or write from this field.
+	 */
 	uint64_t Unused;
 };
 
