@@ -1,5 +1,5 @@
-#include "bmfs.h"
-
+#include <bmfs/bmfs.h>
+#include <bmfs/stdlib.h>
 #include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
@@ -162,18 +162,20 @@ int main(int argc, char **argv)
 		{
 			struct bmfs_sspec entry_storage;
 			bmfs_sspec_set_bytes(&entry_storage, entry->FileSize);
-			char *entry_size = bmfs_sspec_to_string(&entry_storage);
-			printf("%-7s ", entry_size);
-			free(entry_size);
+			char entry_size[8];
+			err = bmfs_sspec_to_string(&entry_storage, entry_size, sizeof(entry_size));
+			if (err == 0)
+				printf("%-7s ", entry_size);
 		}
 
 		if (show_reserved)
 		{
 			struct bmfs_sspec reserved_storage;
 			bmfs_sspec_set_bytes(&reserved_storage, entry->ReservedBlocks * BMFS_BLOCK_SIZE);
-			char *entry_reserved = bmfs_sspec_to_string(&reserved_storage);
-			printf("%-7s ", entry_reserved);
-			free(entry_reserved);
+			char entry_reserved[8];
+			err = bmfs_sspec_to_string(&reserved_storage, entry_reserved, sizeof(entry_reserved));
+			if (err == 0)
+				printf("%-7s ", entry_reserved);
 		}
 
 		printf("%s\n", entry->FileName);

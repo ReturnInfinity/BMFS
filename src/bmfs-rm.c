@@ -1,5 +1,5 @@
-#include "bmfs.h"
-
+#include <bmfs/bmfs.h>
+#include <bmfs/stdlib.h>
 #include <errno.h>
 #include <getopt.h>
 #include <stdio.h>
