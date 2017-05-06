@@ -5,6 +5,7 @@ DOXYGEN ?= doxygen
 .PHONY: all
 all:
 	$(MAKE) -C src all
+	$(MAKE) -C include/bmfs all
 	cp --update src/bmfs bmfs
 ifndef NO_FUSE
 	cp --update src/bmfs-fuse bmfs-fuse
@@ -13,6 +14,7 @@ endif
 .PHONY: clean
 clean:
 	$(MAKE) -C src clean
+	$(MAKE) -C include/bmfs clean
 	$(RM) bmfs bmfs-fuse
 	$(RM) -R doc/html
 	$(RM) -R doc/man
@@ -39,8 +41,9 @@ help:
 .PHONY: test
 test:
 	$(MAKE) -C src test
+	$(MAKE) -C include/bmfs test
 
 .PHONY: install
 install:
 	$(MAKE) -C src install
-
+	$(MAKE) -C include/bmfs install
