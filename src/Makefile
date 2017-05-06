@@ -3,6 +3,8 @@ PREFIX ?= /usr/local
 CFLAGS = -Wall -W -pedantic -std=c99
 NO_UNIX_UTILS = 1
 
+VPATH += ../include/bmfs
+
 ifndef BMFS_RELEASE
 CFLAGS += -g -O2
 else
@@ -10,6 +12,7 @@ CFLAGS += -O3
 endif
 
 CFLAGS += -fno-stack-protector
+CFLAGS += -I../include
 
 libfiles += dir.o
 libfiles += disk.o
@@ -113,8 +116,6 @@ test:
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	mkdir -p $(DESTDIR)$(PREFIX)/lib
-	mkdir -p $(DESTDIR)$(PREFIX)/include/bmfs
-	cp $(utils) $(DESTDIR)$(PREFIX)/bin/
+	cp --update $(utils) $(DESTDIR)$(PREFIX)/bin/
 	cp --update libbmfs.a $(DESTDIR)$(PREFIX)/lib/
-	cp --update $(headers) $(DESTDIR)$(PREFIX)/include/bmfs/
 

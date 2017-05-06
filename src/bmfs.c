@@ -3,6 +3,8 @@
 /* v1.2.3 (2017 04 07) */
 
 /* Global includes */
+#include <bmfs/bmfs.h>
+#include <bmfs/stdlib.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -11,8 +13,6 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "bmfs.h"
-#include "stdlib.h"
 
 char s_list[] = "list";
 char s_format[] = "format";

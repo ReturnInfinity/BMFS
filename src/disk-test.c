@@ -1,7 +1,6 @@
-#include "disk.h"
-#include "limits.h"
-
 #include <assert.h>
+#include <bmfs/disk.h>
+#include <bmfs/limits.h>
 #include <errno.h>
 #include <string.h>
 
