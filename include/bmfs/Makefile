@@ -1,5 +1,4 @@
-DESTDIR ?=
-PREFIX ?= /usr/local
+include $(TOP)/make/config.mk
 
 .PHONY: all
 all:
