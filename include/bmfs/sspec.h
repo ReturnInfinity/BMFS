@@ -111,7 +111,7 @@ int bmfs_sspec_bytes(const struct bmfs_sspec *sspec, uint64_t *bytes);
 int bmfs_sspec_mebibytes(const struct bmfs_sspec *sspec, uint64_t *mebibytes);
 
 #ifdef __cplusplus
-extern "C" {
+} /* extern "C" { */
 #endif /* __cplusplus */
 
 #endif /* BMFS_SSPEC_H */
