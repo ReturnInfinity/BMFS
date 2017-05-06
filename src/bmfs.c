@@ -12,6 +12,7 @@
 #include <ctype.h>
 
 #include "bmfs.h"
+#include "stdlib.h"
 
 char s_list[] = "list";
 char s_format[] = "format";
