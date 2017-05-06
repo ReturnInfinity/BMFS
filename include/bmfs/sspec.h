@@ -9,8 +9,13 @@
 extern "C" {
 #endif
 
+/** @defgroup sspec-api Storage Specifiers
+ * Read and write values like 'MiB', 'GB' and others.
+ */
+
 /** Specifies which suffix is used
  * in the storage specification.
+ * @ingroup sspec-api
  */
 
 enum bmfs_sspec_type
@@ -37,6 +42,7 @@ enum bmfs_sspec_type
 /** Used to specify a numerical value
  * of storage capacity. It is an abbreviated
  * name of 'storage specification'.
+ * @ingroup sspec-api
  */
 
 struct bmfs_sspec
@@ -63,6 +69,7 @@ struct bmfs_sspec
  *  is case-sensitive.
  * @returns Zero on success, a negative error code on
  *  failure.
+ * @ingroup sspec-api
  */
 
 int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *arg);
@@ -75,6 +82,7 @@ int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *arg);
  *  This value must be at least eight.
  * @returns Zero on success, a negative error code on
  *  failure.
+ * @ingroup sspec-api
  */
 
 int bmfs_sspec_to_string(const struct bmfs_sspec *sspec, char *str, uint64_t str_len);
@@ -84,6 +92,7 @@ int bmfs_sspec_to_string(const struct bmfs_sspec *sspec, char *str, uint64_t str
  *  is set by the function.
  * @param bytes The value to set the storage specifier to.
  * @returns Zero on success, a negative error code on failure.
+ * @ingroup sspec-api
  */
 
 int bmfs_sspec_set_bytes(struct bmfs_sspec *sspec, uint64_t bytes);
@@ -95,6 +104,7 @@ int bmfs_sspec_set_bytes(struct bmfs_sspec *sspec, uint64_t bytes);
  * @param bytes The address of the variable that will receive
  *  the number of bytes of the storage specifier.
  * @returns Zero on success, a negative error on failure.
+ * @ingroup sspec-api
  */
 
 int bmfs_sspec_bytes(const struct bmfs_sspec *sspec, uint64_t *bytes);
@@ -106,6 +116,7 @@ int bmfs_sspec_bytes(const struct bmfs_sspec *sspec, uint64_t *bytes);
  * @param mebibytes The address of the variable that will receive
  *  the number of mebibytes of the storage specifier.
  * @returns Zero on success, a negative error on failure.
+ * @ingroup sspec-api
  */
 
 int bmfs_sspec_mebibytes(const struct bmfs_sspec *sspec, uint64_t *mebibytes);
