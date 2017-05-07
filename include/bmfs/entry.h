@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-/* @file */
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
