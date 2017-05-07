@@ -20,6 +20,7 @@ extern "C" {
 
 enum bmfs_sspec_type
 {
+	/** equivalent to 1024 ^ 0 */
 	BMFS_SSPEC_NONE,
 	/** equivalent to 1024 ^ 4 */
 	BMFS_SSPEC_TEBI,
