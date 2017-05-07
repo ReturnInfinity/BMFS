@@ -5,6 +5,8 @@
 
 #include <stdio.h>
 
+/** @file */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
