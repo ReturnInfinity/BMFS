@@ -2,8 +2,7 @@
 /* Written by Ian Seyler of Return Infinity */
 /* v1.2.3 (2017 04 07) */
 
-#include "dir.h"
-
+#include <bmfs/dir.h>
 #include <errno.h>
 
 static int sort_entries(struct BMFSEntry *a,

@@ -1,7 +1,7 @@
-DESTDIR ?=
-PREFIX ?= /usr/local
-CFLAGS = -Wall -W -pedantic -std=c99
-NO_UNIX_UTILS = 1
+include $(TOP)/make/config.mk
+include $(TOP)/make/patterns.mk
+
+VPATH += $(TOP)/include/bmfs
 
 ifndef BMFS_RELEASE
 CFLAGS += -g -O2
@@ -10,6 +10,7 @@ CFLAGS += -O3
 endif
 
 CFLAGS += -fno-stack-protector
+CFLAGS += -I$(TOP)/include
 
 libfiles += dir.o
 libfiles += disk.o
@@ -20,14 +21,6 @@ stdlibfiles += stdlib.o
 
 libs += libbmfs.a
 libs += libbmfs-stdlib.a
-
-headers += bmfs.h
-headers += dir.h
-headers += disk.h
-headers += entry.h
-headers += limits.h
-headers += sspec.h
-headers += version.h
 
 utils += bmfs
 ifndef NO_UNIX_UTILS
@@ -85,10 +78,8 @@ sspec.o: sspec.c sspec.h
 stdlib.o: stdlib.c stdlib.h
 
 libbmfs.a: $(libfiles)
-	$(AR) $(ARFLAGS) $@ $^
 
 libbmfs-stdlib.a: $(stdlibfiles)
-	$(AR) $(ARFLAGS) $@ $^
 
 bmfs-fuse: bmfs-fuse.c $(libs)
 bmfs-fuse: LDLIBS += $(shell pkg-config --libs fuse)
@@ -113,8 +104,6 @@ test:
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	mkdir -p $(DESTDIR)$(PREFIX)/lib
-	mkdir -p $(DESTDIR)$(PREFIX)/include/bmfs
-	cp $(utils) $(DESTDIR)$(PREFIX)/bin/
+	cp --update $(utils) $(DESTDIR)$(PREFIX)/bin/
 	cp --update libbmfs.a $(DESTDIR)$(PREFIX)/lib/
-	cp --update $(headers) $(DESTDIR)$(PREFIX)/include/bmfs/
 

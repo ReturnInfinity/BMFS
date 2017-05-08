@@ -14,6 +14,7 @@ disk.image
 *.app
 # UNIX/Linux/Mac Executable
 bmfs
+!include/bmfs
 bmfs-cat
 bmfs-cp
 bmfs-create

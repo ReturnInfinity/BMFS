@@ -1,5 +1,4 @@
-#include "sspec.h"
-
+#include <bmfs/sspec.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <inttypes.h>

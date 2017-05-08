@@ -2,8 +2,8 @@
 /* Written by Ian Seyler of Return Infinity */
 /* v1.2.3 (2017 04 07) */
 
-#include "disk.h"
-#include "limits.h"
+#include <bmfs/disk.h>
+#include <bmfs/limits.h>
 
 #include <errno.h>
 #include <limits.h>

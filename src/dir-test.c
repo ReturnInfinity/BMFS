@@ -1,4 +1,4 @@
-#include "dir.h"
+#include <bmfs/dir.h>
 
 #include <assert.h>
 #include <errno.h>

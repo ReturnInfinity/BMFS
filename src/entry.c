@@ -2,9 +2,8 @@
 /* Written by Ian Seyler of Return Infinity */
 /* v1.2.3 (2017 04 07) */
 
-#include "entry.h"
-#include "limits.h"
-
+#include <bmfs/entry.h>
+#include <bmfs/limits.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
