@@ -82,22 +82,8 @@ static int data_write(void *disk_ptr, const void *buf, uint64_t len, uint64_t *w
 	return 0;
 }
 
-static int zerocmp(const void *a, size_t size)
-{
-	void *b = calloc(1, size);
-	if (b == NULL)
-		return -1;
-
-	int cmp_result = memcmp(a, b, size);
-
-	free(b);
-
-	return cmp_result;
-}
-
 int main(void)
 {
-
 	struct DiskData data;
 
 	data.buf = malloc(BMFS_MINIMUM_DISK_SIZE);
@@ -116,7 +102,6 @@ int main(void)
 	/* test format function */
 	assert(bmfs_disk_format(&disk) == 0);
 	assert(memcmp(&data.buf[1024], "BMFS", 4) == 0);
-	assert(zerocmp(&data.buf[4096], 4096) == 0);
 
 	/* test allocation */
 	uint64_t starting_block = 0;
@@ -136,8 +121,6 @@ int main(void)
 	assert(dir.Entries[0].FileSize == 0);
 	/* make sure buffer is consistent */
 	assert(memcmp(&data.buf[4096], "a.txt", 5) == 0);
-	/* make sure next file marks end of directory */
-	assert(dir.Entries[1].FileName[0] == 0);
 
 	assert(bmfs_disk_create_file(&disk, "b.txt", 1) == 0);
 	assert(bmfs_disk_read_dir(&disk, &dir) == 0);
@@ -148,8 +131,6 @@ int main(void)
 	/* make sure buffer is consistent */
 	assert(memcmp(&data.buf[4096], "a.txt", 5) == 0);
 	assert(memcmp(&data.buf[4096 + 64], "b.txt", 5) == 0);
-	/* make sure next file marks end of directory */
-	assert(dir.Entries[2].FileName[0] == 0);
 
 	/* test to make sure the disk will run out of space */
 	assert(bmfs_disk_create_file(&disk, "c.txt", 1) == -ENOSPC);

@@ -125,7 +125,7 @@ int bmfs_disk_write(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_bytes(struct BMFSDisk *disk,
-                    size_t *bytes);
+                    uint64_t *bytes);
 
 /** Determines the number of mebibytes
  * available on disk.
@@ -139,7 +139,7 @@ int bmfs_disk_bytes(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_mebibytes(struct BMFSDisk *disk,
-                        size_t *mebibytes);
+                        uint64_t *mebibytes);
 
 /** Determines the number of blocks
  * available on disk.
@@ -153,7 +153,7 @@ int bmfs_disk_mebibytes(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_blocks(struct BMFSDisk *disk,
-                     size_t *blocks);
+                     uint64_t *blocks);
 
 /** Locates a starting block that can
  * fit a certain number of bytes.
@@ -170,8 +170,8 @@ int bmfs_disk_blocks(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_allocate_bytes(struct BMFSDisk *disk,
-                             size_t bytes,
-                             size_t *starting_block);
+                             uint64_t bytes,
+                             uint64_t *starting_block);
 
 /** Locates a starting block that can
  * fit a certain number of mebibytes.
@@ -187,8 +187,8 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_allocate_mebibytes(struct BMFSDisk *disk,
-                                 size_t mebibytes,
-                                 size_t *starting_block);
+                                 uint64_t mebibytes,
+                                 uint64_t *starting_block);
 
 /** Locates a file entry.
  * @param disk An initialized disk.
@@ -277,7 +277,7 @@ int bmfs_disk_write_tag(struct BMFSDisk *disk);
 
 int bmfs_disk_create_file(struct BMFSDisk *disk,
                           const char *filename,
-                          size_t mebibytes);
+                          uint64_t mebibytes);
 
 /** Deletes a file from the disk.
  * If the file doesn't exist, this
