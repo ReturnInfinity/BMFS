@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -184,25 +185,110 @@ static int bmfs_fuse_open(const char *path, struct fuse_file_info *fi)
  * The data is written to the buf parameter.
  * The file is read starting at the offset
  * parameter.
+ * @returns The number of bytes read.
  * */
 
 static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset,
                           struct fuse_file_info *fi)
 {
-	(void) fi;
-	return bmfs_read(&disk, path + 1, buf, size, offset);
+	int err;
+	struct BMFSEntry entry;
+	uint64_t entry_offset;
+	uint64_t read_count;
+
+	/* make sure return code
+	 * can differentiate between
+	 * a negative error code and
+	 * a write count. */
+	if (size > INT_MAX)
+		size = INT_MAX;
+
+	err = bmfs_disk_find_file(&disk, path + 1, &entry, NULL);
+	if (err != 0)
+		return err;
+
+	err = bmfs_entry_get_offset(&entry, &entry_offset);
+	if (err != 0)
+		return err;
+
+	if (offset > entry.FileSize)
+		offset = entry.FileSize;
+
+	err = bmfs_disk_seek(&disk, entry_offset + offset, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	if ((size + offset) > entry.FileSize)
+		size = entry.FileSize - offset;
+
+	err = bmfs_disk_read(&disk, buf, size, &read_count);
+	if (err != 0)
+		return err;
+
+	return read_count;
 }
 
 /** Writes data to a file.
  * This function's parameters are similar
- * to that of bmfs_fuse_read.
+ * to that of bmfs_fuse_read, except that
+ * it cannot return zero.
+ * @returns The number of bytes written.
+ *  If zero is returned, it is considered
+ *  an error.
  * */
 
 static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t offset,
                            struct fuse_file_info *fi)
 {
-	(void) fi;
-	return bmfs_write(&disk, path + 1, buf, size, offset);
+	int err;
+	struct BMFSDir dir;
+	struct BMFSEntry *entry;
+	uint64_t entry_offset;
+	uint64_t write_count;
+	uint64_t reserved_bytes;
+
+	/* make sure return code
+	 * can differentiate between
+	 * a negative error code and
+	 * a write count. */
+	if (size > INT_MAX)
+		size = INT_MAX;
+
+	err = bmfs_disk_read_dir(&disk, &dir);
+	if (err != 0)
+		return err;
+
+	entry = bmfs_dir_find(&dir, path + 1);
+	if (entry == NULL)
+		return -ENOENT;
+
+	reserved_bytes = entry->ReservedBlocks * BMFS_BLOCK_SIZE;
+
+	err = bmfs_entry_get_offset(entry, &entry_offset);
+	if (err != 0)
+		return err;
+
+	if (offset > reserved_bytes)
+		offset = reserved_bytes;
+
+	err = bmfs_disk_seek(&disk, entry_offset + offset, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	if ((size + offset) > reserved_bytes)
+		size = reserved_bytes - offset;
+
+	err = bmfs_disk_write(&disk, buf, size, &write_count);
+	if (err != 0)
+		return err;
+
+	entry->FileSize += write_count;
+
+	err = bmfs_disk_write_dir(&disk, &dir);
+	if (err != 0)
+		return err;
+
+	return write_count;
 }
 
 static struct fuse_operations bmfs_fuse_operations = {
