@@ -91,6 +91,7 @@ clean:
 	$(RM) libbmfs.a
 	$(RM) libbmfs-stdlib.a
 	$(RM) $(libfiles)
+	$(RM) $(stdlibfiles)
 	$(RM) $(tests)
 	$(RM) $(utils)
 
