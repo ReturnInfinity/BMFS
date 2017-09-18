@@ -148,7 +148,7 @@ void bmfs_entry_set_file_name(struct BMFSEntry *entry,
  */
 
 void bmfs_entry_set_file_size(struct BMFSEntry *entry,
-                              size_t file_size);
+                              uint64_t file_size);
 
 /** Sets the starting block of the entry.
  * @param entry An initialized or
@@ -159,7 +159,7 @@ void bmfs_entry_set_file_size(struct BMFSEntry *entry,
  */
 
 void bmfs_entry_set_starting_block(struct BMFSEntry *entry,
-                                   size_t starting_block);
+                                   uint64_t starting_block);
 
 /** Sets the number of reserved blocks
  * for the entry.
@@ -171,7 +171,7 @@ void bmfs_entry_set_starting_block(struct BMFSEntry *entry,
  */
 
 void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry,
-                                    size_t reserved_blocks);
+                                    uint64_t reserved_blocks);
 
 /** Indicates wether or not the
  * entry is empty.
