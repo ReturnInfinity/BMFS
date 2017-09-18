@@ -8,8 +8,11 @@
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
+
+#ifndef _MSC_VER
+#include <strings.h>
+#endif /* _MSC_VER */
 
 /* disk wrapper functions */
 
@@ -115,7 +118,7 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk, uint64_t bytes, uint64_t *st
 		 && !(bmfs_entry_is_terminator(entry)))
 			next_block = entry->StartingBlock;
 
-		size_t blocks_between = next_block - prev_block;
+		uint64_t blocks_between = next_block - prev_block;
 		if ((blocks_between * BMFS_BLOCK_SIZE) >= bytes)
 		{
 			/* found a spot between entries */
@@ -239,7 +242,7 @@ int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename)
 	return bmfs_disk_write_dir(disk, &dir);
 }
 
-int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFSEntry *fileentry, uint64_t *entrynumber)
 {
 	int err;
 	struct BMFSDir dir;
