@@ -209,7 +209,7 @@ int bmfs_disk_allocate_mebibytes(struct BMFSDisk *disk,
 int bmfs_disk_find_file(struct BMFSDisk *disk,
                         const char *filename,
                         struct BMFSEntry *entry,
-                        int *number);
+                        uint64_t *number);
 
 /** Reads the root directory on disk.
  * @param disk An initialized disk.

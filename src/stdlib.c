@@ -419,7 +419,7 @@ void bmfs_readfile(struct BMFSDisk *disk, const char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
-	int slot;
+	uint64_t slot;
 	unsigned long long bytestoread;
 	char *buffer;
 
@@ -486,6 +486,7 @@ void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 	FILE *tfile;
 	int retval;
 	unsigned long long tempfilesize;
+	uint64_t readsize;
 	char *buffer;
 
 	if (bmfs_disk_read_dir(disk, &dir) != 0)
@@ -531,8 +532,8 @@ void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 	{
 		if (tempfilesize >= BMFS_BLOCK_SIZE)
 		{
-			retval = fread(buffer, BMFS_BLOCK_SIZE, 1, tfile);
-			if (retval == 1)
+			readsize = fread(buffer, BMFS_BLOCK_SIZE, 1, tfile);
+			if (readsize == 1)
 			{
 				bmfs_disk_write(disk, buffer, BMFS_BLOCK_SIZE, NULL);
 				tempfilesize -= BMFS_BLOCK_SIZE;
@@ -545,8 +546,8 @@ void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 		}
 		else
 		{
-			retval = fread(buffer, tempfilesize, 1, tfile);
-			if (retval == 1)
+			readsize = fread(buffer, tempfilesize, 1, tfile);
+			if (readsize == 1)
 			{
 				memset(buffer+(tempfilesize), 0, (BMFS_BLOCK_SIZE-tempfilesize)); // 0 the rest of the buffer
 				bmfs_disk_write(disk, buffer, BMFS_BLOCK_SIZE, NULL);

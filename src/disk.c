@@ -242,7 +242,7 @@ int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename)
 	return bmfs_disk_write_dir(disk, &dir);
 }
 
-int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFSEntry *fileentry, uint64_t *entrynumber)
 {
 	int err;
 	struct BMFSDir dir;
