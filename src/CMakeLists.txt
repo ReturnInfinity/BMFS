@@ -57,3 +57,13 @@ if (BMFS_WITH_FUSE)
 	target_link_libraries("bmfs-fuse" "fuse")
 endif (BMFS_WITH_FUSE)
 
+macro(ADD_BMFS_TEST TEST_NAME)
+	add_bmfs_program("${TEST_NAME}" ${ARGN})
+	add_test("${TEST_NAME}" "${TEST_NAME}")
+endmacro(ADD_BMFS_TEST TEST_NAME)
+
+add_bmfs_test("dir-test" "dir-test.c")
+add_bmfs_test("disk-test" "disk-test.c")
+add_bmfs_test("sspec-test" "sspec-test.c")
+
+enable_testing()

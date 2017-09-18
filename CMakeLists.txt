@@ -21,6 +21,8 @@ include_directories("include")
 
 add_subdirectory("src")
 
+enable_testing()
+
 set(CPACK_PACKAGE_NAME "BMFS")
 set(CPACK_DESCRIPTION_SUMMARY "A collection of utilities of the BMFS file system.")
 set(CPACK_PACKAGE_VENDOR "ReturnInfinity")
