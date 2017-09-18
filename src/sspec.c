@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4244)
+#endif /* _MSC_VER */
+
 static int to_string(uint64_t bytes, char *str, uint64_t str_len);
 
 static int to_type(const char *suffix, enum bmfs_sspec_type *type);

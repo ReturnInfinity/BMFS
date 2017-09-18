@@ -10,9 +10,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
 
+#ifndef _MSC_VER
+#include <strings.h>
+#else /* _MSC_VER */
+#define strcasecmp _stricmp
+#endif /* _MSC_VER */
 
 char s_list[] = "list";
 char s_format[] = "format";

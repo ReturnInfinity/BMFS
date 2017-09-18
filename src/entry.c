@@ -98,12 +98,12 @@ void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename)
 	entry->FileName[i] = 0;
 }
 
-void bmfs_entry_set_starting_block(struct BMFSEntry *entry, size_t starting_block)
+void bmfs_entry_set_starting_block(struct BMFSEntry *entry, uint64_t starting_block)
 {
 	entry->StartingBlock = starting_block;
 }
 
-void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry, size_t reserved_blocks)
+void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry, uint64_t reserved_blocks)
 {
 	entry->ReservedBlocks = reserved_blocks;
 }

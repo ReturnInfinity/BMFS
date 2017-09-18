@@ -4,26 +4,49 @@
 #include <errno.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4244)
+#endif
+
 static int bmfs_disk_file_seek(void *file_ptr, int64_t offset, int whence)
 {
 	if (file_ptr == NULL)
 		return -EFAULT;
 
+#if defined(_MSC_VER)
+	if (_fseeki64((FILE *)(file_ptr), offset, whence) != 0)
+		return -errno;
+#elif defined(__GNUC__)
+	if (fseeko((FILE *)(file_ptr), offset, whence) != 0)
+		return -errno;
+#else
 	if (fseek((FILE *)(file_ptr), offset, whence) != 0)
 		return -errno;
+#endif
 
 	return 0;
 }
 
 static int bmfs_disk_file_tell(void *file_ptr, int64_t *offset_ptr)
 {
+	int64_t offset = 0;
+
 	if (file_ptr == NULL)
 		return -EFAULT;
 
-	int64_t offset = ftell((FILE *)(file_ptr));
+#if defined(_MSC_VER)
+	offset = _ftelli64((FILE *)(file_ptr));
 	if (offset < 0)
 		return -errno;
-
+#elif defined(__GNUC__)
+	offset = ftello((FILE *)(file_ptr));
+	if (offset < 0)
+		return -errno;
+#else
+	offset = ftell((FILE *)(file_ptr));
+	if (offset < 0)
+		return -errno;
+#endif
 	if (offset_ptr != NULL)
 		*offset_ptr = offset;
 
@@ -73,8 +96,8 @@ int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file)
 
 int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 {
-	unsigned long long diskSize = 0;
-	unsigned long long writeSize = 0;
+	uint64_t diskSize = 0;
+	uint64_t writeSize = 0;
 	const char *bootFileType = NULL;
 	size_t bufferSize = 50 * 1024;
 	char * buffer = NULL;
@@ -84,7 +107,7 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	int diskSizeFactor = 0;
 	size_t chunkSize = 0;
 	int ret = 0;
-	size_t i;
+	uint64_t i;
 	FILE *disk = NULL;
 
 	// Determine how the second file will be described in output messages.
