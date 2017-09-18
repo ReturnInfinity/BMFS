@@ -281,7 +281,9 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 			percent = writeSize;
 			percent /= diskSize;
 			percent *= 100;
-			printf("Formatting disk: %llu of %llu bytes (%.0f%%)...\r", writeSize, diskSize, percent);
+			printf("Formatting disk: %llu of %llu bytes (%.0f%%)...\r",
+			       (unsigned long long int) writeSize,
+			       (unsigned long long int) diskSize, percent);
 			chunkSize = bufferSize;
 			if (chunkSize > diskSize - writeSize)
 			{
@@ -297,7 +299,9 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 		}
 		if (ret == 0)
 		{
-			printf("Formatting disk: %llu of %llu bytes (100%%)%9s\n", writeSize, diskSize, "");
+			printf("Formatting disk: %llu of %llu bytes (100%%)%9s\n",
+			       (unsigned long long int) writeSize,
+			       (unsigned long long int) diskSize, "");
 		}
 	}
 
