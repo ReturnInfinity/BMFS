@@ -108,9 +108,32 @@ void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry, uint64_t reserved_b
 	entry->ReservedBlocks = reserved_blocks;
 }
 
+void bmfs_entry_set_type(struct BMFSEntry *entry, enum BMFSEntryType type)
+{
+	switch (type)
+	{
+		case BMFS_TYPE_FILE:
+		case BMFS_TYPE_DIRECTORY:
+			entry->Type = type;
+			break;
+		default:
+			break;
+	}
+}
+
+int bmfs_entry_is_directory(const struct BMFSEntry *entry)
+{
+	return entry->Type == BMFS_TYPE_DIRECTORY;
+}
+
 int bmfs_entry_is_empty(const struct BMFSEntry *entry)
 {
 	return entry->FileName[0] == 1;
+}
+
+int bmfs_entry_is_file(const struct BMFSEntry *entry)
+{
+	return entry->Type == BMFS_TYPE_FILE;
 }
 
 int bmfs_entry_is_terminator(const struct BMFSEntry *entry)

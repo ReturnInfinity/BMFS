@@ -16,9 +16,23 @@ extern "C" {
  * Examine and manipulate file entry data.
  */
 
+/** Indicates the type of entry. This
+ * may be a directory or a file.
+ * @ingroup entry-api
+ */
+
+enum BMFSEntryType
+{
+	/** The entry is a file. */
+	BMFS_TYPE_FILE,
+	/** The entry is a directory. */
+	BMFS_TYPE_DIRECTORY
+};
+
 /** An entry within a BMFS directory.
  * Contains information on a file, such
  * as name, size and more.
+ * @ingroup entry-api
  */
 
 struct BMFSEntry
@@ -36,10 +50,12 @@ struct BMFSEntry
 	 * that contain valid data.
 	 */
 	uint64_t FileSize;
+	/** The type of entry this is. */
+	uint8_t Type;
 	/** Reserved for future use. Do not
 	 * read or write from this field.
 	 */
-	uint64_t Unused;
+	uint8_t Unused[7];
 };
 
 /** Initializes an entry.
@@ -173,6 +189,25 @@ void bmfs_entry_set_starting_block(struct BMFSEntry *entry,
 void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry,
                                     uint64_t reserved_blocks);
 
+/** Sets the type of entry.
+ * @param entry An initialized entry.
+ * @param entry_type The type of entry.
+ * @ingroup entry-api
+ */
+
+void bmfs_entry_set_type(struct BMFSEntry *entry,
+                         enum BMFSEntryType entry_type);
+
+/** Indicates wether or not the
+ * entry is a directory.
+ * @param entry An initialized entry.
+ * @returns One if the entry is a directory,
+ *  zero if it is not.
+ * @ingroup entry-api
+ */
+
+int bmfs_entry_is_directory(const struct BMFSEntry *entry);
+
 /** Indicates wether or not the
  * entry is empty.
  * @param entry An initialized entry.
@@ -182,6 +217,16 @@ void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry,
  */
 
 int bmfs_entry_is_empty(const struct BMFSEntry *entry);
+
+/** Indicates wether or not the
+ * entry is a file.
+ * @param entry An initialized entry.
+ * @returns One if the entry is a file,
+ *  zero if it is not.
+ * @ingroup entry-api
+ */
+
+int bmfs_entry_is_file(const struct BMFSEntry *entry);
 
 /** Indicates wether or not the
  * entry marks the end of the directory.
