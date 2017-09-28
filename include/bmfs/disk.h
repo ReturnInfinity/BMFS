@@ -279,6 +279,17 @@ int bmfs_disk_create_file(struct BMFSDisk *disk,
                           const char *filename,
                           uint64_t mebibytes);
 
+/** Creates a directory on the disk.
+ * @param disk An initialized disk structure.
+ * @param dirname The name of the directory to create.
+ *  If this directory already exists, the function will fail.
+ * @returns Zero on success, a negative error code otherwise.
+ * @ingroup disk-api
+ */
+
+int bmfs_disk_create_dir(struct BMFSDisk *disk,
+                         const char *dirname);
+
 /** Deletes a file from the disk.
  * If the file doesn't exist, this
  * function fails.

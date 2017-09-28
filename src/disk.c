@@ -225,6 +225,41 @@ int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, uint64_t 
 	return 0;
 }
 
+int bmfs_disk_create_dir(struct BMFSDisk *disk, const char *dirname)
+{
+	if ((disk == NULL)
+	 || (dirname == NULL))
+		return -EFAULT;
+
+	uint64_t starting_block;
+	int err = bmfs_disk_allocate_mebibytes(disk, 2 /* 2MiB */, &starting_block);
+	if (err != 0)
+		return err;
+
+	struct BMFSEntry entry;
+	bmfs_entry_init(&entry);
+	bmfs_entry_set_file_name(&entry, dirname);
+	bmfs_entry_set_type(&entry, BMFS_TYPE_DIRECTORY);
+	bmfs_entry_set_starting_block(&entry, starting_block);
+	bmfs_entry_set_reserved_blocks(&entry, 1 /* 1 reserved block */);
+
+	struct BMFSDir dir;
+
+	err = bmfs_disk_read_dir(disk, &dir);
+	if (err != 0)
+		return err;
+
+	err = bmfs_dir_add(&dir, &entry);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_write_dir(disk, &dir);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
 int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename)
 {
 	struct BMFSDir dir;

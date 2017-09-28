@@ -165,6 +165,13 @@ int main(void)
 	assert(bmfs_disk_delete_file(&disk, "b.txt") == 0);
 	assert(bmfs_disk_create_file(&disk, "c.txt", 2) == -EEXIST);
 
+	/* delete remaining files */
+	assert(bmfs_disk_delete_file(&disk, "c.txt") == 0);
+
+	/* test to make sure directories can be created */
+	assert(bmfs_disk_create_dir(&disk, "subdir") == 0);
+	assert(memcmp(&data.buf[4096], "subdir", 6) == 0);
+
 	free(data.buf);
 
 	return EXIT_SUCCESS;
