@@ -59,7 +59,10 @@ static int data_read(void *disk_ptr, void *buf, uint64_t len, uint64_t *read_len
 	if ((disk->pos + len) > disk->len)
 		len = disk->len - disk->pos;
 
-	memcpy(buf, &disk->buf[disk->pos], len);
+	if (len > SIZE_MAX)
+		len = SIZE_MAX;
+
+	memcpy(buf, &disk->buf[disk->pos], (size_t) len);
 
 	if (read_len != NULL)
 		*read_len = len;
@@ -74,7 +77,10 @@ static int data_write(void *disk_ptr, const void *buf, uint64_t len, uint64_t *w
 	if ((disk->pos + len) > disk->len)
 		len = disk->len - disk->pos;
 
-	memcpy(&disk->buf[disk->pos], buf, len);
+	if (len > SIZE_MAX)
+		len = SIZE_MAX;
+
+	memcpy(&disk->buf[disk->pos], buf, (size_t) len);
 
 	if (write_len != NULL)
 		*write_len = len;
