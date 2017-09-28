@@ -21,6 +21,7 @@
 char s_list[] = "list";
 char s_format[] = "format";
 char s_initialize[] = "initialize";
+char s_mkdir[] = "mkdir";
 char s_create[] = "create";
 char s_read[] = "read";
 char s_write[] = "write";
@@ -28,6 +29,8 @@ char s_delete[] = "delete";
 char s_version[] = "version";
 
 static int format_file(struct BMFSDisk *disk, long bytes);
+
+static int make_directory(struct BMFSDisk *disk, const char *dirname);
 
 static void list_entries(struct BMFSDisk *disk);
 
@@ -38,6 +41,7 @@ static void print_version(void);
 /* Program code */
 int main(int argc, char *argv[])
 {
+	int err;
 	struct BMFSDisk disk;
 	FILE *diskfile;
 	char *diskname;
@@ -116,6 +120,24 @@ int main(int argc, char *argv[])
 	if (strcasecmp(s_list, command) == 0)
 	{
 		list_entries(&disk);
+	}
+	else if (strcasecmp(s_mkdir, command) == 0)
+	{
+		if (filename == NULL)
+		{
+			printf("Error: Directory name not specified.\n");
+			fclose(diskfile);
+			return EXIT_FAILURE;
+		}
+
+		err = make_directory(&disk, filename);
+		if (err)
+		{
+			printf("Error: Failed to make directory.\n");
+			printf("  %s", strerror(-err));
+			fclose(diskfile);
+			return EXIT_FAILURE;
+		}
 	}
 	else if (strcasecmp(s_format, command) == 0)
 	{
@@ -208,7 +230,7 @@ int main(int argc, char *argv[])
 }
 
 
-int format_file(struct BMFSDisk *disk, long bytes)
+static int format_file(struct BMFSDisk *disk, long bytes)
 {
 	int err = bmfs_disk_seek(disk, bytes - 1, SEEK_SET);
 	if (err != 0)
@@ -224,6 +246,28 @@ int format_file(struct BMFSDisk *disk, long bytes)
 	return 0;
 }
 
+static int make_directory(struct BMFSDisk *disk, const char *dirname)
+{
+	int err;
+	struct BMFSDir root_dir;
+
+	bmfs_dir_init(&root_dir);
+
+	err = bmfs_disk_read_dir(disk, &root_dir);
+	if (err)
+		return err;
+
+	err = bmfs_dir_add_subdir(&root_dir, dirname);
+	if (err)
+		return err;
+
+	err = bmfs_disk_write_dir(disk, &root_dir);
+	if (err)
+		return err;
+
+	return 0;
+}
+
 static void list_entries(struct BMFSDisk *disk)
 {
 	struct BMFSDir dir;
@@ -231,8 +275,8 @@ static void list_entries(struct BMFSDisk *disk)
 	if (err != 0)
 		return;
 
-	printf("| Name                             |             Size (B) |       Reserved (MiB) |\n");
-	printf("|----------------------------------|----------------------|----------------------|\n");
+	printf("| Name                             |             Size (B) |       Reserved (MiB) | Type      |\n");
+	printf("|----------------------------------|----------------------|----------------------|-----------|\n");
 	for (size_t i = 0; i < 64; i++)
 	{
 		const struct BMFSEntry *entry;
@@ -241,8 +285,13 @@ static void list_entries(struct BMFSDisk *disk)
 			continue;
 		else if (bmfs_entry_is_terminator(entry))
 			break;
+		else if (bmfs_entry_is_directory(entry))
+			printf("| %-32s | %20llu | %20llu | Directory |\n",
+			       entry->FileName,
+			       (unsigned long long)(entry->FileSize),
+			       (unsigned long long)(entry->ReservedBlocks * 2));
 		else
-			printf("| %-32s | %20llu | %20llu |\n",
+			printf("| %-32s | %20llu | %20llu | File      |\n",
 			       entry->FileName,
 			       (unsigned long long)(entry->FileSize),
 			       (unsigned long long)(entry->ReservedBlocks * 2));
