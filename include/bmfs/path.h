@@ -44,8 +44,8 @@ int bmfs_path_empty(const struct BMFSPath *path);
  *  number if it wasn't.
  */
 
-int bmfs_path_root(struct BMFSPath *path,
-                   struct BMFSPath *root);
+int bmfs_path_split_root(struct BMFSPath *path,
+                         struct BMFSPath *root);
 
 /** Sets the contents of the path.
  * @param path An initialized path structure.

@@ -26,8 +26,8 @@ int bmfs_path_empty(const struct BMFSPath *path)
 	return path->String == 0;
 }
 
-int bmfs_path_root(struct BMFSPath *path,
-                   struct BMFSPath *root)
+int bmfs_path_split_root(struct BMFSPath *path,
+                         struct BMFSPath *root)
 {
 	uint64_t i;
 	uint64_t path_len;
@@ -53,6 +53,9 @@ int bmfs_path_root(struct BMFSPath *path,
 				root->String = &path_str[i];
 				continue;
 			} else {
+				/* The +1 is for the '/' or '\' separator */
+				path->String = &path->String[i + 1];
+				path->Length -= i + 1;
 				/* root dir found */
 				return 0;
 			}
