@@ -65,7 +65,7 @@ int bmfs_path_split_root(struct BMFSPath *path,
 		i++;
 	}
 	/* separator wasn't found,
-	 * not root dir */
+	 * no root dir */
 	return -1;
 }
 
