@@ -56,6 +56,21 @@ int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename)
 	bmfs_entry_init(&entry);
 	bmfs_entry_set_file_name(&entry, filename);
 	bmfs_entry_set_starting_block(&entry, 1);
+	bmfs_entry_set_type(&entry, BMFS_TYPE_FILE);
+	return bmfs_dir_add(dir, &entry);
+}
+
+int bmfs_dir_add_subdir(struct BMFSDir *dir, const char *dirname)
+{
+	if ((dir == NULL)
+	 || (dirname == NULL))
+		return -EFAULT;
+
+	struct BMFSEntry entry;
+	bmfs_entry_init(&entry);
+	bmfs_entry_set_file_name(&entry, dirname);
+	bmfs_entry_set_starting_block(&entry, 1);
+	bmfs_entry_set_type(&entry, BMFS_TYPE_DIRECTORY);
 	return bmfs_dir_add(dir, &entry);
 }
 

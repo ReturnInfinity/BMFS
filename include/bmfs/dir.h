@@ -61,6 +61,17 @@ int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry);
 
 int bmfs_dir_add_file(struct BMFSDir *dir, const char *filename);
 
+/** Creates a new sub-directory. This function allows
+ * the creation of a directory without creating and
+ * initialized a directory structure.
+ * @param dir The directory to add the sub-directory to.
+ * @param dirname The name of the new directory.
+ * @returns Zero on success, a negative error code on failure.
+ * @ingroup dir-api
+ */
+
+int bmfs_dir_add_subdir(struct BMFSDir *dir, const char *dirname);
+
 /** Removes an entry from the directory.
  * If the file doesn't exist, this function fails.
  * @param dir An initialized directory.
