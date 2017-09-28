@@ -66,6 +66,7 @@ endmacro(ADD_BMFS_TEST TEST_NAME)
 
 add_bmfs_test("dir-test" "dir-test.c")
 add_bmfs_test("disk-test" "disk-test.c")
+add_bmfs_test("size-test" "size-test.c")
 add_bmfs_test("sspec-test" "sspec-test.c")
 add_bmfs_test("path-test" "path-test.c")
 enable_testing()
