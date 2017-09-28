@@ -13,6 +13,7 @@ endmacro(ADD_BMFS_STRUCT VAR HEADER SOURCE)
 
 unset(SOURCES)
 add_bmfs_struct(SOURCES "entry.h" "entry.c")
+add_bmfs_struct(SOURCES "explorer.h" "explorer.c")
 add_bmfs_struct(SOURCES "dir.h" "dir.c")
 add_bmfs_struct(SOURCES "disk.h" "disk.c")
 add_bmfs_struct(SOURCES "sspec.h" "sspec.c")
