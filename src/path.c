@@ -31,7 +31,7 @@ int bmfs_path_split_root(struct BMFSPath *path,
 {
 	uint64_t i;
 	uint64_t path_len;
-	char *path_str;
+	const char *path_str;
 
 	path_str = path->String;
 	path_len = path->Length;
@@ -70,7 +70,7 @@ int bmfs_path_split_root(struct BMFSPath *path,
 }
 
 void bmfs_path_set(struct BMFSPath *path,
-                   char *string,
+                   const char *string,
                    uint64_t length)
 {
 	path->String = string;

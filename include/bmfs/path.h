@@ -14,7 +14,7 @@ extern "C" {
 
 struct BMFSPath
 {
-	char *String;
+	const char *String;
 	uint64_t Length;
 };
 
@@ -58,7 +58,7 @@ int bmfs_path_split_root(struct BMFSPath *path,
  */
 
 void bmfs_path_set(struct BMFSPath *path,
-                   char *string,
+                   const char *string,
                    uint64_t length);
 
 #ifdef __cplusplus
