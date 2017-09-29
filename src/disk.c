@@ -54,7 +54,7 @@ int bmfs_disk_write(struct BMFSDisk *disk, const void *buf, uint64_t len, uint64
 
 /* public functions */
 
-int bmfs_disk_read_dir(struct BMFSDisk *disk, struct BMFSDir *dir)
+int bmfs_disk_read_root_dir(struct BMFSDisk *disk, struct BMFSDir *dir)
 {
 	int err = bmfs_disk_seek(disk, 4096, SEEK_SET);
 	if (err != 0)
@@ -67,7 +67,7 @@ int bmfs_disk_read_dir(struct BMFSDisk *disk, struct BMFSDir *dir)
 	return 0;
 }
 
-int bmfs_disk_write_dir(struct BMFSDisk *disk, const struct BMFSDir *dir)
+int bmfs_disk_write_root_dir(struct BMFSDisk *disk, const struct BMFSDir *dir)
 {
 	int err = bmfs_disk_seek(disk, 4096, SEEK_SET);
 	if (err != 0)
@@ -93,7 +93,7 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk, uint64_t bytes, uint64_t *st
 
 	struct BMFSDir dir;
 
-	int err = bmfs_disk_read_dir(disk, &dir);
+	int err = bmfs_disk_read_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -210,7 +210,7 @@ int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, uint64_t 
 
 	struct BMFSDir dir;
 
-	err = bmfs_disk_read_dir(disk, &dir);
+	err = bmfs_disk_read_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -218,7 +218,7 @@ int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, uint64_t 
 	if (err != 0)
 		return err;
 
-	err = bmfs_disk_write_dir(disk, &dir);
+	err = bmfs_disk_write_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -245,7 +245,7 @@ int bmfs_disk_create_dir(struct BMFSDisk *disk, const char *dirname)
 
 	struct BMFSDir dir;
 
-	err = bmfs_disk_read_dir(disk, &dir);
+	err = bmfs_disk_read_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -253,7 +253,7 @@ int bmfs_disk_create_dir(struct BMFSDisk *disk, const char *dirname)
 	if (err != 0)
 		return err;
 
-	err = bmfs_disk_write_dir(disk, &dir);
+	err = bmfs_disk_write_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -263,7 +263,7 @@ int bmfs_disk_create_dir(struct BMFSDisk *disk, const char *dirname)
 int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename)
 {
 	struct BMFSDir dir;
-	int err = bmfs_disk_read_dir(disk, &dir);
+	int err = bmfs_disk_read_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -274,7 +274,7 @@ int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename)
 
 	entry->FileName[0] = 1;
 
-	return bmfs_disk_write_dir(disk, &dir);
+	return bmfs_disk_write_root_dir(disk, &dir);
 }
 
 int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFSEntry *fileentry, uint64_t *entrynumber)
@@ -283,7 +283,7 @@ int bmfs_disk_find_file(struct BMFSDisk *disk, const char *filename, struct BMFS
 	struct BMFSDir dir;
 	struct BMFSEntry *result;
 
-	err = bmfs_disk_read_dir(disk, &dir);
+	err = bmfs_disk_read_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -348,7 +348,7 @@ int bmfs_disk_format(struct BMFSDisk *disk)
 	struct BMFSDir dir;
 	bmfs_dir_init(&dir);
 
-	err = bmfs_disk_write_dir(disk, &dir);
+	err = bmfs_disk_write_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 

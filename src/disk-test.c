@@ -120,7 +120,7 @@ int main(void)
 	/* test the creation of files */
 	assert(bmfs_disk_create_file(&disk, "a.txt", 1) == 0);
 	struct BMFSDir dir;
-	assert(bmfs_disk_read_dir(&disk, &dir) == 0);
+	assert(bmfs_disk_read_root_dir(&disk, &dir) == 0);
 	assert(strcmp(dir.Entries[0].FileName, "a.txt") == 0);
 	assert(dir.Entries[0].StartingBlock == 1);
 	assert(dir.Entries[0].ReservedBlocks == 1);
@@ -129,7 +129,7 @@ int main(void)
 	assert(memcmp(&data.buf[4096], "a.txt", 5) == 0);
 
 	assert(bmfs_disk_create_file(&disk, "b.txt", 1) == 0);
-	assert(bmfs_disk_read_dir(&disk, &dir) == 0);
+	assert(bmfs_disk_read_root_dir(&disk, &dir) == 0);
 	assert(strcmp(dir.Entries[1].FileName, "b.txt") == 0);
 	assert(dir.Entries[1].StartingBlock == 2);
 	assert(dir.Entries[1].ReservedBlocks == 1);
@@ -143,7 +143,7 @@ int main(void)
 
 	/* test to make sure files may be deleted */
 	assert(bmfs_disk_delete_file(&disk, "a.txt") == 0);
-	assert(bmfs_disk_read_dir(&disk, &dir) == 0);
+	assert(bmfs_disk_read_root_dir(&disk, &dir) == 0);
 	assert(dir.Entries[0].FileName[0] == 1);
 	assert(strcmp(dir.Entries[1].FileName, "b.txt") == 0);
 	/* verify by buffer */
@@ -152,7 +152,7 @@ int main(void)
 
 	/* test to make sure empty slots can be filled again */
 	assert(bmfs_disk_create_file(&disk, "c.txt", 1) == 0);
-	assert(bmfs_disk_read_dir(&disk, &dir) == 0);
+	assert(bmfs_disk_read_root_dir(&disk, &dir) == 0);
 	assert(strcmp(dir.Entries[0].FileName, "c.txt") == 0);
 	assert(strcmp(dir.Entries[1].FileName, "b.txt") == 0);
 	assert(dir.Entries[0].StartingBlock == 1);

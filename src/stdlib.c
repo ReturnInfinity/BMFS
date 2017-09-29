@@ -493,7 +493,7 @@ void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 	uint64_t readsize;
 	char *buffer;
 
-	if (bmfs_disk_read_dir(disk, &dir) != 0)
+	if (bmfs_disk_read_root_dir(disk, &dir) != 0)
 		return;
 
 	entry = bmfs_dir_find(&dir, filename);
@@ -568,7 +568,7 @@ void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 	// Update directory
 	tempfilesize = ftell(tfile);
 	entry->FileSize = tempfilesize;
-	bmfs_disk_write_dir(disk, &dir);
+	bmfs_disk_write_root_dir(disk, &dir);
 	fclose(tfile);
 }
 

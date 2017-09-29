@@ -221,8 +221,8 @@ int bmfs_disk_find_file(struct BMFSDisk *disk,
  * @ingroup disk-api
  */
 
-int bmfs_disk_read_dir(struct BMFSDisk *disk,
-                       struct BMFSDir *dir);
+int bmfs_disk_read_root_dir(struct BMFSDisk *disk,
+                            struct BMFSDir *dir);
 
 /** Writes to the root directory.
  * All previous entries in the root
@@ -235,8 +235,8 @@ int bmfs_disk_read_dir(struct BMFSDisk *disk,
  * @ingroup disk-api
  */
 
-int bmfs_disk_write_dir(struct BMFSDisk *disk,
-                        const struct BMFSDir *dir);
+int bmfs_disk_write_root_dir(struct BMFSDisk *disk,
+                             const struct BMFSDir *dir);
 
 /** Checks to make sure that the
  * BMFS tag exists in the disk info

@@ -253,7 +253,7 @@ static int make_directory(struct BMFSDisk *disk, const char *dirname)
 
 	bmfs_dir_init(&root_dir);
 
-	err = bmfs_disk_read_dir(disk, &root_dir);
+	err = bmfs_disk_read_root_dir(disk, &root_dir);
 	if (err)
 		return err;
 
@@ -261,7 +261,7 @@ static int make_directory(struct BMFSDisk *disk, const char *dirname)
 	if (err)
 		return err;
 
-	err = bmfs_disk_write_dir(disk, &root_dir);
+	err = bmfs_disk_write_root_dir(disk, &root_dir);
 	if (err)
 		return err;
 
@@ -271,7 +271,7 @@ static int make_directory(struct BMFSDisk *disk, const char *dirname)
 static void list_entries(struct BMFSDisk *disk)
 {
 	struct BMFSDir dir;
-	int err = bmfs_disk_read_dir(disk, &dir);
+	int err = bmfs_disk_read_root_dir(disk, &dir);
 	if (err != 0)
 		return;
 
