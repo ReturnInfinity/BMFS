@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.6)
 project("BMFS")
 
 set (BMFS_VERSION_MAJOR 1)
-set (BMFS_VERSION_MINOR 2)
-set (BMFS_VERSION_PATCH 3)
+set (BMFS_VERSION_MINOR 3)
+set (BMFS_VERSION_PATCH 0)
 
 option(BMFS_WITH_FUSE "Build BMFS with fuse support" OFF)
 option(BMFS_WITH_POSIX_UTILS "Build BMFS POSIX utilities" OFF)

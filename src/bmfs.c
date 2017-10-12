@@ -1,6 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.2.3 (2017 04 07) */
+/* v1.3.0 (2017 10 11) */
 
 /* Global includes */
 #include <bmfs/bmfs.h>
@@ -269,7 +269,7 @@ static void print_usage(const char *argv0)
 
 static void print_version(void)
 {
-	printf("BareMetal File System Utility v1.2.3 (2017 04 07)\n");
+	printf("BareMetal File System Utility v1.3.0 (2017 10 11)\n");
 	printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
 }
 

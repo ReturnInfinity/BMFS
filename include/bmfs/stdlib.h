@@ -1,3 +1,7 @@
+/* BareMetal File System Utility */
+/* Written by Ian Seyler of Return Infinity */
+/* v1.3.0 (2017 10 11) */
+
 #ifndef BMFS_STDLIB_H
 #define BMFS_STDLIB_H
 
