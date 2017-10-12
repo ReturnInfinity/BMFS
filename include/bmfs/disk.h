@@ -8,9 +8,6 @@
 #include "entry.h"
 #include "dir.h"
 
-#include <stdio.h>
-#include <sys/types.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
