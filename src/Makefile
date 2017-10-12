@@ -102,7 +102,7 @@ test:
 	$(VALGRIND) ./sspec-test
 
 .PHONY: install
-install:
+install: $(utils) libbmfs.a
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	mkdir -p $(DESTDIR)$(PREFIX)/lib
 	cp --update $(utils) $(DESTDIR)$(PREFIX)/bin/
