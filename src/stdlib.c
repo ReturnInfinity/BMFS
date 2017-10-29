@@ -569,6 +569,7 @@ void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 	tempfilesize = ftell(tfile);
 	entry->FileSize = tempfilesize;
 	bmfs_disk_write_root_dir(disk, &dir);
+	free(buffer);
 	fclose(tfile);
 }
 
