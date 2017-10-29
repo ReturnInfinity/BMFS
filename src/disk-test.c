@@ -2,6 +2,7 @@
 #include <bmfs/disk.h>
 #include <bmfs/limits.h>
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 
 struct DiskData
