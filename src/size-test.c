@@ -24,15 +24,6 @@ void test_entry(void) {
 
 	memcpy(buf, &entry, sizeof(entry));
 
-	printf("%llx\n", *(uint64_t *)(&buf[0]));
-	printf("%llx\n", *(uint64_t *)(&buf[8]));
-	printf("%llx\n", *(uint64_t *)(&buf[16]));
-	printf("%llx\n", *(uint64_t *)(&buf[24]));
-	printf("%llx\n", *(uint64_t *)(&buf[32]));
-	printf("%llx\n", *(uint64_t *)(&buf[40]));
-	printf("%llx\n", *(uint64_t *)(&buf[48]));
-	printf("%llx\n", *(uint64_t *)(&buf[56]));
-
 	/* FileName */
 	assert(memcmp(&buf[0], "filename.txt", sizeof("filename.txt") - 1) == 0);
 	/* StartingBlock */
