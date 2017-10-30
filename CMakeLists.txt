@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-project("BMFS")
+project("BMFS" C)
 
 set (BMFS_VERSION_MAJOR 1)
 set (BMFS_VERSION_MINOR 3)
