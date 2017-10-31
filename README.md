@@ -1,5 +1,7 @@
 # BMFS
 
+[![Build Status](https://travis-ci.org/ReturnInfinity/BMFS.svg?branch=master)](https://travis-ci.org/ReturnInfinity/BMFS)
+
 Utility for accessing a disk or disk image formatted with BareMetal File System (BMFS).
 
 

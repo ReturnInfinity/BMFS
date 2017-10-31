@@ -1,0 +1,19 @@
+language: c
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc
+      - cmake
+      - libfuse-dev
+      - valgrind
+      - pkg-config
+
+compiler:
+  - gcc
+  - clang
+
+script:
+  - travis-ci/do-all-build.bash
