@@ -130,7 +130,7 @@ static int bmfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler
 
 	/* get the current directory entries */
 	struct BMFSDir dir;
-	if (bmfs_disk_read_dir(&disk, &dir) != 0)
+	if (bmfs_disk_read_root_dir(&disk, &dir) != 0)
 		return -ENOENT;
 
 	/* list the entries */
@@ -196,6 +196,9 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
 	uint64_t entry_offset;
 	uint64_t read_count;
 
+	/* unused */
+	(void) fi;
+
 	/* make sure return code
 	 * can differentiate between
 	 * a negative error code and
@@ -211,7 +214,7 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
 	if (err != 0)
 		return err;
 
-	if (offset > entry.FileSize)
+	if (offset > (off_t) entry.FileSize)
 		offset = entry.FileSize;
 
 	err = bmfs_disk_seek(&disk, entry_offset + offset, SEEK_SET);
@@ -247,6 +250,9 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
 	uint64_t write_count;
 	uint64_t reserved_bytes;
 
+	/* unused */
+	(void) fi;
+
 	/* make sure return code
 	 * can differentiate between
 	 * a negative error code and
@@ -254,7 +260,7 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
 	if (size > INT_MAX)
 		size = INT_MAX;
 
-	err = bmfs_disk_read_dir(&disk, &dir);
+	err = bmfs_disk_read_root_dir(&disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -268,7 +274,7 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
 	if (err != 0)
 		return err;
 
-	if (offset > reserved_bytes)
+	if (offset > (off_t) reserved_bytes)
 		offset = reserved_bytes;
 
 	err = bmfs_disk_seek(&disk, entry_offset + offset, SEEK_SET);
@@ -284,7 +290,7 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
 
 	entry->FileSize += write_count;
 
-	err = bmfs_disk_write_dir(&disk, &dir);
+	err = bmfs_disk_write_root_dir(&disk, &dir);
 	if (err != 0)
 		return err;
 

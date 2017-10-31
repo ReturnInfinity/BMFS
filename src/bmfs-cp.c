@@ -65,7 +65,7 @@ static int copy_file(struct BMFSDisk *disk, const char *src, const char *dst, ui
 	}
 
 	struct BMFSDir dir;
-	int err = bmfs_disk_read_dir(disk, &dir);
+	int err = bmfs_disk_read_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 
@@ -83,7 +83,7 @@ static int copy_file(struct BMFSDisk *disk, const char *src, const char *dst, ui
 		 * to get the file's starting
 		 * point. */
 
-		err = bmfs_disk_read_dir(disk, &dir);
+		err = bmfs_disk_read_root_dir(disk, &dir);
 		if (err != 0)
 			return err;
 
@@ -152,7 +152,7 @@ static int copy_file(struct BMFSDisk *disk, const char *src, const char *dst, ui
 
 	entry->FileSize = i;
 
-	err = bmfs_disk_write_dir(disk, &dir);
+	err = bmfs_disk_write_root_dir(disk, &dir);
 	if (err != 0)
 		return err;
 

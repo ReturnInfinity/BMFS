@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 	}
 
 	struct BMFSDir dir;
-	err = bmfs_disk_read_dir(&disk, &dir);
+	err = bmfs_disk_read_root_dir(&disk, &dir);
 	if (err != 0)
 	{
 		fprintf(stderr, "%s: failed to read root directory: %s\n", argv[0], strerror(-err));
