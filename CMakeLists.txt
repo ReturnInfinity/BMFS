@@ -11,6 +11,7 @@ option(BMFS_WITH_POSIX_UTILS "Build BMFS POSIX utilities" OFF)
 
 if (CMAKE_COMPILER_IS_GNUCC)
 	set (CMAKE_C_FLAGS "-Wall -Wextra -Werror -Wfatal-errors")
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_FILE_OFFSET_BITS=64")
 endif (CMAKE_COMPILER_IS_GNUCC)
 
 if (MSVC)
