@@ -34,6 +34,7 @@ endif
 
 ifndef NO_FUSE
 utils += bmfs-fuse
+CFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
 tests += dir-test
