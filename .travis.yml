@@ -16,4 +16,4 @@ compiler:
   - clang
 
 script:
-  - travis-ci/do-all-build.bash
+  - travis-ci/do-all-builds.bash
