@@ -3,6 +3,7 @@ include $(TOP)/make/patterns.mk
 
 VPATH += $(TOP)/include/bmfs
 
+CFLAGS += -Wall -Wextra -Werror -Wfatal-errors -std=gnu99
 ifndef BMFS_RELEASE
 CFLAGS += -g -O2
 else
