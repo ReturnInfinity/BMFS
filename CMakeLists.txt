@@ -9,10 +9,14 @@ set (BMFS_VERSION_PATCH 0)
 option(BMFS_WITH_FUSE "Build BMFS with fuse support" OFF)
 option(BMFS_WITH_POSIX_UTILS "Build BMFS POSIX utilities" OFF)
 
-if (CMAKE_COMPILER_IS_GNUCC)
-	set (CMAKE_C_FLAGS "-Wall -Wextra -Werror -Wfatal-errors")
-	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_FILE_OFFSET_BITS=64")
-endif (CMAKE_COMPILER_IS_GNUCC)
+set (GNU_C_FLAGS "-Wall -Wextra -Werror -Wfatal-errors")
+set (GNU_C_FLAGS "${CMAKE_C_FLAGS} -D_FILE_OFFSET_BITS=64")
+
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+	set (CMAKE_C_FLAGS ${GNU_C_FLAGS})
+elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+	set (CMAKE_C_FLAGS ${GNU_C_FLAGS})
+endif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 
 if (MSVC)
 	set (CMAKE_C_FLAGS "/W3 /WX /D_CRT_SECURE_NO_WARNINGS")
