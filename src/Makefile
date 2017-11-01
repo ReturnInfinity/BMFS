@@ -10,7 +10,7 @@ else
 CFLAGS += -O3
 endif
 
-CFLAGS += -fno-stack-protector
+CFLAGS += -fno-stack-protector -fomit-frame-pointer -mno-red-zone -fPIC
 CFLAGS += -I$(TOP)/include
 
 libfiles += dir.o
