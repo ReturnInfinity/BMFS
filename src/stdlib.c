@@ -419,7 +419,7 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	return ret;
 }
 
-void bmfs_readfile(struct BMFSDisk *disk, const char *filename)
+void bmfs_readfile(struct BMFSDisk *disk, const char *destination, const char *source)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
@@ -427,13 +427,16 @@ void bmfs_readfile(struct BMFSDisk *disk, const char *filename)
 	unsigned long long bytestoread;
 	char *buffer;
 
-	if (bmfs_disk_find_file(disk, filename, &tempentry, &slot) != 0)
+	if (source == NULL)
+		source = destination;
+
+	if (bmfs_disk_find_file(disk, source, &tempentry, &slot) != 0)
 	{
 		printf("Error: File not found in BMFS.\n");
 	}
 	else
 	{
-		if ((tfile = fopen(tempentry.FileName, "wb")) == NULL)
+		if ((tfile = fopen(destination, "wb")) == NULL)
 		{
 			printf("Error: Could not open local file '%s'\n", tempentry.FileName);
 		}
@@ -483,7 +486,7 @@ void bmfs_readfile(struct BMFSDisk *disk, const char *filename)
 	}
 }
 
-void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
+void bmfs_writefile(struct BMFSDisk *disk, const char *destination, const char *source)
 {
 	struct BMFSDir dir;
 	struct BMFSEntry *entry;
@@ -493,10 +496,13 @@ void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 	uint64_t readsize;
 	char *buffer;
 
+	if (source == NULL)
+		source = destination;
+
 	if (bmfs_disk_read_root_dir(disk, &dir) != 0)
 		return;
 
-	entry = bmfs_dir_find(&dir, filename);
+	entry = bmfs_dir_find(&dir, destination);
 	if (entry == NULL)
 	{
 		printf("Error: File not found in BMFS\n");
@@ -504,7 +510,7 @@ void bmfs_writefile(struct BMFSDisk *disk, const char *filename)
 		return;
 	}
 
-	if ((tfile = fopen(filename, "rb")) == NULL)
+	if ((tfile = fopen(source, "rb")) == NULL)
 	{
 		printf("Error: Could not open local file '%s'\n", entry->FileName);
 		return;
