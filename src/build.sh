@@ -3,7 +3,7 @@
 set -e
 
 CC=gcc
-CFLAGS="${CFLAGS} -Wall -Wextra -Werror -Wfatal-errors -std=gnu99"
+CFLAGS="${CFLAGS} -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g"
 CFLAGS="${CFLAGS} -fno-stack-protector -fomit-frame-pointer -mno-red-zone"
 CFLAGS="${CFLAGS} -I../include"
 
