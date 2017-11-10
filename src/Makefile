@@ -1,3 +1,5 @@
+TOP ?= ..
+
 include $(TOP)/make/config.mk
 include $(TOP)/make/patterns.mk
 
