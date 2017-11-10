@@ -30,6 +30,9 @@ struct BMFSDisk
 	 * pass to the seek, tell, read and write methods.
 	 */
 	void *disk;
+	/** Called when the disk is no longer going to be
+	 * used. */
+	void (*done)(void *disk);
 	/** Points the disk to a particular location.
 	 */
 	int (*seek)(void *disk, int64_t offset, int whence);
@@ -43,6 +46,21 @@ struct BMFSDisk
 	 */
 	int (*write)(void *disk, const void *buf, uint64_t len, uint64_t *write_len);
 };
+
+/** Initializes the members of the disk structure
+ * for pointer safety. This function must be called
+ * before any others.
+ * @ingroup disk-api
+ * */
+
+void bmfs_disk_init(struct BMFSDisk *disk);
+
+/** Called when the disk is no longer going
+ * to be used by the caller.
+ * @ingroup disk-api
+ * */
+
+void bmfs_disk_done(struct BMFSDisk *disk);
 
 /** Points the disk to a particular offset.
  * @param disk An initialized disk.

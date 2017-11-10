@@ -55,6 +55,22 @@ int bmfs_disk_write(struct BMFSDisk *disk, const void *buf, uint64_t len, uint64
 
 /* public functions */
 
+void bmfs_disk_init(struct BMFSDisk *disk)
+{
+	disk->disk = NULL;
+	disk->done = NULL;
+	disk->seek = NULL;
+	disk->tell = NULL;
+	disk->read = NULL;
+	disk->write = NULL;
+}
+
+void bmfs_disk_done(struct BMFSDisk *disk)
+{
+	if (disk->done != NULL)
+		disk->done(disk->disk);
+}
+
 int bmfs_disk_read_root_dir(struct BMFSDisk *disk, struct BMFSDir *dir)
 {
 	int err = bmfs_disk_seek(disk, 4096, SEEK_SET);
