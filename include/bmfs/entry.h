@@ -29,6 +29,19 @@ enum BMFSEntryType
 	BMFS_TYPE_DIRECTORY
 };
 
+/** Indicates the permissions held by
+ * an entry.
+ * @ingroup entry-api
+ * */
+
+enum BMFSPermission
+{
+	BMFS_PERMISSION_NONE = 0x00,
+	BMFS_PERMISSION_READ = 0x04,
+	BMFS_PERMISSION_WRITE = 0x02,
+	BMFS_PERMISSION_EXECUTE = 0x01,
+};
+
 /** An entry within a BMFS directory.
  * Contains information on a file, such
  * as name, size and more.
@@ -52,10 +65,12 @@ struct BMFSEntry
 	uint64_t FileSize;
 	/** The type of entry this is. */
 	uint8_t Type;
+	/** Permissions of the file. */
+	uint8_t Permissions;
 	/** Reserved for future use. Do not
 	 * read or write from this field.
 	 */
-	uint8_t Unused[7];
+	uint8_t Unused[6];
 };
 
 /** Initializes an entry.
