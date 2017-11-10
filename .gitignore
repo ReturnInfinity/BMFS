@@ -15,21 +15,21 @@ disk.image
 *.out
 *.app
 # UNIX/Linux/Mac Executable
-bmfs
-!include/bmfs
-bmfs-cat
-bmfs-cp
-bmfs-create
-bmfs-init
-bmfs-ls
-bmfs-rm
-bmfs-fuse
-disk-test
-dir-test
-sspec-test
+/src/bmfs
+/src/bmfs-cat
+/src/bmfs-cp
+/src/bmfs-create
+/src/bmfs-init
+/src/bmfs-ls
+/src/bmfs-rm
+/src/bmfs-fuse
+/src/disk-test
+/src/dir-test
+/src/path-test
+/src/sspec-test
 # Mac crap
 .DS_Store
 # Doxygen crap
-doc/html
-doc/man
-doc/latex
+/doc/html
+/doc/man
+/doc/latex
