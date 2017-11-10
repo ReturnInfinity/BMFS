@@ -18,6 +18,7 @@ CFLAGS += -I$(TOP)/include
 libfiles += dir.o
 libfiles += disk.o
 libfiles += entry.o
+libfiles += path.o
 libfiles += sspec.o
 
 stdlibfiles += stdlib.o
@@ -42,6 +43,7 @@ endif
 
 tests += dir-test
 tests += disk-test
+tests += path-test
 tests += sspec-test
 
 ifndef NO_VALGRIND
@@ -69,6 +71,8 @@ dir-test: dir-test.c $(libs)
 
 disk-test: disk-test.c $(libs)
 
+path-test: path-test.c $(libs)
+
 sspec-test: sspec-test.c $(libs)
 
 entry.o: entry.c entry.h limits.h
@@ -76,6 +80,8 @@ entry.o: entry.c entry.h limits.h
 dir.o: dir.c dir.h entry.h
 
 disk.o: disk.c disk.h dir.h entry.h limits.h
+
+path.o: path.c path.h
 
 sspec.o: sspec.c sspec.h
 
@@ -103,6 +109,7 @@ clean:
 test:
 	$(VALGRIND) ./dir-test
 	$(VALGRIND) ./disk-test
+	$(VALGRIND) ./path-test
 	$(VALGRIND) ./sspec-test
 
 .PHONY: install
