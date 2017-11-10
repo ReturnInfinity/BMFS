@@ -22,6 +22,7 @@ libfiles += entry.o
 libfiles += explorer.o
 libfiles += path.o
 libfiles += sspec.o
+libfiles += ramdisk.o
 
 stdlibfiles += stdlib.o
 
@@ -84,6 +85,8 @@ entry.o: entry.c entry.h limits.h
 dir.o: dir.c dir.h entry.h
 
 disk.o: disk.c disk.h dir.h entry.h limits.h
+
+ramdisk.o: ramdisk.c ramdisk.h disk.h dir.h entry.h limits.h
 
 path.o: path.c path.h
 

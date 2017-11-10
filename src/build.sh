@@ -17,8 +17,9 @@ $CC $CFLAGS -c header.c -o header.o
 $CC $CFLAGS -c entry.c -o entry.o
 $CC $CFLAGS -c dir.c -o dir.o
 $CC $CFLAGS -c disk.c -o disk.o
+$CC $CFLAGS -c ramdisk.c -o ramdisk.o
 
-$AR $ARFLAGS libbmfs.a header.o entry.o dir.o disk.o
+$AR $ARFLAGS libbmfs.a header.o entry.o dir.o disk.o ramdisk.o
 
 $CC $CFLAGS -c stdlib.c -o stdlib.o
 $CC $CFLAGS -c bmfs.c -o bmfs.o
