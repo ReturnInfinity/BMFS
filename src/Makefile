@@ -15,9 +15,11 @@ endif
 CFLAGS += -fno-stack-protector -fomit-frame-pointer -mno-red-zone -fPIC
 CFLAGS += -I$(TOP)/include
 
+libfiles += header.o
 libfiles += dir.o
 libfiles += disk.o
 libfiles += entry.o
+libfiles += explorer.o
 libfiles += path.o
 libfiles += sspec.o
 
@@ -74,6 +76,8 @@ disk-test: disk-test.c $(libs)
 path-test: path-test.c $(libs)
 
 sspec-test: sspec-test.c $(libs)
+
+header.o: header.c header.h
 
 entry.o: entry.c entry.h limits.h
 
