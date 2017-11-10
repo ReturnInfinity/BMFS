@@ -26,7 +26,9 @@ enum BMFSEntryType
 	/** The entry is a file. */
 	BMFS_TYPE_FILE,
 	/** The entry is a directory. */
-	BMFS_TYPE_DIRECTORY
+	BMFS_TYPE_DIRECTORY,
+	/** The entry is a link to another entry. */
+	BMFS_TYPE_LINK
 };
 
 /** Indicates the permissions held by
