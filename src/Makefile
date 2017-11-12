@@ -132,3 +132,4 @@ install: $(utils) libbmfs.a
 	cp --update $(utils) $(DESTDIR)$(PREFIX)/bin/
 	cp --update libbmfs.a $(DESTDIR)$(PREFIX)/lib/
 
+$(V).SILENT:

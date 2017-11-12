@@ -27,3 +27,5 @@ test:
 install:
 	$(MAKE) -C src install
 	$(MAKE) -C include/bmfs install
+
+$(V).SILENT:
