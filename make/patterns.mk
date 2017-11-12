@@ -1,12 +1,13 @@
 %.a:
-	@$(AR) $(ARFLAGS) $@ $^
-	@echo "Linking static library $@"
+	@echo "AR $@"
+	$(AR) $(ARFLAGS) $@ $^
 
 %.o: %.c
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "Building C object file $@"
+	@echo "CC $@"
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
-%: %.c
-	@$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
-	@echo "Building C executable $@"
+%: %.o
+	@echo "LINK $@"
+	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
 
+$(Q).SILENT:

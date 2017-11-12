@@ -44,6 +44,8 @@ utils += bmfs-fuse
 CFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
+LDLIBS=$(libs)
+
 tests += dir-test
 tests += disk-test
 tests += path-test
@@ -57,29 +59,29 @@ endif
 .PHONY: all
 all: $(libs) $(tests) $(utils)
 
-bmfs: bmfs.c $(libs)
+bmfs.o: bmfs.c
 
-bmfs-cat: bmfs-cat.c $(libs)
+bmfs-cat.o: bmfs-cat.c
 
-bmfs-cp: bmfs-cp.c $(libs)
+bmfs-cp.o: bmfs-cp.c
 
-bmfs-create: bmfs-create.c $(libs)
+bmfs-create.o: bmfs-create.c
 
-bmfs-init: bmfs-init.c $(libs)
+bmfs-init.o: bmfs-init.c
 
-bmfs-ls: bmfs-ls.c $(libs)
+bmfs-ls.o: bmfs-ls.c
 
-bmfs-rm: bmfs-rm.c $(libs)
+bmfs-rm.o: bmfs-rm.c
 
-dir-test: dir-test.c $(libs)
+dir-test.o: dir-test.c
 
-disk-test: disk-test.c $(libs)
+disk-test.o: disk-test.c
 
-path-test: path-test.c $(libs)
+path-test.o: path-test.c
 
-sspec-test: sspec-test.c $(libs)
+sspec-test.o: sspec-test.c
 
-explorer-test: explorer-test.c $(libs)
+explorer-test.o: explorer-test.c
 
 header.o: header.c header.h
 
@@ -112,8 +114,8 @@ clean:
 	$(RM) libbmfs-stdlib.a
 	$(RM) $(libfiles)
 	$(RM) $(stdlibfiles)
-	$(RM) $(tests)
-	$(RM) $(utils)
+	$(RM) $(tests) $(tests:=.o)
+	$(RM) $(utils) $(utils:=.o)
 
 .PHONY: test
 test:

@@ -51,3 +51,7 @@ BMFS_RELEASE ?=
 #   static libraries.
 ARFLAGS = rcs
 
+# V
+#   If set, this will cause the compile commands to
+#   be printed as they are called. Used for debugging.
+V ?= 1
