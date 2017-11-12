@@ -47,23 +47,30 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
  * the host file system. The file on disk
  * must exist.
  * @param disk The disk to read the file from.
- * @param filename The name of the file on the
- *  disk and the name of the file on the host
- *  file system.
+ * @param destination The name of the file on
+ * the host filesystem.
+ * @param source The name of the file on the
+ * BMFS filesystem. If this file is null, then
+ * the filename on the BMFS filesystem is the same
+ * as teh filename on the host filesystem.
  */
 
-void bmfs_readfile(struct BMFSDisk *disk, const char *filename);
+void bmfs_readfile(struct BMFSDisk *disk, const char *destination, const char *source);
 
 /** Writes a file from the host file system
  * to the disk. The disk and the filename
  * on the host file system must be the same.
  * The file must already exist on the disk.
  * @param disk The disk to write the file to.
- * @param filename The name of the file on the
- *  host file system.
+ * @param destination The name of the file on
+ * the BMFS filesystem.
+ * @param source The name of the file on the
+ * host filesystem. This parameter may be null,
+ * in which case the filename of the source is
+ * the same as the destination.
  */
 
-void bmfs_writefile(struct BMFSDisk *disk, const char *filename);
+void bmfs_writefile(struct BMFSDisk *disk, const char *destination, const char *source);
 
 #ifdef __cplusplus
 } /* extern "C" { */
