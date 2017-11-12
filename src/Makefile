@@ -48,6 +48,7 @@ tests += dir-test
 tests += disk-test
 tests += path-test
 tests += sspec-test
+tests += explorer-test
 
 ifndef NO_VALGRIND
 VALGRIND = valgrind --error-exitcode=1 --quiet
@@ -77,6 +78,8 @@ disk-test: disk-test.c $(libs)
 path-test: path-test.c $(libs)
 
 sspec-test: sspec-test.c $(libs)
+
+explorer-test: explorer-test.c $(libs)
 
 header.o: header.c header.h
 
@@ -118,6 +121,7 @@ test:
 	$(VALGRIND) ./disk-test
 	$(VALGRIND) ./path-test
 	$(VALGRIND) ./sspec-test
+	$(VALGRIND) ./explorer-test
 
 .PHONY: install
 install: $(utils) libbmfs.a

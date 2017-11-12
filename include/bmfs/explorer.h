@@ -25,17 +25,25 @@ struct BMFSPath;
  * */
 
 struct BMFSExplorer {
-	/** @brief The disk containing the filesystem
+	/** The disk containing the filesystem
 	 * to explorer. */
 	struct BMFSDisk Disk;
-	/** @brief The current directory. When the structure
+	/** The current directory. When the structure
 	 * is initialized for the first time, this is the root
 	 * directory of the file system.
 	 * */
 	struct BMFSDir CurrentDirectory;
+	/** Used for seeking back to the beginning of the
+	 * directory for a read or write operation.
+	 * */
+	uint64_t CurrentDirectoryOffset;
 };
 
 /** Initializes a BMFS file system explorer.
+ * After calling this function, the disk callbacks
+ * should be set. Once the callbacks are set, then
+ * call @ref bmfs_explorer_read and then the explorer
+ * will be ready for use.
  * @param explorer An uninitialized file system
  * explorer structure.
  * @ingroup explorer-api
@@ -43,16 +51,46 @@ struct BMFSExplorer {
 
 void bmfs_explorer_init(struct BMFSExplorer *explorer);
 
-/** Reads the contents of the current directory.
+/** Creates an entry in the current directory
+ * of the explorer.
  * @param explorer An initialized @ref BMFSExplorer structure.
- * @param dir A pointer to a @ref BMFSDir structure to get
- *  the directory contents.
+ * @param entry The entry to create in the current directory.
+ * @returns On success, zero. On failure, a negative error code.
+ * @ingroup explorer-api
+ * */
+
+int bmfs_explorer_create(struct BMFSExplorer *explorer,
+                         const struct BMFSEntry *entry);
+
+/** Creates a file in the current directory of
+ * the explorer. The file will be created with one block
+ * reserved.
+ * @param explorer An initialized @ref BMFSExplorer structure.
+ * @param filename The name to give the new file.
+ * @returns On success, zero. On failure, a negative error code.
+ * @ingroup explorer-api
+ * */
+
+int bmfs_explorer_create_file(struct BMFSExplorer *explorer,
+                              const char *filename);
+
+/** Reads the contents of the current directory.
+ * This should be called after the disk callbacks have been
+ * set appropriately.
+ * @param explorer An initialized @ref BMFSExplorer structure.
  * @returns On success, zero. On failure, a negative error code.
  * @ingroup explorer-api
  */
 
-int bmfs_explorer_read(struct BMFSExplorer *explorer,
-                       struct BMFSDir *dir);
+int bmfs_explorer_read(struct BMFSExplorer *explorer);
+
+/** Writes the contents of the directory to the disk.
+ * @param explorer An initialized @ref BMFSExplorer structure.
+ * @returns On success, zero. On failure, a negative error code.
+ * @ingroup explorer-api
+ * */
+
+int bmfs_explorer_write(struct BMFSExplorer *explorer);
 
 /** Moves the explorer to another directory.
  * @param explorer An initialized @ref BMFSExplorer structure.

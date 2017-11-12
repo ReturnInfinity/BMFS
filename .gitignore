@@ -27,6 +27,7 @@ disk.image
 /src/dir-test
 /src/path-test
 /src/sspec-test
+/src/explorer-test
 # Mac crap
 .DS_Store
 # Doxygen crap

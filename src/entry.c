@@ -14,6 +14,7 @@ void bmfs_entry_init(struct BMFSEntry *entry)
 	entry->FileSize = 0;
 	entry->StartingBlock = 0;
 	entry->ReservedBlocks = 0;
+	entry->Type = BMFS_TYPE_FILE;
 }
 
 int bmfs_entry_cmp_by_filename(const struct BMFSEntry *a,
