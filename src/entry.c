@@ -19,6 +19,13 @@ void bmfs_entry_init(struct BMFSEntry *entry)
 	entry->StartingBlock = 0;
 	entry->ReservedBlocks = 0;
 	entry->Type = BMFS_TYPE_FILE;
+	entry->Permissions = BMFS_PERMISSION_NONE;
+	entry->Unused[0] = 0;
+	entry->Unused[1] = 0;
+	entry->Unused[2] = 0;
+	entry->Unused[3] = 0;
+	entry->Unused[4] = 0;
+	entry->Unused[5] = 0;
 }
 
 int bmfs_entry_cmp_by_filename(const struct BMFSEntry *a,
