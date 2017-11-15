@@ -10,7 +10,11 @@
 
 void bmfs_entry_init(struct BMFSEntry *entry)
 {
+	for (unsigned int i = 0; i < BMFS_FILE_NAME_MAX; i++)
+		entry->FileName[i] = 0;
+
 	entry->FileName[0] = 1;
+
 	entry->FileSize = 0;
 	entry->StartingBlock = 0;
 	entry->ReservedBlocks = 0;
@@ -90,13 +94,11 @@ int bmfs_entry_get_offset(const struct BMFSEntry *entry, uint64_t *offset)
 void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename)
 {
 	uint64_t i;
-	for (i = 0; i < (BMFS_FILE_NAME_MAX - 1); i++)
-	{
-		if (filename[i] == 0)
-			break;
+	for (i = 0; (i < (BMFS_FILE_NAME_MAX - 1)) && (filename[i] != 0); i++)
 		entry->FileName[i] = filename[i];
-	}
-	entry->FileName[i] = 0;
+
+	for (; i < BMFS_FILE_NAME_MAX; i++)
+		entry->FileName[i] = 0;
 }
 
 void bmfs_entry_set_starting_block(struct BMFSEntry *entry, uint64_t starting_block)
