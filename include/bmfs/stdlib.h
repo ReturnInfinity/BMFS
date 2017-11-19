@@ -41,7 +41,7 @@ int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file);
  * @returns Zero on success.
  */
 
-int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
+int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel, char *loader);
 
 /** Reads a file from the disk to a file on
  * the host file system. The file on disk

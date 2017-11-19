@@ -80,7 +80,8 @@ int main(int argc, char *argv[])
 			char *mbr = (argc > 4 ? argv[4] : NULL);    	// Opt.
 			char *boot = (argc > 5 ? argv[5] : NULL);   	// Opt.
 			char *kernel = (argc > 6 ? argv[6] : NULL); 	// Opt.
-			int ret = bmfs_initialize(diskname, size, mbr, boot, kernel);
+			char *loader = (argc > 7 ? argv[7] : NULL);
+			int ret = bmfs_initialize(diskname, size, mbr, boot, kernel, loader);
 			if (ret != 0)
 				return EXIT_FAILURE;
 			else
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
 		{
 			printf("Usage: %s disk %s ", argv[0], command);
 			printf("size [mbr_file] ");
-			printf("[bootloader_file] [kernel_file]\n");
+			printf("[bootloader_file] [kernel_file] [loader_file]\n");
 			return EXIT_FAILURE;
 		}
 	}

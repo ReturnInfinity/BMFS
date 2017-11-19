@@ -94,7 +94,7 @@ int bmfs_disk_init_file(struct BMFSDisk *disk, FILE *file)
 	return 0;
 }
 
-int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
+int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel, char *loader)
 {
 	uint64_t diskSize = 0;
 	uint64_t writeSize = 0;
@@ -104,6 +104,7 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	FILE *mbrFile = NULL;
 	FILE *bootFile = NULL;
 	FILE *kernelFile = NULL;
+	FILE *loaderFile = NULL;
 	int diskSizeFactor = 0;
 	size_t chunkSize = 0;
 	int ret = 0;
@@ -242,6 +243,16 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 		if (kernelFile == NULL )
 		{
 			printf("Error: Unable to open kernel file '%s'\n", kernel);
+			ret = 1;
+		}
+	}
+
+	if (ret == 0 && loader != NULL)
+	{
+		loaderFile = fopen(loader, "rb");
+		if (loaderFile == NULL)
+		{
+			printf("Error: Unable to open loader file '%s'\n", loader);
 			ret = 1;
 		}
 	}
@@ -386,6 +397,32 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 		}
 	}
 
+	// Write the loader if it was specified by the caller.
+	if (ret == 0 && loaderFile != NULL)
+	{
+		for (;;)
+		{
+			chunkSize = fread( buffer, 1, bufferSize, loaderFile);
+			if (chunkSize > 0)
+			{
+				if (fwrite(buffer, chunkSize, 1, disk) != 1)
+				{
+					printf("Error: Failed to write disk '%s'\n", diskname);
+					ret = 1;
+				}
+			}
+			else
+			{
+				if (ferror(disk))
+				{
+					printf("Error: Failed to read file '%s'\n", loader);
+					ret = 1;
+				}
+				break;
+			}
+		}
+	}
+
 	// Close any files that were opened.
 	if (mbrFile != NULL)
 	{
@@ -398,6 +435,10 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	if (kernelFile != NULL)
 	{
 		fclose(kernelFile);
+	}
+	if (loaderFile != NULL)
+	{
+		fclose(loaderFile);
 	}
 	if (disk != NULL)
 	{
