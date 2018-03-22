@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 	bmfs_disk_init_file(&disk, diskfile);
 
 	/* Opened ok, is it a valid BMFS disk? */
-	if (bmfs_disk_check_tag(&disk) != 0)
+	if (bmfs_disk_check_signature(&disk) != 0)
 	{
 		if (strcasecmp(s_format, command) == 0)
 		{
@@ -240,7 +240,7 @@ static int format_file(struct BMFSDisk *disk, long bytes)
 	if (fputc(0, (FILE*)(disk->disk)) != 0)
 		return -errno;
 
-	err = bmfs_disk_format(disk);
+	err = bmfs_disk_format(disk, bytes);
 	if (err != 0)
 		return err;
 

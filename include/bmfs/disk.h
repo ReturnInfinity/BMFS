@@ -170,32 +170,31 @@ int bmfs_disk_mebibytes(struct BMFSDisk *disk,
 int bmfs_disk_blocks(struct BMFSDisk *disk,
                      uint64_t *blocks);
 
-/** Locates a starting block that can
+/** Locates a region that can
  * fit a certain number of bytes.
  * @param disk An initialized disk.
  * @param bytes The number of bytes
  *  that must be allocated.
- * @param starting_block A pointer to
- *  the variable that will receive the
- *  starting block that will fit the
- *  specified number of bytes.
+ * @param offset A pointer that will
+ * receive the offset, in bytes, of the
+ * new allocation.
  * @returns Zero on success, a negative
  *  error code on failure.
  * @ingroup disk-api
  */
 
-int bmfs_disk_allocate_bytes(struct BMFSDisk *disk,
-                             uint64_t bytes,
-                             uint64_t *starting_block);
+int bmfs_disk_allocate(struct BMFSDisk *disk,
+                       uint64_t bytes,
+                       uint64_t *offset);
 
-/** Locates a starting block that can
+/** Locates a region that can
  * fit a certain number of mebibytes.
  * @param disk An initialized disk.
  * @param mebibytes The number of
  *  mebibytes that must be allocated.
- * @param starting_block A pointer to
- *  the variable that will receive the
- *  starting block.
+ * @param offset A pointer that will
+ * receive the offset, in bytes, of the
+ * new allocation.
  * @returns Zero on success, a negative
  *  error code on failure.
  * @ingroup disk-api
@@ -203,7 +202,17 @@ int bmfs_disk_allocate_bytes(struct BMFSDisk *disk,
 
 int bmfs_disk_allocate_mebibytes(struct BMFSDisk *disk,
                                  uint64_t mebibytes,
-                                 uint64_t *starting_block);
+                                 uint64_t *offset);
+
+/** Checks for the file system signature.
+ * This is useful for determining wether or
+ * not the disk has a valid BMFS file system.
+ * @param disk An initialized disk structure.
+ * @returns Zero on success, an error code on
+ * failure.
+ * */
+
+int bmfs_disk_check_signature(struct BMFSDisk *disk);
 
 /** Locates a file entry.
  * @param disk An initialized disk.
@@ -253,28 +262,6 @@ int bmfs_disk_read_root_dir(struct BMFSDisk *disk,
 int bmfs_disk_write_root_dir(struct BMFSDisk *disk,
                              const struct BMFSDir *dir);
 
-/** Checks to make sure that the
- * BMFS tag exists in the disk info
- * section. If the tag is not present,
- * this function fails.
- * @param disk An initialized disk.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_check_tag(struct BMFSDisk *disk);
-
-/** Writes the BMFS tag onto the
- * disk info section.
- * @param disk An initialized disk.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_write_tag(struct BMFSDisk *disk);
-
 /** Creates a file on the disk.
  * This function fails if the file
  * exists or if there isn't enough
@@ -319,16 +306,19 @@ int bmfs_disk_create_dir(struct BMFSDisk *disk,
 int bmfs_disk_delete_file(struct BMFSDisk *disk,
                           const char *filename);
 
-/** Writes the BMFS tag in the disk info
- * section and initializes the root directory
- * with zero entries. This causes all file
- * entries present on disk to be deleted.
+/** Formats the disk so that the file
+ * system can function properly. This
+ * function will clear all existing
+ * allocations if the disk is already
+ * formatted to BMFS.
  * @param disk An initialized disk.
+ * @param size The number of bytes to allow
+ * for the file system to grow.
  * @returns Zero on success, a negative
  *  error code on failure.
  */
 
-int bmfs_disk_format(struct BMFSDisk *disk);
+int bmfs_disk_format(struct BMFSDisk *disk, uint64_t size);
 
 /** Reads content of a specified file.
  * @param disk An initialized disk.

@@ -11,40 +11,32 @@
 extern "C" {
 #endif /* __cplusplus */
 
+struct BMFSDisk;
+
 struct BMFSHeader
 {
 	/** The BMFS file system tag.
 	 * If this is not set to 'BMFS',
 	 * then the file system is not
 	 * BMFS formatted. */
-	char tag[4];
-	/** The version of the BMFS
-	 * file system being used. */
-	unsigned char version;
-	/** Information held by headers
-	 * greater than or equal to version
-	 * one. */
-	struct {
-		/** The offset of the root directory,
-		 * relative to the end of the BMFS
-		 * header. */
-		uint64_t root_offset;
-		/** The number of bytes that the file system
-		 * is allowed to occupy, not including the size
-		 * of this header. */
-		uint64_t size;
-	} v1_info;
+	char Signature[8];
+	/** The offset, in bytes, of the root directory.*/
+	uint64_t RootOffset;
+	/** The offset, in bytes, of the allocation table. */
+	uint64_t TableOffset;
+	/** The number of used entries in the allocation table. */
+	uint64_t TableEntryCount;
+	/** The total size allowed for the file system to grow. */
+	uint64_t TotalSize;
 };
 
 void bmfs_header_init(struct BMFSHeader *header);
 
 int bmfs_header_read(struct BMFSHeader *header,
-                     const void *buf,
-                     uint64_t buf_size);
+                     struct BMFSDisk *disk);
 
-int bmfs_header_write(struct BMFSHeader *header,
-                      void *buf,
-                      uint64_t buf_size);
+int bmfs_header_write(const struct BMFSHeader *header,
+                      struct BMFSDisk *disk);
 
 #ifdef __cplusplus
 } /* extern "C" { */

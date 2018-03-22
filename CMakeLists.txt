@@ -24,7 +24,9 @@ endif (MSVC)
 
 include_directories("include")
 
-add_subdirectory("src")
+add_subdirectory("lib")
+add_subdirectory("utils")
+add_subdirectory("tests")
 
 enable_testing()
 

@@ -12,6 +12,25 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/** Used to walk a path without
+ * allocated any memory or parsing
+ * any strings.
+ * */
+
+struct BMFSPathVisitor
+{
+	/** Used to pass data to the callback functions.  */
+	void *data;
+	/** Called when a parent directory is parsed. */
+	int (*visit_parent)(void *data, const char *name, uint64_t name_size);
+	/** Called when the basename of the path is parsed. */
+	int (*visit_basename)(void *data, const char *name, uint64_t name_size);
+};
+
+/** A path that references a file
+ * or directory on the file system.
+ * */
+
 struct BMFSPath
 {
 	const char *String;
@@ -60,6 +79,22 @@ int bmfs_path_split_root(struct BMFSPath *path,
 void bmfs_path_set(struct BMFSPath *path,
                    const char *string,
                    uint64_t length);
+
+/** Parses the path and calls the visitor
+ * function everytime that it matches a parent
+ * directory or the basename of the path.
+ * This is used for opening or creating files
+ * and directories.
+ * @param path The path to visit.
+ * @param visitor The visitor to call for each
+ * path component.
+ * @returns Zero if the path is visited entirely
+ * without an error from the visitor. If non-zero
+ * is returned, it is returned from the visitor.
+ * */
+
+int bmfs_path_visit(struct BMFSPath *path,
+                    struct BMFSPathVisitor *visitor);
 
 #ifdef __cplusplus
 } /* extern "C" { */

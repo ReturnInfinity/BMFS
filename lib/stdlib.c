@@ -321,7 +321,7 @@ int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *ker
 	{
 		struct BMFSDisk tmp_disk;
 		bmfs_disk_init_file(&tmp_disk, disk);
-		bmfs_disk_format(&tmp_disk);
+		bmfs_disk_format(&tmp_disk, diskSize);
 	}
 
 	// Write the master boot record if it was specified by the caller.

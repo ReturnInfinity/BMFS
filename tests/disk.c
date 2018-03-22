@@ -107,16 +107,8 @@ int main(void)
 	disk.write = data_write;
 
 	/* test format function */
-	assert(bmfs_disk_format(&disk) == 0);
+	assert(bmfs_disk_format(&disk, data.len) == 0);
 	assert(memcmp(&data.buf[1024], "BMFS", 4) == 0);
-
-	/* test allocation */
-	uint64_t starting_block = 0;
-	assert(bmfs_disk_allocate_bytes(&disk, 1024, &starting_block) == 0);
-	assert(starting_block == 1);
-	assert(bmfs_disk_allocate_bytes(&disk, BMFS_BLOCK_SIZE * 2, &starting_block) == 0);
-	assert(starting_block == 1);
-	assert(bmfs_disk_allocate_bytes(&disk, (BMFS_BLOCK_SIZE * 2) + 1, &starting_block) == -ENOSPC);
 
 	/* test the creation of files */
 	assert(bmfs_disk_create_file(&disk, "a.txt", 1) == 0);
