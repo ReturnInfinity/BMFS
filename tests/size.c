@@ -11,29 +11,33 @@
 void test_entry(void) {
 
 	struct BMFSEntry entry;
-	char buf[64];
+
+	char buf[BMFS_ENTRY_SIZE];
 
 	/* Make sure the structure is 64 bytes long */
-	assert(sizeof(entry) == 64);
+	assert(sizeof(entry) == BMFS_ENTRY_SIZE);
 
-	strcpy(entry.FileName, "filename.txt");
-	entry.FileSize = 0x01;
-	entry.StartingBlock = 0x02;
-	entry.ReservedBlocks = 0x03;
-	entry.Type = 0x04;
+	strcpy(entry.Name, "filename.txt");
+	entry.Offset = 0x01;
+	entry.Size = 0x02;
+	entry.CreationTime = 0x03;
+	entry.ModificationTime = 0x04;
+	entry.Flags = 0x05;
+	entry.UserID = 0x06;
+	entry.GroupID = 0x07;
 
 	memcpy(buf, &entry, sizeof(entry));
 
-	/* FileName */
+	/* Name */
 	assert(memcmp(&buf[0], "filename.txt", sizeof("filename.txt") - 1) == 0);
-	/* StartingBlock */
-	assert(memcmp(&buf[32], "\x02\x00\x00\x00\x00\x00\x00\x00", 8) == 0);
-	/* ReservedBlocks */
-	assert(memcmp(&buf[40], "\x03\x00\x00\x00\x00\x00\x00\x00", 8) == 0);
-	/* FileSize */
-	assert(memcmp(&buf[48], "\x01\x00\x00\x00\x00\x00\x00\x00", 8) == 0);
+	/* Size */
+	assert(memcmp(&buf[192], "\x01\x00\x00\x00\x00\x00\x00\x00", 8) == 0);
+	/* Offset */
+	assert(memcmp(&buf[192 + 8], "\x02\x00\x00\x00\x00\x00\x00\x00", 8) == 0);
+	/* Flags */
+	assert(memcmp(&buf[192 + 16], "\x03\x00\x00\x00\x00\x00\x00\x00", 8) == 0);
 	/* Type */
-	assert(memcmp(&buf[56], "\x04", 1) == 0);
+	assert(memcmp(&buf[192 + 24], "\x04", 1) == 0);
 }
 
 int main(void) {
