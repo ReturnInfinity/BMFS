@@ -14,7 +14,8 @@ set_target_properties("bmfs-library" PROPERTIES OUTPUT_NAME "bmfs")
 
 add_library("bmfs-stdlib-library"
 	"sspec.c"
-	"stdlib.c")
+	"stdlib.c"
+	"time.c")
 
 # Tell CMake that we want 'libbmfs-stdlib.so' and not 'libbmfs-stdlib-library.so'
 set_target_properties("bmfs-stdlib-library" PROPERTIES OUTPUT_NAME "bmfs-stdlib")
