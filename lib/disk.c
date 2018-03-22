@@ -5,7 +5,9 @@
 #include <bmfs/disk.h>
 #include <bmfs/header.h>
 #include <bmfs/limits.h>
+#include <bmfs/path.h>
 #include <bmfs/table.h>
+#include <bmfs/time.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -16,6 +18,8 @@
 #ifndef _MSC_VER
 #include <strings.h>
 #endif /* _MSC_VER */
+
+#include <stdio.h>
 
 /* disk wrapper functions */
 
@@ -53,6 +57,194 @@ int bmfs_disk_write(struct BMFSDisk *disk, const void *buf, uint64_t len, uint64
 		return -EFAULT;
 
 	return disk->write(disk->disk, buf, len, write_len);
+}
+
+/* private functions */
+
+static int is_entry(struct BMFSEntry *entry,
+                    const char *name,
+                    uint64_t name_size) {
+
+	if ((name_size == 0) || (name_size >= BMFS_FILE_NAME_MAX))
+		return 0;
+
+	for (uint64_t i = 0; i < name_size; i++) {
+		if (name[i] != entry->Name[i])
+			return 0;
+	}
+
+	return 1;
+}
+
+static int add_entry(struct BMFSDisk *disk,
+                     const struct BMFSEntry *root,
+                     const struct BMFSEntry *entry)
+{
+	uint64_t pos = root->Offset;
+
+	int err = bmfs_disk_seek(disk, pos, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	uint64_t pos_max = pos + BMFS_BLOCK_SIZE;
+
+	struct BMFSEntry tmp_entry;
+
+	while (pos < pos_max) {
+
+		bmfs_entry_init(&tmp_entry);
+
+		err = bmfs_entry_read(&tmp_entry, disk);
+		if (err != 0)
+			return err;
+
+		if (bmfs_entry_is_empty(&tmp_entry))
+			break;
+
+		pos += BMFS_ENTRY_SIZE;
+	}
+
+	if (pos >= pos_max)
+		return -ENOSPC;
+
+	err = bmfs_disk_seek(disk, pos, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_entry_write(entry, disk);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+static int find_entry(struct BMFSDisk *disk,
+                      const struct BMFSEntry *parent_dir,
+                      struct BMFSEntry *entry,
+                      const char *name,
+                      uint64_t name_size)
+{
+	int err = bmfs_disk_seek(disk, parent_dir->Offset, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	uint64_t pos = 0;
+
+	uint64_t pos_max = BMFS_BLOCK_SIZE;
+
+	while (pos < pos_max) {
+
+		bmfs_entry_init(entry);
+
+		err = bmfs_entry_read(entry, disk);
+		if (err != 0)
+			return err;
+
+		if (is_entry(entry, name, name_size)) {
+			/* Found the entry */
+			return 0;
+		}
+
+		pos += BMFS_ENTRY_SIZE;
+	}
+
+	return -ENOENT;
+}
+
+static int create_entry(struct BMFSDisk *disk,
+                        struct BMFSEntry *entry,
+                        const char *path_string)
+{
+	/* Get the length of the path. */
+
+	uint64_t path_size = 0;
+
+	while (path_string[path_size] != 0)
+		path_size++;
+
+	/* Read the header to get the root directory
+	 * offset. */
+
+	int err = bmfs_disk_seek(disk, 0, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	struct BMFSHeader header;
+
+	bmfs_header_init(&header);
+
+	err = bmfs_header_read(&header, disk);
+	if (err != 0)
+		return err;
+
+	/* Go to the root directory location. */
+
+	err = bmfs_disk_seek(disk, header.RootOffset, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	/* Read the root directory. */
+
+	struct BMFSEntry root;
+
+	bmfs_entry_init(&root);
+
+	err = bmfs_entry_read(&root, disk);
+	if (err != 0)
+		return err;
+
+	/* Setup the path structures */
+
+	struct BMFSPath path;
+
+	bmfs_path_init(&path);
+
+	bmfs_path_set(&path, path_string, path_size);
+
+	struct BMFSPath parent;
+
+	bmfs_path_init(&parent);
+
+	/* Iterate the path until the
+	 * basename is found */
+
+	while ((bmfs_path_split_root(&path, &parent) == 0) && (path.Length > 0)) {
+
+		uint64_t name_size = parent.Length;
+		if (name_size == 0) {
+			/* Reached the base name */
+			break;
+		}
+
+		const char *name = parent.String;
+
+		err = find_entry(disk, &root, &root, name, name_size);
+		if (err != 0)
+			return err;
+
+		err = bmfs_disk_seek(disk, root.Offset, SEEK_SET);
+		if (err != 0)
+			return err;
+	}
+
+	/* Copy over file name */
+
+	uint64_t name_size = parent.Length;
+	if ((name_size == 0) || (name_size >= BMFS_FILE_NAME_MAX))
+		return -EINVAL;
+
+	const char *name = parent.String;
+
+	for (uint64_t i = 0; i < name_size; i++)
+		entry->Name[i] = name[i];
+
+	entry->Name[name_size] = 0;
+
+	err = add_entry(disk, &root, entry);
+	if (err != 0)
+		return err;
+
+	return 0;
 }
 
 /* public functions */
@@ -122,7 +314,7 @@ int bmfs_disk_allocate(struct BMFSDisk *disk, uint64_t size, uint64_t *offset_pt
 	/* Check to see if the allocation
 	 * table is already full. */
 
-	if (header.TableEntryCount == BMFS_TABLE_ENTRY_COUNT_MAX) {
+	if (header.TableEntryCount >= BMFS_TABLE_ENTRY_COUNT_MAX) {
 		return -ENOSPC;
 	}
 
@@ -162,8 +354,9 @@ int bmfs_disk_allocate(struct BMFSDisk *disk, uint64_t size, uint64_t *offset_pt
 
 	/* Check to make sure that the offset can fit into the disk. */
 
-	if ((entry.Offset + entry.Reserved) > header.TotalSize)
+	if ((entry.Offset + entry.Reserved) > header.TotalSize) {
 		return -ENOSPC;
+	}
 
 	/* Write the table entry. */
 
@@ -281,72 +474,53 @@ int bmfs_disk_blocks(struct BMFSDisk *disk, uint64_t *blocks)
 	return 0;
 }
 
-int bmfs_disk_create_file(struct BMFSDisk *disk, const char *filename, uint64_t mebibytes)
+int bmfs_disk_create_file(struct BMFSDisk *disk, const char *path, uint64_t mebibytes)
 {
-	if ((disk == NULL)
-	 || (filename == NULL))
+	if ((disk == NULL) || (path == NULL))
 		return -EFAULT;
 
 	if (mebibytes % 2 != 0)
 		mebibytes++;
 
-	uint64_t starting_block;
-	int err = bmfs_disk_allocate_mebibytes(disk, mebibytes, &starting_block);
+	uint64_t offset = 0;
+
+	int err = bmfs_disk_allocate_mebibytes(disk, mebibytes, &offset);
 	if (err != 0)
 		return err;
 
 	struct BMFSEntry entry;
 	bmfs_entry_init(&entry);
-	bmfs_entry_set_file_name(&entry, filename);
-	bmfs_entry_set_starting_block(&entry, starting_block);
-	bmfs_entry_set_reserved_blocks(&entry, mebibytes / 2);
+	bmfs_entry_set_type(&entry, BMFS_TYPE_FILE);
+	entry.Offset = offset;
+	bmfs_get_current_time(&entry.CreationTime);
+	bmfs_get_current_time(&entry.ModificationTime);
 
-	struct BMFSDir dir;
-
-	err = bmfs_disk_read_root_dir(disk, &dir);
-	if (err != 0)
-		return err;
-
-	err = bmfs_dir_add(&dir, &entry);
-	if (err != 0)
-		return err;
-
-	err = bmfs_disk_write_root_dir(disk, &dir);
+	err = create_entry(disk, &entry, path);
 	if (err != 0)
 		return err;
 
 	return 0;
 }
 
-int bmfs_disk_create_dir(struct BMFSDisk *disk, const char *dirname)
+int bmfs_disk_create_dir(struct BMFSDisk *disk, const char *path)
 {
-	if ((disk == NULL)
-	 || (dirname == NULL))
+	if ((disk == NULL) || (path == NULL))
 		return -EFAULT;
 
-	uint64_t starting_block;
-	int err = bmfs_disk_allocate_mebibytes(disk, 2 /* 2MiB */, &starting_block);
+	uint64_t offset = 0;
+
+	int err = bmfs_disk_allocate_mebibytes(disk, 2 /* 2MiB */, &offset);
 	if (err != 0)
 		return err;
 
 	struct BMFSEntry entry;
 	bmfs_entry_init(&entry);
-	bmfs_entry_set_file_name(&entry, dirname);
 	bmfs_entry_set_type(&entry, BMFS_TYPE_DIRECTORY);
-	bmfs_entry_set_starting_block(&entry, starting_block);
-	bmfs_entry_set_reserved_blocks(&entry, 1 /* 1 reserved block */);
+	entry.Offset = offset;
+	bmfs_get_current_time(&entry.CreationTime);
+	bmfs_get_current_time(&entry.ModificationTime);
 
-	struct BMFSDir dir;
-
-	err = bmfs_disk_read_root_dir(disk, &dir);
-	if (err != 0)
-		return err;
-
-	err = bmfs_dir_add(&dir, &entry);
-	if (err != 0)
-		return err;
-
-	err = bmfs_disk_write_root_dir(disk, &dir);
+	err = create_entry(disk, &entry, path);
 	if (err != 0)
 		return err;
 
@@ -365,7 +539,7 @@ int bmfs_disk_delete_file(struct BMFSDisk *disk, const char *filename)
 	if (entry == NULL)
 		return -ENOENT;
 
-	entry->FileName[0] = 1;
+	entry->Name[0] = 1;
 
 	return bmfs_disk_write_root_dir(disk, &dir);
 }
@@ -431,11 +605,21 @@ int bmfs_disk_format(struct BMFSDisk *disk, uint64_t size)
 
 	/* Write the root directory. */
 
-	struct BMFSDir dir;
+	struct BMFSEntry root;
 
-	bmfs_dir_init(&dir);
+	bmfs_entry_init(&root);
 
-	err = bmfs_disk_write_root_dir(disk, &dir);
+	bmfs_entry_set_type(&root, BMFS_TYPE_DIRECTORY);
+
+	err = bmfs_disk_allocate(disk, BMFS_BLOCK_SIZE, &root.Offset);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_seek(disk, header.RootOffset, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_entry_write(&root, disk);
 	if (err != 0)
 		return err;
 
