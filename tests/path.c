@@ -94,10 +94,27 @@ static void test5(void)
 	assert(path.Length == 0);
 }
 
+static void test6(void) {
+
+	int err;
+	char path_str[] = "/tmp";
+	struct BMFSPath path;
+	struct BMFSPath root;
+
+	bmfs_path_init(&path);
+	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
+
+	err = bmfs_path_split_root(&path, &root);
+	assert(err == 0);
+	assert(root.Length == (sizeof("tmp") - 1));
+	assert(memcmp(root.String, "tmp", (size_t) path.Length) == 0);
+	assert(path.Length == 0);
+}
+
 static void test_failure1(void)
 {
 	int err;
-	char path_str[] = "no-root";
+	char path_str[] = "no-slash";
 	struct BMFSPath path;
 	struct BMFSPath root;
 
@@ -105,30 +122,13 @@ static void test_failure1(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == -1);
-	/* Ensure the path wasn't modified */
-	assert(path.Length == (sizeof("no-root") - 1));
-	assert(memcmp(path.String, "no-root", (size_t) path.Length) == 0);
+	assert(err == 0);
+	assert(root.Length == (sizeof("no-slash") - 1));
+	assert(memcmp(root.String, "no-slash", (size_t) path.Length) == 0);
+	assert(path.Length == 0);
 }
 
 static void test_failure2(void)
-{
-	int err;
-	char path_str[] = "/no-root";
-	struct BMFSPath path;
-	struct BMFSPath root;
-
-	bmfs_path_init(&path);
-	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
-
-	err = bmfs_path_split_root(&path, &root);
-	assert(err == -1);
-	/* Ensure the path wasn't modified */
-	assert(path.Length == (sizeof("/no-root") - 1));
-	assert(memcmp(path.String, "/no-root", (size_t) path.Length) == 0);
-}
-
-static void test_failure3(void)
 {
 	int err;
 	char path_str[] = "/";
@@ -139,12 +139,63 @@ static void test_failure3(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == -1);
-	/* Ensure the string wasn't modified */
-	assert(path.Length == 1);
-	assert(path.String[0] == '/');
-	assert(path.String[1] == 0);
+	assert(err == 0);
+	assert(path.Length == 0);
+	assert(root.Length == 0);
 }
+
+#if 0
+struct VisitorData {
+	unsigned int name_index;
+};
+
+static void visit_parent(void *data_ptr, const char *name, uint64_t name_size)
+{
+	struct VisitorData *data = (struct VisitorData *) data_ptr;
+
+	assert(data->name_index <= 1);
+
+	if (data->name_index == 0) {
+		assert(name_size == 2);
+		assert(memcmp(name, "ab", 3) == 0);
+	} else if (data->name_index == 1) {
+		assert(name_size == 3);
+		assert(memcmp(name, "cde", 3) == 0);
+	}
+}
+
+static void visit_basename(void *data_ptr, const void *name, uint64_t name_size)
+{
+	struct VisitorData *data = (struct VisitorData *) data_ptr;
+
+	assert(data->name_index == 2);
+
+	assert(name_size == 2);
+	assert(memcmp(name, "fg", 2) == 0);
+}
+
+static void test_visitor(void)
+{
+
+	struct BMFSPath path;
+
+	bmfs_path_init(&path);
+
+	bmfs_path_set(&path, "/ab/cde/fg", sizeof("/ab/cde/fg") - 1);
+
+	struct VisitorData visitor_data;
+	visitor_data.name_index = 0;
+
+	struct BMFSPathVisitor visitor;
+	visitor.data = &visitor_data;
+	visitor.visit_parent = visit_parent;
+	visitor.visit_basename = visit_basename;
+
+	int ret = bmfs_path_visit(&path, &visitor);
+	assert(ret == 0);
+}
+
+#endif
 
 int main(void)
 {
@@ -153,8 +204,8 @@ int main(void)
 	test3();
 	test4();
 	test5();
+	test6();
 	test_failure1();
 	test_failure2();
-	test_failure3();
 	return EXIT_SUCCESS;
 }
