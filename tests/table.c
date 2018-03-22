@@ -13,7 +13,7 @@ void test_alloc(void)
 	/* Allocate enough room for the file system
 	 * data and three allocations. */
 
-	size_t mem_size = BMFS_BLOCK_SIZE * 5;
+	size_t mem_size = BMFS_BLOCK_SIZE * 6;
 
 	void *mem = malloc(mem_size);
 	assert(mem != NULL);
