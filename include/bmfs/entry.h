@@ -5,12 +5,16 @@
 #ifndef BMFS_ENTRY_H
 #define BMFS_ENTRY_H
 
+#include <bmfs/limits.h>
+
 #include <stdlib.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+struct BMFSDisk;
 
 /** @defgroup entry-api Entries
  * Examine and manipulate file entry data.
@@ -31,19 +35,6 @@ enum BMFSEntryType
 	BMFS_TYPE_LINK
 };
 
-/** Indicates the permissions held by
- * an entry.
- * @ingroup entry-api
- * */
-
-enum BMFSPermission
-{
-	BMFS_PERMISSION_NONE = 0x00,
-	BMFS_PERMISSION_READ = 0x04,
-	BMFS_PERMISSION_WRITE = 0x02,
-	BMFS_PERMISSION_EXECUTE = 0x01,
-};
-
 /** An entry within a BMFS directory.
  * Contains information on a file, such
  * as name, size and more.
@@ -53,26 +44,24 @@ enum BMFSPermission
 struct BMFSEntry
 {
 	/** The name of the entry. */
-	char FileName[32];
-	/** The block that the file data
-	 * starts at. */
-	uint64_t StartingBlock;
-	/** The number of blocks that have
-	 * been reserved for the file to grow.
-	 */
-	uint64_t ReservedBlocks;
-	/** The number of bytes in the file
-	 * that contain valid data.
-	 */
-	uint64_t FileSize;
-	/** The type of entry this is. */
-	uint8_t Type;
-	/** Permissions of the file. */
-	uint8_t Permissions;
-	/** Reserved for future use. Do not
-	 * read or write from this field.
-	 */
-	uint8_t Unused[6];
+	char Name[BMFS_FILE_NAME_MAX];
+	/** The offset of the entry, in bytes. */
+	uint64_t Offset;
+	/** The number of bytes used by the entry. */
+	uint64_t Size;
+	/** The time that the entry was created. */
+	uint64_t CreationTime;
+	/** The time that the entry was last modified. */
+	uint64_t ModificationTime;
+	/** Stores information on entry type
+	 * and permissions. */
+	uint64_t Flags;
+	/** The owner user ID */
+	uint64_t UserID;
+	/** The group ID */
+	uint64_t GroupID;
+	/** Currently unused, reserved for future use. */
+	uint64_t Padding;
 };
 
 /** Initializes an entry.
@@ -81,6 +70,26 @@ struct BMFSEntry
  */
 
 void bmfs_entry_init(struct BMFSEntry *entry);
+
+/** Reads an entry from disk.
+ * @param entry The entry to read.
+ * @param disk The disk to read the entry from.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup entry-api
+ * */
+
+int bmfs_entry_read(struct BMFSEntry *entry,
+                    struct BMFSDisk *disk);
+
+/** Writes an entry to disk.
+ * @param entry The entry to write.
+ * @param disk The disk to write the entry to.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup entry-api
+ * */
+
+int bmfs_entry_write(const struct BMFSEntry *entry,
+                     struct BMFSDisk *disk);
 
 /** Compares two entries by file name.
  * This function can be used by @ref bmfs_dir_sort.
