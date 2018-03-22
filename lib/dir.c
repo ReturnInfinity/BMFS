@@ -20,7 +20,7 @@ void bmfs_dir_init(struct BMFSDir *dir)
 
 int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
 {
-	if (bmfs_dir_find(dir, entry->FileName) != NULL)
+	if (bmfs_dir_find(dir, entry->Name) != NULL)
 		return -EEXIST;
 
 	for (size_t i = 0; i < 64; i++)
@@ -38,7 +38,7 @@ int bmfs_dir_add(struct BMFSDir *dir, const struct BMFSEntry *entry)
 			if ((i + 1) < 64)
 				/* make sure next entry
 				 * indicates end of directory */
-				dir->Entries[i + 1].FileName[0] = 0;
+				dir->Entries[i + 1].Name[0] = 0;
 			return 0;
 		}
 	}
@@ -82,7 +82,7 @@ int bmfs_dir_delete_file(struct BMFSDir *dir, const char *filename)
 	if (entry == NULL)
 		return -ENOENT;
 
-	entry->FileName[0] = 1;
+	entry->Name[0] = 1;
 
 	return 0;
 }
