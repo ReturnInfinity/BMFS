@@ -45,9 +45,9 @@ struct BMFSEntry
 {
 	/** The name of the entry. */
 	char Name[BMFS_FILE_NAME_MAX];
-	/** The offset of the entry, in bytes. */
+	/** The offset of the entry data, in bytes. */
 	uint64_t Offset;
-	/** The number of bytes used by the entry. */
+	/** The number of bytes used by the entry data. */
 	uint64_t Size;
 	/** The time that the entry was created. */
 	uint64_t CreationTime;
@@ -60,8 +60,8 @@ struct BMFSEntry
 	uint64_t UserID;
 	/** The group ID */
 	uint64_t GroupID;
-	/** Currently unused, reserved for future use. */
-	uint64_t Padding;
+	/** The offset of the entry within it's parent directory. */
+	uint64_t EntryOffset;
 };
 
 /** Initializes an entry.
@@ -70,6 +70,18 @@ struct BMFSEntry
  */
 
 void bmfs_entry_init(struct BMFSEntry *entry);
+
+/** Copies the contents of an entry structure
+ * from one location to another.
+ * @param dst The destination entry.
+ * @param src The source entry. This is
+ * the entry that contains the data that
+ * is copied over to the destination entry.
+ * @ingroup entry-api
+ * */
+
+void bmfs_entry_copy(struct BMFSEntry *dst,
+                     const struct BMFSEntry *src);
 
 /** Reads an entry from disk.
  * @param entry The entry to read.
