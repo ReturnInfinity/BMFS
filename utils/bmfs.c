@@ -179,13 +179,29 @@ int main(int argc, const char **argv)
 
 	bmfs_set_disk(&bmfs, &disk);
 
-	int err = 0;
+	if (cmd == BMFS_CMD_FORMAT)
+	{
+		int err = cmd_format(&bmfs, argc - i, &argv[i]);
+
+		fclose(diskfile);
+
+		if (err != 0)
+			return EXIT_FAILURE;
+
+		return EXIT_SUCCESS;
+	}
+
+	int err = bmfs_import(&bmfs);
+	if (err != 0)
+	{
+		fprintf(stderr, "Error: Failed to import file system.\n");
+		fprintf(stderr, "Reason: %s\n", strerror(-err));
+		fclose(diskfile);
+		return EXIT_FAILURE;
+	}
 
 	switch (cmd)
 	{
-	case BMFS_CMD_FORMAT:
-		err = cmd_format(&bmfs, argc - i, &argv[i]);
-		break;
 	case BMFS_CMD_LS:
 		err =  cmd_ls(&bmfs, argc - i, &argv[i]);
 		break;
