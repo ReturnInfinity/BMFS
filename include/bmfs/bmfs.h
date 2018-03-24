@@ -5,9 +5,10 @@
 #ifndef BMFS_H
 #define BMFS_H
 
-#include "entry.h"
 #include "dir.h"
 #include "disk.h"
+#include "entry.h"
+#include "fs.h"
 #include "limits.h"
 #include "sspec.h"
 #include "version.h"
