@@ -83,32 +83,6 @@ sspec-test: sspec-test.o $(libs)
 
 fs-test.o: fs-test.c
 
-header.o: header.c header.h
-
-entry.o: entry.c entry.h limits.h
-
-dir.o: dir.c dir.h entry.h
-
-disk.o: disk.c disk.h dir.h entry.h limits.h
-
-fs.o: fs.c fs.h disk.h entry.h dir.h
-
-ramdisk.o: ramdisk.c ramdisk.h disk.h dir.h entry.h limits.h
-
-path.o: path.c path.h
-
-sspec.o: sspec.c sspec.h
-
-table.o: table.c table.h disk.h
-
-stdlib.o: stdlib.c stdlib.h
-
-time.o: time.c time.h
-
-libbmfs.a: $(libfiles)
-
-libbmfs-stdlib.a: $(stdlibfiles)
-
 bmfs-fuse: bmfs-fuse.c $(libs)
 bmfs-fuse: LDLIBS += $(shell pkg-config --libs fuse)
 bmfs-fuse: CFLAGS += $(shell pkg-config --cflags fuse)
@@ -116,26 +90,14 @@ bmfs-fuse: CFLAGS += -std=gnu99
 
 .PHONY: clean
 clean:
-	$(RM) libbmfs.a
-	$(RM) libbmfs-stdlib.a
-	$(RM) $(libfiles)
-	$(RM) $(stdlibfiles)
-	$(RM) $(tests) $(tests:=.o)
 	$(RM) $(utils) $(utils:=.o)
 
 .PHONY: test
 test:
-	$(VALGRIND) ./dir-test
-	$(VALGRIND) ./disk-test
-	$(VALGRIND) ./path-test
-	$(VALGRIND) ./sspec-test
-	$(VALGRIND) ./fs-test
 
 .PHONY: install
 install: $(utils) $(libs)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	mkdir -p $(DESTDIR)$(PREFIX)/lib
 	cp --update $(utils) $(DESTDIR)$(PREFIX)/bin/
-	cp --update libbmfs.a $(DESTDIR)$(PREFIX)/lib/
 
 $(V).SILENT:
