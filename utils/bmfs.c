@@ -10,23 +10,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-
-#ifndef _MSC_VER
-#include <strings.h>
-#else /* _MSC_VER */
-#define strcasecmp _stricmp
-#endif /* _MSC_VER */
-
-char s_list[] = "list";
-char s_format[] = "format";
-char s_initialize[] = "initialize";
-char s_mkdir[] = "mkdir";
-char s_create[] = "create";
-char s_read[] = "read";
-char s_write[] = "write";
-char s_delete[] = "delete";
-char s_version[] = "version";
 
 /** Enumerates a list of commands
  * that the utility supports.
