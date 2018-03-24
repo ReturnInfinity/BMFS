@@ -29,19 +29,33 @@ void bmfs_entry_init(struct BMFSEntry *entry)
 	entry->Flags = 0;
 	entry->UserID = 0;
 	entry->GroupID = 0;
-	entry->Padding = 0;
+	entry->EntryOffset = 0;
+}
+
+void bmfs_entry_copy(struct BMFSEntry *dst,
+                     const struct BMFSEntry *src)
+{
+	*dst = *src;
 }
 
 int bmfs_entry_read(struct BMFSEntry *entry,
                     struct BMFSDisk *disk) {
 
+	int64_t disk_pos = 0;
+
+	int err = bmfs_disk_tell(disk, &disk_pos);
+	if (err != 0)
+		return err;
+
 	uint64_t read_size = 0;
 
-	int err = bmfs_disk_read(disk, entry, sizeof(struct BMFSEntry), &read_size);
+	err = bmfs_disk_read(disk, entry, sizeof(struct BMFSEntry), &read_size);
 	if (err != 0)
 		return err;
 	else if (read_size != BMFS_ENTRY_SIZE)
 		return -EIO;
+
+	entry->EntryOffset = (uint64_t) disk_pos;
 
 	return 0;
 }
@@ -49,9 +63,23 @@ int bmfs_entry_read(struct BMFSEntry *entry,
 int bmfs_entry_write(const struct BMFSEntry *entry,
                      struct BMFSDisk *disk) {
 
+	int64_t disk_pos = 0;
+
+	int err = bmfs_disk_tell(disk, &disk_pos);
+	if (err != 0)
+		return err;
+
+	struct BMFSEntry tmp_entry;
+
+	bmfs_entry_init(&tmp_entry);
+
+	bmfs_entry_copy(&tmp_entry, entry);
+
+	tmp_entry.EntryOffset = (uint64_t) disk_pos;
+
 	uint64_t write_size = 0;
 
-	int err = bmfs_disk_write(disk, entry, sizeof(*entry), &write_size);
+	err = bmfs_disk_write(disk, &tmp_entry, sizeof(tmp_entry), &write_size);
 	if (err != 0)
 		return err;
 	else if (write_size != BMFS_ENTRY_SIZE)
