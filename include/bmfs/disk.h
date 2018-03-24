@@ -17,6 +17,22 @@ extern "C" {
  * disk.
  */
 
+/** Used with the function @ref bmfs_disk_seek
+ * to indicate that the reference point of the
+ * seek operation is at the beginning of the disk.
+ * @ingroup disk-api
+ * */
+
+#define BMFS_SEEK_SET 0
+
+/** Used with the function @ref bmfs_disk_seek
+ * to indicate that the reference point of the
+ * seek operation is at the end of the disk.
+ * @ingroup disk-api
+ * */
+
+#define BMFS_SEEK_END 2
+
 /** An abstract disk structure.
  * This structure allows a disk
  * to be represented by anything
@@ -66,9 +82,8 @@ void bmfs_disk_done(struct BMFSDisk *disk);
  * @param disk An initialized disk.
  * @param offset The offset to point the disk to.
  * @param whence Where the base the offset from.
- *  This value may be SEEK_SET, SEEK_CUR or SEEK_END.
- * @returns Zero on success, a negative error code on
- *  failure.
+ *  This value may be @ref BMFS_SEEK_SET or @ref BMFS_SEEK_END.
+ * @returns Zero on success, a negative error code on failure.
  * @ingroup disk-api
  */
 
@@ -170,193 +185,8 @@ int bmfs_disk_mebibytes(struct BMFSDisk *disk,
 int bmfs_disk_blocks(struct BMFSDisk *disk,
                      uint64_t *blocks);
 
-/** Locates a region that can
- * fit a certain number of bytes.
- * @param disk An initialized disk.
- * @param bytes The number of bytes
- *  that must be allocated.
- * @param offset A pointer that will
- * receive the offset, in bytes, of the
- * new allocation.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_allocate(struct BMFSDisk *disk,
-                       uint64_t bytes,
-                       uint64_t *offset);
-
-/** Locates a region that can
- * fit a certain number of mebibytes.
- * @param disk An initialized disk.
- * @param mebibytes The number of
- *  mebibytes that must be allocated.
- * @param offset A pointer that will
- * receive the offset, in bytes, of the
- * new allocation.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_allocate_mebibytes(struct BMFSDisk *disk,
-                                 uint64_t mebibytes,
-                                 uint64_t *offset);
-
-/** Checks for the file system signature.
- * This is useful for determining wether or
- * not the disk has a valid BMFS file system.
- * @param disk An initialized disk structure.
- * @returns Zero on success, an error code on
- * failure.
- * */
-
-int bmfs_disk_check_signature(struct BMFSDisk *disk);
-
-/** Locates a file entry.
- * @param disk An initialized disk.
- * @param filename The name of the file
- *  to search for.
- * @param entry A pointer to an entry
- *  structure that will receive all the
- *  file information if the file is found.
- * @param number A pointer to a variable
- *  that will receive the index of the file
- *  in the root directory, if it is found.
- *  This parameter may be NULL.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_find_file(struct BMFSDisk *disk,
-                        const char *filename,
-                        struct BMFSEntry *entry,
-                        uint64_t *number);
-
-/** Reads the root directory on disk.
- * @param disk An initialized disk.
- * @param dir A pointer to a directory
- *  structure that will receive all the
- *  entries in the root directory.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_read_root_dir(struct BMFSDisk *disk,
-                            struct BMFSDir *dir);
-
-/** Writes to the root directory.
- * All previous entries in the root
- * directory are replaced.
- * @param disk An initialized disk.
- * @param dir The directory to write
- *  to the disk.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_write_root_dir(struct BMFSDisk *disk,
-                             const struct BMFSDir *dir);
-
-/** Creates a file on the disk.
- * This function fails if the file
- * exists or if there isn't enough
- * space to create the file.
- * @param disk An initialized disk.
- * @param filename The name of the
- *  new file entry.
- * @param mebibytes The number of
- *  mebibytes to reserve for the
- *  new file.
- * @returns Zero on success, a
- *  negative error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_create_file(struct BMFSDisk *disk,
-                          const char *filename,
-                          uint64_t mebibytes);
-
-/** Creates a directory on the disk.
- * @param disk An initialized disk structure.
- * @param dirname The name of the directory to create.
- *  If this directory already exists, the function will fail.
- * @returns Zero on success, a negative error code otherwise.
- * @ingroup disk-api
- */
-
-int bmfs_disk_create_dir(struct BMFSDisk *disk,
-                         const char *dirname);
-
-/** Deletes a file from the disk.
- * If the file doesn't exist, this
- * function fails.
- * @param disk An initialized disk.
- * @param filename The name of the
- *  file to delete.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_delete_file(struct BMFSDisk *disk,
-                          const char *filename);
-
-/** Formats the disk so that the file
- * system can function properly. This
- * function will clear all existing
- * allocations if the disk is already
- * formatted to BMFS.
- * @param disk An initialized disk.
- * @param size The number of bytes to allow
- * for the file system to grow.
- * @returns Zero on success, a negative
- *  error code on failure.
- */
-
-int bmfs_disk_format(struct BMFSDisk *disk, uint64_t size);
-
-/** Reads content of a specified file.
- * @param disk An initialized disk.
- * @param filename The name of the entry to read from.
- * @param buf The data to put the file content into.
- * @param len The number of bytes to read.
- * @param off The offset within the file data to read.
- * @returns Zero on success, a negative error code
- *  on failure.
- * @ingroup disk-api
- */
-
-int bmfs_read(struct BMFSDisk *disk,
-              const char *filename,
-              void * buf,
-              uint64_t len,
-              uint64_t off);
-
-/** Writes contents to a specified file.
- * @param disk An initialized disk.
- * @param filename The name of the entry to write to.
- * @param buf The data to write to the file.
- * @param len The number of bytes to write from @p buf.
- * @param off The offset within the file to begin writing.
- * @returns Zero on success, a negative error code on
- *  failure.
- * @ingroup disk-api
- */
-
-int bmfs_write(struct BMFSDisk *disk,
-               const char *filename,
-               const void *buf,
-               uint64_t len,
-               uint64_t off);
-
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
 
 #endif /* BMFS_DISK_H */
-

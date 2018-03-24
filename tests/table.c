@@ -1,5 +1,5 @@
+#include <bmfs/fs.h>
 #include <bmfs/ramdisk.h>
-#include <bmfs/table.h>
 #include <bmfs/limits.h>
 
 #include <assert.h>
@@ -24,24 +24,30 @@ void test_alloc(void)
 
 	bmfs_ramdisk_set_buf(&ramdisk, mem, mem_size);
 
-	struct BMFSDisk *disk = &ramdisk.base;
+	/* Setup the file system */
 
-	int err = bmfs_disk_format(disk, mem_size);
+	struct BMFS bmfs;
+
+	bmfs_init(&bmfs);
+
+	bmfs_set_disk(&bmfs, &ramdisk.base);
+
+	int err = bmfs_format(&bmfs, mem_size);
 	assert(err == 0);
 
 	uint64_t offset1 = 0;
 
-	err = bmfs_disk_allocate(disk, BMFS_BLOCK_SIZE / 2, &offset1);
+	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE / 2, &offset1);
 	assert(err == 0);
 
 	uint64_t offset2 = 0;
 
-	err = bmfs_disk_allocate(disk, BMFS_BLOCK_SIZE * 2, &offset2);
+	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE * 2, &offset2);
 	assert(err == 0);
 
 	uint64_t offset3 = 0;
 
-	err = bmfs_disk_allocate(disk, BMFS_BLOCK_SIZE / 2, &offset3);
+	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE / 2, &offset3);
 	assert(err == 0);
 
 	assert(offset2 == (offset1 + BMFS_BLOCK_SIZE));
