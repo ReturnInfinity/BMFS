@@ -28,299 +28,412 @@ char s_write[] = "write";
 char s_delete[] = "delete";
 char s_version[] = "version";
 
-static int format_file(struct BMFSDisk *disk, long bytes);
+/** Enumerates a list of commands
+ * that the utility supports.
+ * */
 
-static int make_directory(struct BMFSDisk *disk, const char *dirname);
+enum bmfs_command {
+	/** No command specified. */
+	BMFS_CMD_NONE,
+	/** Unknown command */
+	BMFS_CMD_UNKNOWN,
+	/** List directory contents */
+	BMFS_CMD_LS,
+	/** Format a BMFS image. */
+	BMFS_CMD_FORMAT,
+	/** Make a directory */
+	BMFS_CMD_MKDIR,
+	/** Create a file and update modification time. */
+	BMFS_CMD_TOUCH,
+	/** Remove a file */
+	BMFS_CMD_RM,
+	/** Remove an empty directory */
+	BMFS_CMD_RMDIR,
+	/** Print version */
+	BMFS_CMD_VERSION,
+	/** Print help contents of a command. */
+	BMFS_CMD_HELP
+};
 
-static void list_entries(struct BMFSDisk *disk);
+static enum bmfs_command command_parse(const char *cmd)
+{
+	if (cmd == NULL)
+		return BMFS_CMD_NONE;
+	else if ((strcmp(cmd, "ls") == 0)
+	      || (strcmp(cmd, "list") == 0)
+	      || (strcmp(cmd, "dir") == 0))
+		return BMFS_CMD_LS;
+	else if (strcmp(cmd, "format") == 0)
+		return BMFS_CMD_FORMAT;
+	else if (strcmp(cmd, "mkdir") == 0)
+		return BMFS_CMD_MKDIR;
+	else if ((strcmp(cmd, "rm") == 0)
+	      || (strcmp(cmd, "delete") == 0))
+		return BMFS_CMD_RM;
+	else if ((strcmp(cmd, "create") == 0)
+	      || (strcmp(cmd, "touch") == 0))
+		return BMFS_CMD_TOUCH;
+	else if (strcmp(cmd, "rmdir") == 0)
+		return BMFS_CMD_RMDIR;
+	else if (strcmp(cmd, "version") == 0)
+		return BMFS_CMD_VERSION;
+	else if (strcmp(cmd, "help") == 0)
+		return BMFS_CMD_HELP;
 
-static void print_usage(const char *argv0);
+	return BMFS_CMD_UNKNOWN;
+}
+
+static int is_opt(const char *arg,
+                  char s_opt,
+                  const char *l_opt)
+{
+	if (arg[0] != '-')
+		return 0;
+	else if ((arg[1] == s_opt)
+	      && (arg[2] == 0))
+		return 1;
+	else if ((arg[1] == '-')
+	      && (strcmp(&arg[2], l_opt) == 0))
+		return 1;
+
+	return 0;
+}
+
+static int cmd_format(struct BMFS *bmfs, int argc, const char **argv);
+
+static int cmd_mkdir(struct BMFS *bmfs, int argc, const char **argv);
+
+static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv);
+
+static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv);
+
+static void print_help(const char *argv0, int argc, const char **argv);
 
 static void print_version(void);
 
 /* Program code */
-int main(int argc, char *argv[])
+int main(int argc, const char **argv)
 {
-	int err;
-	struct BMFSDisk disk;
-	FILE *diskfile;
-	char *diskname;
-	char *command;
-	char *filename;
-	char tempstring[32];
-	unsigned int filesize;
+	const char *diskname = "bmfs.img";
 
-	/* Parse arguments */
-	if (argc < 3)
+	int i = 1;
+
+	for (i = 1; i < argc; i++)
 	{
-		if (argc > 1)
-		{
-			if (strcasecmp(s_version, argv[1]) == 0)
-				print_version();
-		}
-		else
-		{
-			print_usage(argv[0]);
-		}
-		/* the program wasn't called
-		 * properly, should be considered
-		 * a program failure */
-		return EXIT_FAILURE;
-	}
-
-	diskname = argv[1];
-	command = argv[2];
-	filename = argv[3];
-
-	if (strcasecmp(s_initialize, command) == 0)
-	{
-		if (argc >= 4)
-		{
-			char *size = argv[3];				// Required
-			char *mbr = (argc > 4 ? argv[4] : NULL);    	// Opt.
-			char *boot = (argc > 5 ? argv[5] : NULL);   	// Opt.
-			char *kernel = (argc > 6 ? argv[6] : NULL); 	// Opt.
-			char *loader = (argc > 7 ? argv[7] : NULL);
-			int ret = bmfs_initialize(diskname, size, mbr, boot, kernel, loader);
-			if (ret != 0)
+		if (argv[i][0] != '-') {
+			break;
+		} else if (is_opt(argv[i], 'd', "disk")) {
+			if ((i + 1) >= argc)
+			{
+				fprintf(stderr, "Error: No disk path specified.\n");
 				return EXIT_FAILURE;
-			else
-				return EXIT_SUCCESS;
-		}
-		else
-		{
-			printf("Usage: %s disk %s ", argv[0], command);
-			printf("size [mbr_file] ");
-			printf("[bootloader_file] [kernel_file] [loader_file]\n");
+			}
+			diskname = argv[++i];
+		} else {
+			fprintf(stderr, "Error: Unknown option '%s'.\n", argv[i]);
+			fprintf(stderr, "Run '%s help' for assistance.\n", argv[0]);
 			return EXIT_FAILURE;
 		}
 	}
 
-	if ((diskfile = fopen(diskname, "r+b")) == NULL)			// Open for read/write in binary mode
+	enum bmfs_command cmd = command_parse(argv[i]);
+
+	switch (cmd)
 	{
+	case BMFS_CMD_NONE:
+		fprintf(stderr, "Error: No command specified.\n");
+		fprintf(stderr, "Run '%s help' for assistance.\n", argv[0]);
+		return EXIT_FAILURE;
+	case BMFS_CMD_UNKNOWN:
+		fprintf(stderr, "Error: Unknown command '%s'.\n", argv[i]);
+		fprintf(stderr, "Run '%s help' for assistance.\n", argv[0]);
+		return EXIT_FAILURE;
+	case BMFS_CMD_HELP:
+		print_help(argv[0], argc - i, &argv[i + 1]);
+		return EXIT_FAILURE;
+	case BMFS_CMD_VERSION:
+		print_version();
+		return EXIT_FAILURE;
+	default:
+		break;
+	}
+
+	i++;
+
+	FILE *diskfile = fopen(diskname, "r+b");
+	if (diskfile == NULL)
+	{
+		int err = errno;
 		printf("Error: Unable to open disk '%s'\n", diskname);
+		printf("Reason: %s\n", strerror(err));
 		return EXIT_FAILURE;
 	}
+
+	struct BMFSDisk disk;
 
 	bmfs_disk_init_file(&disk, diskfile);
 
-	/* Opened ok, is it a valid BMFS disk? */
-	if (bmfs_disk_check_signature(&disk) != 0)
+	struct BMFS bmfs;
+
+	bmfs_init(&bmfs);
+
+	bmfs_set_disk(&bmfs, &disk);
+
+	int err = 0;
+
+	switch (cmd)
 	{
-		if (strcasecmp(s_format, command) == 0)
-		{
-			format_file(&disk, BMFS_MINIMUM_DISK_SIZE);
-			fclose(diskfile);
-			return EXIT_SUCCESS;
-		}
-		printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
+	case BMFS_CMD_FORMAT:
+		err = cmd_format(&bmfs, argc - i, &argv[i]);
+		break;
+	case BMFS_CMD_LS:
+		err =  cmd_ls(&bmfs, argc - i, &argv[i]);
+		break;
+	case BMFS_CMD_MKDIR:
+		err = cmd_mkdir(&bmfs, argc - i, &argv[i]);
+		break;
+	case BMFS_CMD_TOUCH:
+		err = cmd_touch(&bmfs, argc - i, &argv[i]);
+		break;
+	default:
+		fprintf(stderr, "Error: Command not supported yet.\n");
 		fclose(diskfile);
 		return EXIT_FAILURE;
 	}
 
-	if (strcasecmp(s_list, command) == 0)
-	{
-		list_entries(&disk);
-	}
-	else if (strcasecmp(s_mkdir, command) == 0)
-	{
-		if (filename == NULL)
-		{
-			printf("Error: Directory name not specified.\n");
-			fclose(diskfile);
-			return EXIT_FAILURE;
-		}
+	fclose(diskfile);
 
-		err = make_directory(&disk, filename);
-		if (err)
-		{
-			printf("Error: Failed to make directory.\n");
-			printf("  %s", strerror(-err));
-			fclose(diskfile);
-			return EXIT_FAILURE;
-		}
-	}
-	else if (strcasecmp(s_format, command) == 0)
-	{
-		if (argc > 3)
-		{
-			if (strcasecmp(argv[3], "/FORCE") == 0)
-			{
-				format_file(&disk, BMFS_MINIMUM_DISK_SIZE);
-			}
-			else
-			{
-				printf("Format aborted!\n");
-			}
-		}
-		else
-		{
-			printf("Format aborted!\n");
-		}
-	}
-	else if (strcasecmp(s_create, command) == 0)
-	{
-		if (filename == NULL)
-		{
-			printf("Error: File name not specified.\n");
-		}
-		else
-		{
-			if (argc > 4)
-			{
-				int filesize = atoi(argv[4]);
-				if (filesize < 1)
-				{
-					printf("Error: Invalid file size.\n");
-					return EXIT_FAILURE;
-				}
+	if (err != 0)
+		return EXIT_FAILURE;
 
-				int err = bmfs_disk_create_file(&disk, filename, filesize);
-				if (err != 0)
-				{
-					fprintf(stderr, "%s: Failed to create '%s'\n", argv[0], filename);
-					fprintf(stderr, "  %s\n", strerror(-err));
-					return EXIT_FAILURE;
-				}
-			}
-			else
-			{
-				printf("Maximum file size in MiB: ");
-				if (fgets(tempstring, sizeof(tempstring), stdin) != NULL)	// Get up to 32 chars from the keyboard
-					filesize = atoi(tempstring);
-				else
-					return EXIT_FAILURE;
-
-				if (filesize < 1)
-				{
-					printf("Error: Invalid file size.\n");
-					return EXIT_FAILURE;
-				}
-
-				int err = bmfs_disk_create_file(&disk, filename, filesize);
-				if (err != 0)
-				{
-					fprintf(stderr, "%s: Failed to create '%s'\n", argv[0], filename);
-					fprintf(stderr, "  %s\n", strerror(-err));
-					return EXIT_FAILURE;
-				}
-			}
-		}
-	}
-	else if (strcasecmp(s_read, command) == 0)
-	{
-		bmfs_readfile(&disk, filename, argv[4]);
-	}
-	else if (strcasecmp(s_write, command) == 0)
-	{
-		bmfs_writefile(&disk, filename, argv[4]);
-	}
-	else if (strcasecmp(s_delete, command) == 0)
-	{
-		bmfs_disk_delete_file(&disk, filename);
-	}
-	else
-	{
-		printf("Error: Unknown command\n");
-	}
-	if (diskfile != NULL)
-	{
-		fclose(diskfile);
-	}
 	return EXIT_SUCCESS;
 }
 
-
-static int format_file(struct BMFSDisk *disk, long bytes)
+static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 {
-	int err = bmfs_disk_seek(disk, bytes - 1, SEEK_SET);
+	int i = 0;
+
+	unsigned long long int disk_size = BMFS_MINIMUM_DISK_SIZE;
+
+	unsigned int force_flag = 0;
+
+	while (i < argc)
+	{
+		if (argv[i][0] != '-')
+		{
+			fprintf(stderr, "Error: Trailing argument: %s\n", argv[i]);
+		}
+		else if (is_opt(argv[i], 's', "size"))
+		{
+			if ((i + 1) >= argc)
+			{
+				fprintf(stderr, "Error: Disk size not specified.\n");
+				return EXIT_FAILURE;
+			}
+			if (sscanf(argv[i + 1], "%llu", &disk_size) != 1)
+			{
+				fprintf(stderr, "Error: Failed to parse disk size '%s'.\n", argv[i]);
+				return EXIT_FAILURE;
+			}
+			i++;
+		}
+		else if (is_opt(argv[i], 'f', "force"))
+		{
+			force_flag = 1;
+		}
+		else
+		{
+			fprintf(stderr, "Error: Unknown option '%s'.\n", argv[i]);
+			return EXIT_FAILURE;
+		}
+
+		i++;
+	}
+
+	if (disk_size == 0)
+	{
+		fprintf(stderr, "Error: Disk size must be greater than zero.\n");
+		return EXIT_FAILURE;
+	}
+
+	disk_size *= 1024 * 1024;
+
+	int err = bmfs_check_signature(bmfs);
+	if ((err == 0) && !force_flag)
+	{
+		fprintf(stderr, "Error: Disk already formatted.\n");
+		fprintf(stderr, "Use '-f' or '--force' to override this error.\n");
+		return EXIT_FAILURE;
+	}
+
+	err = bmfs_disk_seek(bmfs->Disk, disk_size - 1, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
-	if (fputc(0, (FILE*)(disk->disk)) != 0)
-		return -errno;
+	err = bmfs_disk_write(bmfs->Disk, "\x00", 1, NULL);
+	if (err != 0)
+		return err;
 
-	err = bmfs_disk_format(disk, bytes);
+	err = bmfs_format(bmfs, (uint64_t) disk_size);
 	if (err != 0)
 		return err;
 
 	return 0;
 }
 
-static int make_directory(struct BMFSDisk *disk, const char *dirname)
+static int cmd_mkdir(struct BMFS *bmfs, int argc, const char **argv)
 {
-	int err;
-	struct BMFSDir root_dir;
+	int i = 0;
 
-	bmfs_dir_init(&root_dir);
+	while (i < argc)
+	{
+		if (argv[i][0] == '-') {
+			fprintf(stderr, "Error: Options must be specified before directory paths.\n");
+			return EXIT_FAILURE;
+		}
 
-	err = bmfs_disk_read_root_dir(disk, &root_dir);
-	if (err)
-		return err;
+		const char *path = argv[i];
 
-	err = bmfs_dir_add_subdir(&root_dir, dirname);
-	if (err)
-		return err;
+		int err = bmfs_create_dir(bmfs, path);
+		if (err != 0)
+		{
+			fprintf(stderr, "Error: Failed to create '%s'.\n", path);
+			fprintf(stderr, "\t%s\n", strerror(-err));
+			return EXIT_FAILURE;
+		}
 
-	err = bmfs_disk_write_root_dir(disk, &root_dir);
-	if (err)
-		return err;
+		i++;
+	}
 
 	return 0;
 }
 
-static void list_entries(struct BMFSDisk *disk)
+static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
 {
 	struct BMFSDir dir;
-	int err = bmfs_disk_read_root_dir(disk, &dir);
-	if (err != 0)
-		return;
 
-	printf("| Name                             |             Size (B) |       Reserved (MiB) | Type      |\n");
-	printf("|----------------------------------|----------------------|----------------------|-----------|\n");
+	bmfs_dir_init(&dir);
+
+	int i = 0;
+
+	while (i < argc)
+	{
+		if (argv[i][0] != '-') {
+			break;
+		} else {
+			fprintf(stderr, "Error: Unknown option '%s'\n", argv[i]);
+			return EXIT_FAILURE;
+		}
+
+		i++;
+	}
+
+	const char *path = "/";
+
+	if (i < argc)
+		path = argv[i];
+
+	int err = bmfs_open_dir(bmfs, &dir, path);
+	if (err != 0)
+	{
+		fprintf(stderr, "Error: Failed to read '%s'.\n", path);
+		fprintf(stderr, "Reason: %s\n", strerror(-err));
+		return EXIT_FAILURE;
+	}
+
+	printf("| Name                             |             Size (B) | Type      |\n");
+	printf("|----------------------------------|----------------------|-----------|\n");
+
 	for (size_t i = 0; i < 64; i++)
 	{
-		const struct BMFSEntry *entry;
-		entry = &dir.Entries[i];
+		const struct BMFSEntry *entry = bmfs_dir_next(&dir);
+		if (entry == NULL)
+			break;
+
 		if (bmfs_entry_is_empty(entry))
 			continue;
 		else if (bmfs_entry_is_terminator(entry))
 			break;
 		else if (bmfs_entry_is_directory(entry))
-			printf("| %-32s | %20llu | %20llu | Directory |\n",
-			       entry->FileName,
-			       (unsigned long long)(entry->FileSize),
-			       (unsigned long long)(entry->ReservedBlocks * 2));
+			printf("| %-32s | %20llu | Directory |\n",
+			       entry->Name, (unsigned long long)(entry->Size));
 		else
-			printf("| %-32s | %20llu | %20llu | File      |\n",
-			       entry->FileName,
-			       (unsigned long long)(entry->FileSize),
-			       (unsigned long long)(entry->ReservedBlocks * 2));
+			printf("| %-32s | %20llu | File      |\n",
+			       entry->Name, (unsigned long long)(entry->Size));
 	}
+
+	return EXIT_SUCCESS;
+}
+
+static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv)
+{
+	(void) bmfs;
+	(void) argc;
+	(void) argv;
+	return EXIT_FAILURE;
 }
 
 static void print_usage(const char *argv0)
 {
-	printf("Usage: %s disk function [file]\n", argv0);
+	printf("Usage: %s [options] <command>\n", argv0);
 	printf("\n");
-	printf("Disk: the name of the disk file\n");
+	printf("Options:\n");
+	printf("\t-d, --disk PATH : Specify the path to the BMFS disk.\n");
 	printf("\n");
-	printf("Functions:\n");
-	printf("\tlist   : lists entries in the BMFS file system\n");
-	printf("\tread   : reads a file from the BMFS file system to the host file system\n");
-	printf("\twrite  : writes a file from the host file system to BMFS file system\n");
-	printf("\tcreate : creates a file within a BMFS file system\n");
-	printf("\tdelete : deletes a file within a BMFS file system\n");
-	printf("\tformat : formats an existing file with BMFS\n");
-	printf("\tinitialize : creates an image for the BareMetal operating system\n");
+	printf("Commands:\n");
+	printf("\thelp    : Get help with a command.\n");
+	printf("\tversion : Print version information and exit.\n");
+	printf("\tls      : Lists entries in a specified directory.\n");
+	printf("\tlist    : Alias for 'ls'.\n");
+	printf("\tread    : Reads a file from the BMFS file system to the host file system.\n");
+	printf("\twrite   : Writes a file from the host file system to BMFS file system.\n");
+	printf("\ttouch   : Creates a file if it doesn't exist and updates its modification time.\n");
+	printf("\trm      : Deletes a file if it exists.\n");
+	printf("\tdelete  : Alias for 'rm'.\n");
+	printf("\tformat  : Formats an existing file with BMFS.\n");
+	printf("\tmkdir   : Creates a directory, if it doesn't exist.\n");
 	printf("\n");
 	printf("File: may be used in a read, write, create or delete operation\n");
 }
 
-static void print_version(void)
+static void print_help(const char *argv0, int argc, const char **argv)
 {
-	printf("BareMetal File System Utility v1.3.0 (2017 10 11)\n");
-	printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
+	if (argc == 0)
+	{
+		print_usage(argv0);
+		return;
+	}
+
+	enum bmfs_command cmd = command_parse(argv[0]);
+
+	switch (cmd)
+	{
+	case BMFS_CMD_NONE:
+		print_usage(argv0);
+		break;
+	case BMFS_CMD_UNKNOWN:
+		fprintf(stderr, "Error: Unknown command '%s'.\n", argv[0]);
+		break;
+	case BMFS_CMD_FORMAT:
+		printf("%s format [options]\n", argv0);
+		printf("\n");
+		printf("Options\n");
+		printf("\t-f, --force     : Format an existing file system.\n");
+		printf("\t-s, --size SIZE : Specify the size of the file system.\n");
+		break;
+	case BMFS_CMD_MKDIR:
+		printf("%s mkdir PATH\n", argv0);
+		break;
+	case BMFS_CMD_LS:
+		printf("%s ls PATH\n", argv0);
+		break;
+	default:
+		printf("No help available for '%s'\n", argv[0]);
+		break;
+	}
 }
 
-/* EOF */
+static void print_version(void)
+{
+	printf("BareMetal File System Utility v2.0.0 (2018 3 24)\n");
+}
