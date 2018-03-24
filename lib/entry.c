@@ -27,6 +27,8 @@ void bmfs_entry_init(struct BMFSEntry *entry)
 	entry->CreationTime = 0;
 	entry->ModificationTime = 0;
 	entry->Flags = 0;
+	entry->UserID = 0;
+	entry->GroupID = 0;
 	entry->Padding = 0;
 }
 
@@ -35,7 +37,7 @@ int bmfs_entry_read(struct BMFSEntry *entry,
 
 	uint64_t read_size = 0;
 
-	int err = bmfs_disk_read(disk, entry, sizeof(*entry), &read_size);
+	int err = bmfs_disk_read(disk, entry, sizeof(struct BMFSEntry), &read_size);
 	if (err != 0)
 		return err;
 	else if (read_size != BMFS_ENTRY_SIZE)
