@@ -8,24 +8,11 @@ TOP=$(shell pwd)
 # to other makefiles.
 export TOP
 
-.PHONY: all
-all:
-	$(MAKE) -C src all
-	$(MAKE) -C include/bmfs all
-
-.PHONY: clean
-clean:
-	$(MAKE) -C src clean
-	$(MAKE) -C include/bmfs clean
-
-.PHONY: test
-test:
-	$(MAKE) -C src test
-	$(MAKE) -C include/bmfs test
-
-.PHONY: install
-install:
-	$(MAKE) -C src install
-	$(MAKE) -C include/bmfs install
+.PHONY: all clean test install
+all clean test install:
+	$(MAKE) -C include/bmfs $@
+	$(MAKE) -C lib $@
+	$(MAKE) -C tests $@
+	$(MAKE) -C utils $@
 
 $(V).SILENT:

@@ -1,13 +1,15 @@
 %.a:
-	@echo "AR $@"
+	@echo "AR      $@"
 	$(AR) $(ARFLAGS) $@ $^
 
 %.o: %.c
-	@echo "CC $@"
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+	@echo "CC      $@"
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%-test.o: $.c
+	@echo "CC      $@"
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %: %.o
-	@echo "LINK $@"
+	@echo "LD      $@"
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
-
-$(Q).SILENT:
