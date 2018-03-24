@@ -54,13 +54,13 @@ int bmfs_dir_import(struct BMFSDir *dir)
 
 const struct BMFSEntry *bmfs_dir_next(struct BMFSDir *dir)
 {
-	if (dir->CurrentIndex >= (BMFS_BLOCK_SIZE / BMFS_ENTRY_SIZE))
-		return NULL;
-
 	int64_t offset = 0;
 	offset += (int64_t) dir->CurrentIndex;
 	offset *= BMFS_ENTRY_SIZE;
 	offset += (int64_t) dir->Entry.Offset;
+
+	if ((offset + BMFS_ENTRY_SIZE) > (dir->Entry.Offset + dir->Entry.Size))
+		return NULL;
 
 	int err = bmfs_disk_seek(dir->Disk, offset, BMFS_SEEK_SET);
 	if (err != 0)
@@ -68,9 +68,6 @@ const struct BMFSEntry *bmfs_dir_next(struct BMFSDir *dir)
 
 	err = bmfs_entry_read(&dir->CurrentEntry, dir->Disk);
 	if (err != 0)
-		return NULL;
-
-	if (dir->CurrentEntry.Name[0] == 0)
 		return NULL;
 
 	dir->CurrentIndex++;
