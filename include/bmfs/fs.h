@@ -86,7 +86,7 @@ int bmfs_allocate_mebibytes(struct BMFS *fs,
  * @returns Zero on success, an error code on failure.
  * */
 
-int bmfs_disk_check_signature(struct BMFS *fs);
+int bmfs_check_signature(struct BMFS *fs);
 
 /** Formats the disk with the file system.
  * This should only be called if the disk
@@ -160,6 +160,16 @@ int bmfs_open_file(struct BMFS *bmfs,
 int bmfs_open_dir(struct BMFS *bmfs,
                   struct BMFSDir *dir,
                   const char *path);
+
+/** Deletes a file on the file system.
+ * @param bmfs An initialized disk structure.
+ * @param path The path of the file to delete.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup fs-api
+ * */
+
+int bmfs_delete_file(struct BMFS *bmfs,
+                     const char *path);
 
 #ifdef __cplusplus
 } /* extern "C" { */
