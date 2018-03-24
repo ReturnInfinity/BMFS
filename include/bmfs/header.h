@@ -13,6 +13,12 @@ extern "C" {
 
 struct BMFSDisk;
 
+/** Describes various positions and
+ * characteristics of the file system.
+ * It is the first structure in the
+ * layout.
+ * */
+
 struct BMFSHeader
 {
 	/** The BMFS file system tag.
@@ -28,6 +34,9 @@ struct BMFSHeader
 	uint64_t TableEntryCount;
 	/** The total size allowed for the file system to grow. */
 	uint64_t TotalSize;
+	/** Padding until the 512-byte marker.
+	 * This space is alos reserved for future use. */
+	uint64_t Reserved[59];
 };
 
 void bmfs_header_init(struct BMFSHeader *header);
