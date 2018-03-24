@@ -31,41 +31,31 @@ static int is_entry(struct BMFSEntry *entry,
 }
 
 static int add_entry(struct BMFS *fs,
-                     const struct BMFSEntry *root,
+                     struct BMFSEntry *root,
                      const struct BMFSEntry *entry)
 {
-	uint64_t pos = root->Offset;
+	if ((root->Size + BMFS_ENTRY_SIZE) > BMFS_BLOCK_SIZE)
+		return -ENOSPC;
+
+	uint64_t pos = root->Offset + root->Size;
 
 	int err = bmfs_disk_seek(fs->Disk, pos, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
-	uint64_t pos_max = pos + BMFS_BLOCK_SIZE;
-
-	struct BMFSEntry tmp_entry;
-
-	while (pos < pos_max) {
-
-		bmfs_entry_init(&tmp_entry);
-
-		err = bmfs_entry_read(&tmp_entry, fs->Disk);
-		if (err != 0)
-			return err;
-
-		if (bmfs_entry_is_empty(&tmp_entry))
-			break;
-
-		pos += BMFS_ENTRY_SIZE;
-	}
-
-	if (pos >= pos_max)
-		return -ENOSPC;
-
-	err = bmfs_disk_seek(fs->Disk, pos, BMFS_SEEK_SET);
+	err = bmfs_entry_write(entry, fs->Disk);
 	if (err != 0)
 		return err;
 
-	err = bmfs_entry_write(entry, fs->Disk);
+	/* Update directory size */
+
+	err = bmfs_disk_seek(fs->Disk, root->EntryOffset, BMFS_SEEK_SET);
+	if (err != 0)
+		return err;
+
+	root->Size += BMFS_ENTRY_SIZE;
+
+	err = bmfs_entry_write(root, fs->Disk);
 	if (err != 0)
 		return err;
 
@@ -84,7 +74,7 @@ static int find_entry(struct BMFS *fs,
 
 	uint64_t pos = 0;
 
-	uint64_t pos_max = BMFS_BLOCK_SIZE;
+	uint64_t pos_max = parent_dir->Size;
 
 	while (pos < pos_max) {
 
@@ -113,7 +103,7 @@ static int find_dir(struct BMFS *fs,
 {
 	uint64_t pos = 0;
 
-	uint64_t pos_max = BMFS_BLOCK_SIZE;
+	uint64_t pos_max = parent_dir->Size;
 
 	bmfs_dir_init(dir);
 
