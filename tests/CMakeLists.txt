@@ -6,18 +6,18 @@ macro(ADD_BMFS_TEST TEST)
 	add_test(${TEST} ${TEST})
 endmacro(ADD_BMFS_TEST TEST)
 
-add_bmfs_test("dir-test" "dir.c")
+add_bmfs_test("dir-test" "dir-test.c")
 
-add_bmfs_test("disk-test" "disk.c")
+add_bmfs_test("disk-test" "disk-test.c")
 
-add_bmfs_test("fs-test" "fs.c")
+add_bmfs_test("fs-test" "fs-test.c")
 
-add_bmfs_test("path-test" "path.c")
+add_bmfs_test("path-test" "path-test.c")
 
-add_bmfs_test("size-test" "size.c")
+add_bmfs_test("size-test" "size-test.c")
 
-add_bmfs_test("sspec-test" "sspec.c")
+add_bmfs_test("sspec-test" "sspec-test.c")
 
-add_bmfs_test("table-test" "table.c")
+add_bmfs_test("table-test" "table-test.c")
 
 enable_testing()
