@@ -31,6 +31,9 @@ void bmfs_header_init(struct BMFSHeader *header)
 	header->TableEntryCount = 0;
 
 	header->TotalSize = BMFS_MINIMUM_DISK_SIZE;
+
+	for (uint64_t i = 0; i < (sizeof(header->Reserved) / sizeof(header->Reserved[0])); i++)
+		header->Reserved[i] = 0;
 }
 
 int bmfs_header_read(struct BMFSHeader *header,
