@@ -1,4 +1,4 @@
-# BareMetal File System (BMFS) - Version 1
+# BareMetal File System (BMFS) - Version 2
 
 BMFS is a new file system used by the BareMetal kernel and its related systems.
 The design is extremely simplified compared to conventional file systems.
