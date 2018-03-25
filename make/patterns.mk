@@ -6,10 +6,6 @@
 	@echo "CC      $@"
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%-test.o: $.c
-	@echo "CC      $@"
-	$(CC) $(CFLAGS) -c $< -o $@
-
 %: %.o
 	@echo "LD      $@"
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
