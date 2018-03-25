@@ -7,7 +7,6 @@ set (BMFS_VERSION_MINOR 3)
 set (BMFS_VERSION_PATCH 0)
 
 option(BMFS_WITH_FUSE "Build BMFS with fuse support" OFF)
-option(BMFS_WITH_POSIX_UTILS "Build BMFS POSIX utilities" OFF)
 
 set (GNU_C_FLAGS "-Wall -Wextra -Werror -Wfatal-errors -std=gnu99")
 set (GNU_C_FLAGS "${GNU_C_FLAGS} -D_FILE_OFFSET_BITS=64")

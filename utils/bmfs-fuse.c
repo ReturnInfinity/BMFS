@@ -15,15 +15,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-/** The disk file to use
- * in fuse operations. Fuse
- * doesn't have a way of passing
- * data to the operations, so
- * a global variable is required
- * here.
- */
+/** The file system structure.
+ * Since FUSE can't pass data
+ * to the callback functions,
+ * this will have to suffice.
+ * */
 
-struct BMFSDisk disk;
+struct BMFS fs;
 
 /** These are options read from
  * the command line. */
@@ -55,17 +53,28 @@ static void *bmfs_fuse_init(struct fuse_conn_info *conn)
 	return NULL;
 }
 
-static int bmfs_fuse_access(const char *filename, int mode)
+static int bmfs_fuse_access(const char *path, int mode)
 {
 	(void) mode;
 
-	if (strcmp(filename, "/") == 0)
+	struct BMFSDir dir;
+
+	bmfs_dir_init(&dir);
+
+	int err = bmfs_open_dir(&fs, &dir, path);
+	if (err == 0)
 		return 0;
 
-	if (bmfs_disk_find_file(&disk, filename + 1, NULL, NULL) == 0)
+	struct BMFSFile file;
+
+	bmfs_file_init(&file);
+
+	err = bmfs_open_file(&fs, &file, path);
+	if (err == 0)
 		return 0;
 
 	/* file not found */
+
 	return -ENOENT;
 }
 
@@ -79,21 +88,32 @@ static int bmfs_fuse_getattr(const char *path, struct stat *stbuf)
 {
 	memset(stbuf, 0, sizeof(struct stat));
 
-	if (strcmp(path, "/") == 0)
+	struct BMFSDir dir;
+
+	bmfs_dir_init(&dir);
+
+	int err = bmfs_open_dir(&fs, &dir, path);
+	if (err == 0)
 	{
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
 		return 0;
 	}
 
-	struct BMFSEntry entry;
-	if (bmfs_disk_find_file(&disk, path + 1, &entry, NULL) != 0)
-		return -ENOENT;
+	struct BMFSFile file;
 
-	stbuf->st_mode = S_IFREG | 0666;
-	stbuf->st_nlink = 1;
-	stbuf->st_size = entry.FileSize;
-	return 0;
+	bmfs_file_init(&file);
+
+	err = bmfs_open_file(&fs, &file, path);
+	if (err == 0)
+	{
+		stbuf->st_mode = S_IFREG | 0666;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = file.Entry.Size;
+		return 0;
+	}
+
+	return -ENOENT;
 }
 
 /** This function does not actually
@@ -120,30 +140,27 @@ static int bmfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler
 	(void) offset;
 	(void) fi;
 
-	/* BMFS only supports the root directory */
-	if (strcmp(path, "/") != 0)
-		return -ENOENT;
-
 	/* standard directory entries */
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 
 	/* get the current directory entries */
+
 	struct BMFSDir dir;
-	if (bmfs_disk_read_root_dir(&disk, &dir) != 0)
+
+	bmfs_dir_init(&dir);
+
+	int err = bmfs_open_dir(&fs, &dir, path);
+	if (err != 0)
 		return -ENOENT;
 
-	/* list the entries */
-	for (int i = 0; i < 64; i++)
+	for (;;)
 	{
-		if (dir.Entries[i].FileName[0] == 0)
-			/* end of entries */
+		const struct BMFSEntry *entry = bmfs_dir_next(&dir);
+		if (entry == NULL)
 			break;
-		else if (dir.Entries[i].FileName[0] == 1)
-			/* empty entry */
-			continue;
-		/* found an entry */
-		filler(buf, dir.Entries[i].FileName, NULL, 0);
+
+		filler(buf, entry->Name, NULL, 0);
 	}
 
 	return 0;
@@ -157,8 +174,7 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 {
 	(void) mode;
 	(void) fi;
-
-	return bmfs_disk_create_file(&disk, path + 1, 1);
+	return bmfs_create_file(&fs, path);
 }
 
 /** Deletes a file.
@@ -166,7 +182,14 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 
 static int bmfs_fuse_unlink(const char *path)
 {
-	return bmfs_disk_delete_file(&disk, path + 1);
+	/* TODO : implement this again
+	 *
+	 * return bmfs_disk_delete_file(&disk, path + 1);
+	 */
+
+	(void) path;
+
+	return -ENOSYS;
 }
 
 /** This function opens a file.
@@ -178,7 +201,15 @@ static int bmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
 	(void) fi;
 
-	return bmfs_disk_find_file(&disk, path + 1, NULL, NULL);
+	struct BMFSFile file;
+
+	bmfs_file_init(&file);
+
+	int err = bmfs_open_file(&fs, &file, path);
+	if (err != 0)
+		return err;
+
+	return 0;
 }
 
 /** Reads data from a file.
@@ -191,40 +222,23 @@ static int bmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset,
                           struct fuse_file_info *fi)
 {
-	int err;
-	struct BMFSEntry entry;
-	uint64_t entry_offset;
-	uint64_t read_count;
-
-	/* unused */
 	(void) fi;
 
-	/* make sure return code
-	 * can differentiate between
-	 * a negative error code and
-	 * a write count. */
-	if (size > INT_MAX)
-		size = INT_MAX;
+	struct BMFSFile file;
 
-	err = bmfs_disk_find_file(&disk, path + 1, &entry, NULL);
+	bmfs_file_init(&file);
+
+	int err = bmfs_open_file(&fs, &file, path);
 	if (err != 0)
 		return err;
 
-	err = bmfs_entry_get_offset(&entry, &entry_offset);
+	err = bmfs_file_seek(&file, offset, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
-	if (offset > (off_t) entry.FileSize)
-		offset = entry.FileSize;
+	uint64_t read_count = 0;
 
-	err = bmfs_disk_seek(&disk, entry_offset + offset, SEEK_SET);
-	if (err != 0)
-		return err;
-
-	if ((size + offset) > entry.FileSize)
-		size = entry.FileSize - offset;
-
-	err = bmfs_disk_read(&disk, buf, size, &read_count);
+	err = bmfs_file_read(&file, buf, size, &read_count);
 	if (err != 0)
 		return err;
 
@@ -243,54 +257,23 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
 static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t offset,
                            struct fuse_file_info *fi)
 {
-	int err;
-	struct BMFSDir dir;
-	struct BMFSEntry *entry;
-	uint64_t entry_offset;
-	uint64_t write_count;
-	uint64_t reserved_bytes;
-
-	/* unused */
 	(void) fi;
 
-	/* make sure return code
-	 * can differentiate between
-	 * a negative error code and
-	 * a write count. */
-	if (size > INT_MAX)
-		size = INT_MAX;
+	struct BMFSFile file;
 
-	err = bmfs_disk_read_root_dir(&disk, &dir);
+	bmfs_file_init(&file);
+
+	int err = bmfs_open_file(&fs, &file, path);
 	if (err != 0)
 		return err;
 
-	entry = bmfs_dir_find(&dir, path + 1);
-	if (entry == NULL)
-		return -ENOENT;
-
-	reserved_bytes = entry->ReservedBlocks * BMFS_BLOCK_SIZE;
-
-	err = bmfs_entry_get_offset(entry, &entry_offset);
+	err = bmfs_file_seek(&file, offset, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
-	if (offset > (off_t) reserved_bytes)
-		offset = reserved_bytes;
+	uint64_t write_count = 0;
 
-	err = bmfs_disk_seek(&disk, entry_offset + offset, SEEK_SET);
-	if (err != 0)
-		return err;
-
-	if ((size + offset) > reserved_bytes)
-		size = reserved_bytes - offset;
-
-	err = bmfs_disk_write(&disk, buf, size, &write_count);
-	if (err != 0)
-		return err;
-
-	entry->FileSize += write_count;
-
-	err = bmfs_disk_write_root_dir(&disk, &dir);
+	err = bmfs_file_write(&file, buf, size, &write_count);
 	if (err != 0)
 		return err;
 
@@ -326,7 +309,7 @@ int main(int argc, char *argv[])
 	struct bmfs_fuse_options options = {
 		/* .disk may be reallocated, can't
 		 * use string literal */
-		.disk = strdup("disk.image"),
+		.disk = strdup("bmfs.img"),
 		.show_help = 0
 	};
 
@@ -347,6 +330,8 @@ int main(int argc, char *argv[])
 		return fuse_main(args.argc, args.argv, &bmfs_fuse_operations, NULL);
 	}
 
+	/* Open the disk file. */
+
 	FILE *diskfile = fopen(options.disk, "r+b");
 	if (diskfile == NULL)
 	{
@@ -354,7 +339,26 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* Initialize the disk structure. */
+
+	struct BMFSDisk disk;
+
 	bmfs_disk_init_file(&disk, diskfile);
+
+	/* Initialize the file system. */
+
+	bmfs_init(&fs);
+
+	bmfs_set_disk(&fs, &disk);
+
+	int err = bmfs_import(&fs);
+	if (err != 0)
+	{
+		fprintf(stderr, "Error: Failed to import file system.\n");
+		fprintf(stderr, "Reason: %s\n", strerror(-err));
+		fclose(diskfile);
+		return EXIT_FAILURE;
+	}
 
 	int retval = fuse_main(args.argc, args.argv, &bmfs_fuse_operations, NULL);
 
@@ -363,4 +367,3 @@ int main(int argc, char *argv[])
 
 	return retval;
 }
-
