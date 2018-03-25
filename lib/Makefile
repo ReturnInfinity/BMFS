@@ -19,6 +19,7 @@ libfiles += header.o
 libfiles += dir.o
 libfiles += disk.o
 libfiles += entry.o
+libfiles += file.o
 libfiles += fs.o
 libfiles += path.o
 libfiles += ramdisk.o
@@ -39,6 +40,8 @@ entry.o: entry.c entry.h limits.h
 dir.o: dir.c dir.h entry.h
 
 disk.o: disk.c disk.h dir.h entry.h limits.h
+
+file.o: file.c file.h entry.h disk.h
 
 fs.o: fs.c fs.h disk.h entry.h dir.h
 
