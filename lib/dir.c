@@ -44,6 +44,8 @@ int bmfs_dir_import(struct BMFSDir *dir)
 	err = bmfs_entry_read(&entry, dir->Disk);
 	if (err != 0)
 		return err;
+	else if (!bmfs_entry_is_directory(&entry))
+		return -ENOTDIR;
 
 	dir->Entry = entry;
 	dir->EntryOffset = entry_offset;
