@@ -743,7 +743,7 @@ int bmfs_format(struct BMFS *fs, uint64_t size)
 	if (err != 0)
 		return err;
 
-	for (uint64_t i = 0; i < fs->Header.TableEntryCount; i++) {
+	for (uint64_t i = 0; i < BMFS_TABLE_ENTRY_COUNT_MAX; i++) {
 
 		struct BMFSTableEntry table_entry;
 
