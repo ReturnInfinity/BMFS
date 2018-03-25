@@ -23,11 +23,11 @@ libfiles += file.o
 libfiles += fs.o
 libfiles += path.o
 libfiles += ramdisk.o
-libfiles += sspec.o
 libfiles += table.o
 
 stdlibfiles += stdlib.o
 stdlibfiles += time.o
+stdlibfiles += sspec.o
 
 libs += libbmfs.a
 libs += libbmfs-stdlib.a
