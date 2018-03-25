@@ -8,6 +8,7 @@
 #include <bmfs/file.h>
 
 #include <bmfs/disk.h>
+#include <bmfs/time.h>
 
 #include <errno.h>
 
@@ -18,6 +19,25 @@ void bmfs_file_init(struct BMFSFile *file)
 	file->CurrentPosition = 0;
 	file->ReservedSize = 0;
 	file->Mode = BMFS_FILE_MODE_READ;
+}
+
+void bmfs_file_close(struct BMFSFile *file)
+{
+	if ((file->Mode != BMFS_FILE_MODE_RW)
+	 && (file->Mode != BMFS_FILE_MODE_WRITE))
+	{
+		return;
+	}
+
+	bmfs_get_current_time(&file->Entry.ModificationTime);
+
+	int err = bmfs_disk_seek(file->Disk, file->Entry.EntryOffset, BMFS_SEEK_SET);
+	if (err != 0)
+		return;
+
+	err = bmfs_entry_write(&file->Entry, file->Disk);
+	if (err != 0)
+		return;
 }
 
 void bmfs_file_set_disk(struct BMFSFile *file,
@@ -47,18 +67,43 @@ int bmfs_file_import(struct BMFSFile *file)
 	return 0;
 }
 
+int bmfs_file_eof(const struct BMFSFile *file)
+{
+	if (file->CurrentPosition >= file->Entry.Size)
+		return 1;
+	else
+		return 0;
+}
+
 int bmfs_file_read(struct BMFSFile *file,
                    void *buf,
                    uint64_t buf_size,
-                   uint64_t *read_result)
+                   uint64_t *read_result_ptr)
 {
+	if ((file->Mode != BMFS_FILE_MODE_READ)
+	 && (file->Mode != BMFS_FILE_MODE_RW))
+		return -EINVAL;
+
+	if (file->CurrentPosition > file->Entry.Size)
+		file->CurrentPosition = file->Entry.Size;
+
 	int err = bmfs_file_seek(file, file->CurrentPosition, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
-	err = bmfs_disk_read(file->Disk, buf, buf_size, read_result);
+	if ((file->CurrentPosition + buf_size) > file->Entry.Size)
+		buf_size = file->Entry.Size - file->CurrentPosition;
+
+	uint64_t read_result = 0;
+
+	err = bmfs_disk_read(file->Disk, buf, buf_size, &read_result);
 	if (err != 0)
 		return err;
+
+	file->CurrentPosition += read_result;
+
+	if (read_result_ptr != NULL)
+		*read_result_ptr = read_result;
 
 	return 0;
 }
@@ -66,15 +111,31 @@ int bmfs_file_read(struct BMFSFile *file,
 int bmfs_file_write(struct BMFSFile *file,
                     const void *buf,
                     uint64_t buf_size,
-                    uint64_t *write_result)
+                    uint64_t *write_result_ptr)
 {
+	/* TODO : check how much space is reserved for the file. */
+
+	if ((file->Mode != BMFS_FILE_MODE_WRITE)
+	 && (file->Mode != BMFS_FILE_MODE_RW))
+		return -EINVAL;
+
 	int err = bmfs_file_seek(file, file->CurrentPosition, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
-	err = bmfs_disk_write(file->Disk, buf, buf_size, write_result);
+	uint64_t write_result = 0;
+
+	err = bmfs_disk_write(file->Disk, buf, buf_size, &write_result);
 	if (err != 0)
 		return err;
+
+	file->CurrentPosition += write_result;
+
+	if (write_result_ptr != NULL)
+		*write_result_ptr = write_result;
+
+	if (file->Entry.Size < file->CurrentPosition)
+		file->Entry.Size = file->CurrentPosition;
 
 	return 0;
 }
@@ -106,6 +167,10 @@ int bmfs_file_seek(struct BMFSFile *file,
 	}
 
 	file->CurrentPosition = next_pos;
+
+	int err = bmfs_disk_seek(file->Disk, file->Entry.Offset + file->CurrentPosition, BMFS_SEEK_SET);
+	if (err != 0)
+		return err;
 
 	return 0;
 }
