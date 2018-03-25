@@ -1,8 +1,10 @@
-/* BareMetal File System Utility */
-/* Written by Ian Seyler of Return Infinity */
-/* v1.3.0 (2017 10 11) */
+/* ===============================================================
+ * Baremetal File System - A file system designed for BareMetal OS
+ * Copyright (C) 2008 - 2018 Return Infinity
+ * See COPYING for license information.
+ * ===============================================================
+ */
 
-/* Global includes */
 #include <bmfs/bmfs.h>
 #include <bmfs/stdlib.h>
 #include <errno.h>
@@ -10,6 +12,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+#ifndef BMFS_DEFAULT_DISK_SIZE
+#define BMFS_DEFAULT_DISK_SIZE (128 * 1024 * 1024)
+#endif
 
 /** Enumerates a list of commands
  * that the utility supports.
@@ -64,6 +71,19 @@ static enum bmfs_command command_parse(const char *cmd)
 		return BMFS_CMD_HELP;
 
 	return BMFS_CMD_UNKNOWN;
+}
+
+static void time_print(time_t time)
+{
+	struct tm ts;
+
+	ts = *localtime(&time);
+
+	char time_string[32];
+
+	strftime(time_string, sizeof(time_string), "%b %d %H:%M:%S", &ts);
+
+	printf("%s ", time_string);
 }
 
 static int is_opt(const char *arg,
@@ -212,7 +232,7 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 {
 	int i = 0;
 
-	unsigned long long int disk_size = BMFS_MINIMUM_DISK_SIZE;
+	unsigned long long int disk_size = BMFS_DEFAULT_DISK_SIZE / (1024 * 1024);
 
 	unsigned int force_flag = 0;
 
@@ -321,10 +341,22 @@ static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
 
 	int color_mode = color_always;
 
+	const int info_name = 0;
+
+	const int info_time = 0x01;
+
+	const int info_size = 0x02;
+
+	const int info_all = info_time | info_size;
+
+	int info_mode = info_name;
+
 	while (i < argc)
 	{
 		if (argv[i][0] != '-') {
 			break;
+		} else if (is_opt(argv[i], 'l', "list")) {
+			info_mode = info_all;
 		} else if (is_opt(argv[i], 'c', "color")) {
 			if ((i + 1) >= argc) {
 				fprintf(stderr, "Error: Color mode not specified.\n");
@@ -367,6 +399,12 @@ static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
 		const struct BMFSEntry *entry = bmfs_dir_next(&dir);
 		if (entry == NULL)
 			break;
+
+		if ((info_mode & info_size) != 0)
+			printf("%8llu ", (unsigned long long int) entry->Size);
+
+		if ((info_mode & info_time) != 0)
+			time_print(entry->ModificationTime);
 
 		if (bmfs_entry_is_directory(entry) && (color_mode == color_always))
 			printf("\033[34;1m%s\033[0m\n", entry->Name);
@@ -431,7 +469,7 @@ static void print_help(const char *argv0, int argc, const char **argv)
 		printf("\n");
 		printf("Options\n");
 		printf("\t-f, --force     : Format an existing file system.\n");
-		printf("\t-s, --size SIZE : Specify the size of the file system.\n");
+		printf("\t-s, --size SIZE : Specify the size, in mebibytes, of the file system.\n");
 		break;
 	case BMFS_CMD_MKDIR:
 		printf("%s mkdir PATH\n", argv0);
