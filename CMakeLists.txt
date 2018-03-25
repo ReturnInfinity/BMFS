@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project("BMFS" C)
 
-set (BMFS_VERSION_MAJOR 1)
-set (BMFS_VERSION_MINOR 3)
+set (BMFS_VERSION_MAJOR 2)
+set (BMFS_VERSION_MINOR 0)
 set (BMFS_VERSION_PATCH 0)
 
 option(BMFS_WITH_FUSE "Build BMFS with fuse support" OFF)
@@ -26,6 +26,10 @@ include_directories("include")
 add_subdirectory("lib")
 add_subdirectory("utils")
 add_subdirectory("tests")
+
+install(DIRECTORY "include/bmfs"
+        DESTINATION "include"
+        FILES_MATCHING PATTERN "*.h")
 
 enable_testing()
 

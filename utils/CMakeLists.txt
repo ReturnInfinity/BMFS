@@ -7,7 +7,10 @@ endfunction (ADD_BMFS_UTIL UTIL)
 
 add_bmfs_util("bmfs" "bmfs.c")
 
+install(TARGETS "bmfs" RUNTIME DESTINATION "bin")
+
 if (BMFS_WITH_FUSE)
 	add_bmfs_util("bmfs-fuse" "bmfs-fuse.c")
 	target_link_libraries("bmfs-fuse" "fuse")
+	install(TARGETS "bmfs-fuse" RUNTIME DESTINATION "bin")
 endif (BMFS_WITH_FUSE)
