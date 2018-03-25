@@ -9,6 +9,7 @@
 
 #include <bmfs/disk.h>
 #include <bmfs/entry.h>
+#include <bmfs/file.h>
 #include <bmfs/path.h>
 #include <bmfs/table.h>
 #include <bmfs/time.h>
@@ -122,6 +123,43 @@ static int find_dir(struct BMFS *fs,
 		err = bmfs_dir_import(dir);
 		if ((err == 0) && (is_entry(&dir->Entry, name, name_size)))
 			return 0;
+
+		pos += BMFS_ENTRY_SIZE;
+	}
+
+	return -ENOENT;
+}
+
+static int find_file(struct BMFS *fs,
+                    const struct BMFSEntry *parent_dir,
+                    struct BMFSFile *file,
+                    const char *name,
+                    uint64_t name_size)
+{
+	uint64_t pos = 0;
+
+	uint64_t pos_max = parent_dir->Size;
+
+	while (pos < pos_max) {
+
+		int64_t offset = 0;
+		offset += (int64_t) parent_dir->Offset;
+		offset += (int64_t) pos;
+
+		int err = bmfs_disk_seek(fs->Disk, offset, BMFS_SEEK_SET);
+		if (err != 0)
+			return err;
+
+		err = bmfs_file_import(file);
+		if (err != 0)
+		{
+			if (err == -EISDIR)
+				return err;
+		}
+		else if (is_entry(&file->Entry, name, name_size))
+		{
+			return 0;
+		}
 
 		pos += BMFS_ENTRY_SIZE;
 	}
@@ -325,6 +363,108 @@ static int open_dir(struct BMFS *fs,
 	const char *name = parent.String;
 
 	err = find_dir(fs, &root, dir, name, name_size);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+static int open_file(struct BMFS *fs,
+                     struct BMFSFile *file,
+                     const char *path_string)
+{
+	/* Assign the disk to the file. */
+
+	bmfs_file_set_disk(file, fs->Disk);
+
+	/* Get the length of the path. */
+
+	uint64_t path_size = 0;
+
+	while (path_string[path_size] != 0)
+		path_size++;
+
+	/* Read the header to get the root directory
+	 * offset. */
+
+	int err = bmfs_disk_seek(fs->Disk, 0, BMFS_SEEK_SET);
+	if (err != 0)
+		return err;
+
+	struct BMFSHeader header;
+
+	bmfs_header_init(&header);
+
+	err = bmfs_header_read(&header, fs->Disk);
+	if (err != 0)
+		return err;
+
+	/* Go to the root directory location. */
+
+	err = bmfs_disk_seek(fs->Disk, header.RootOffset, BMFS_SEEK_SET);
+	if (err != 0)
+		return err;
+
+	/* Read the root directory. */
+
+	struct BMFSEntry root;
+
+	bmfs_entry_init(&root);
+
+	err = bmfs_entry_read(&root, fs->Disk);
+	if (err != 0)
+		return err;
+
+	/* Setup the path structures */
+
+	struct BMFSPath path;
+
+	bmfs_path_init(&path);
+
+	bmfs_path_set(&path, path_string, path_size);
+
+	struct BMFSPath parent;
+
+	bmfs_path_init(&parent);
+
+	/* Iterate the path until the
+	 * basename is found */
+
+	while ((bmfs_path_split_root(&path, &parent) == 0) && (path.Length > 0))
+	{
+		uint64_t name_size = parent.Length;
+		if (name_size == 0) {
+			/* Reached the base name */
+			break;
+		}
+
+		const char *name = parent.String;
+
+		err = find_entry(fs, &root, &root, name, name_size);
+		if (err != 0)
+			return err;
+
+		err = bmfs_disk_seek(fs->Disk, root.Offset, BMFS_SEEK_SET);
+		if (err != 0)
+			return err;
+	}
+
+	/* Open the entry */
+
+	uint64_t name_size = parent.Length;
+	if (name_size == 0)
+	{
+		/* The root directory was passed. */
+		return -EISDIR;
+	}
+	else if (name_size >= BMFS_FILE_NAME_MAX)
+	{
+		return -EINVAL;
+	}
+
+	const char *name = parent.String;
+
+	err = find_file(fs, &root, file, name, name_size);
 	if (err != 0)
 		return err;
 
@@ -537,6 +677,16 @@ int bmfs_open_dir(struct BMFS *fs,
 		return err;
 
 	return 0;
+}
+
+int bmfs_open_file(struct BMFS *fs,
+                   struct BMFSFile *file,
+                   const char *path)
+{
+	if ((fs == NULL) || (file == NULL) || (path == NULL))
+		return -EFAULT;
+
+	return open_file(fs, file, path);
 }
 
 int bmfs_delete_file(struct BMFS *fs, const char *path)
