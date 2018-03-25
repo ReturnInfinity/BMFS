@@ -25,66 +25,72 @@ Optionally, you can also install the Filesystem in Userspace (FUSE) headers.
 *You can copy the bmfs binary to a location in the system path for ease of use*
 
 
-## Creating a new, formatted disk image
+## Formatting a New Disk
 
-    bmfs disk.image initialize 128M
+    bmfs --disk disk.image format 128M
 
+You can also just use the default disk name, `bmfs.img`, and make the command simpler.
 
-## Creating a new disk image that boots BareMetal OS
-
-    bmfs disk.image initialize 128M path/to/bmfs_mbr.sys path/to/pure64.sys path/to/kernel64.sys
-
-or if the Pure64 boot loader and BareMetal-OS kernel are combined into one file:
-
-    bmfs disk.image initialize 128M path/to/bmfs_mbr.sys path/to/software.sys
-
-
-## Formatting a disk image
-
-	bmfs disk.image format
+    bmfs format 128M
 
 In Linux/Unix/Mac OS X you can also format a physical drive by passing the correct path.
 
 	sudo bmfs /dev/sdc format
 
 
-## Display BMFS disk contents
+## Display BMFS Disk Contents
 
-	bmfs disk.image list
+To list dist contents, use the `ls` command.
+
+	bmfs ls -l
+
+Or specify a path.
+
+	bmfs ls /home -l
 
 Sample output:
 
-	C:\baremetal>utils\bmfs BMFS-256-flat.vmdk list
-	Disk Size: 256 MiB
-	Name                            |            Size (B)|      Reserved (MiB)
-	==========================================================================
-	test.app                                           31                    2
-	AnotherFile.app                                     1                    2
-	helloc.app                                        800                    2
+	bmfs ls -l
+	       0 Mar 24 23:08:13 usr
+	       0 Mar 24 23:08:14 home
+	       0 Mar 24 23:08:16 lib
+	       0 Mar 24 23:08:24 boot
+
+If the command is being run by a script, you can omit the color by using the `--color` option, like this:
+
+	bmfs ls --color never
+
+Aliases for the `ls` command are `dir` and `list`.
 
 
-## Create a new file and reserve space for it
+## Create a New File
 
-	bmfs disk.image create FileName.Ext
+To create a new file without any content on it, you can just use the `touch` command.
 
-You will be prompted for the size to reserve.
+	bmfs touch /etc/bashrc
 
-Alternately, you can specify the reserved size after the file name. The reserved size is given in Megabytes and will automatically round up to an even number.
+You can also create a new file by copying one from the host file system.
 
-	bmfs disk.image create FileName.Ext 4
+	bmfs cp ./some-script.sh /bin/some-script.sh
 
-
-## Read from BMFS to a local file
-
-	bmfs disk.image read FileName.Ext
+An alias for the `cp` command is `copy`.
 
 
-## Write a local file to BMFS
+## Reading File Contents from BMFS
 
-	bmfs disk.image write FileName.Ext
+To read a file from BMFS, you can use the `cat` command.
+
+	bmfs cat /home/john/.bashrc
+
+Redirect the output to save it to a file.
+
+	bmfs cat /home/john/.bashrc >.bashrc
 
 
 ## Delete a file on BMFS
 
-	bmfs disk.image delete FileName.Ext
+To delete a file, use the `rm` command.
 
+	bmfs rm /var/log/unused-file.txt
+
+An alias for the `rm` command is `delete`.
