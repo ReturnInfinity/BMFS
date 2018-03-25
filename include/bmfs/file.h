@@ -5,6 +5,8 @@
  * ===============================================================
  */
 
+/** @file */
+
 #ifndef BMFS_FILE_H
 #define BMFS_FILE_H
 
@@ -141,8 +143,9 @@ int bmfs_file_read(struct BMFSFile *file,
 
 /** Writes data to the file.
  * For this to work, the file must be open for writing.
+ * @param file An initialized file structure.
  * @param buf The buffer containing the data to write.
- * @parma buf_size The number of bytes to write to the file.
+ * @param buf_size The number of bytes to write to the file.
  * @param write_result The number of bytes that were
  * actually written to the file.
  * @returns Zero on success, an error code on failure.
@@ -152,7 +155,7 @@ int bmfs_file_read(struct BMFSFile *file,
 int bmfs_file_write(struct BMFSFile *file,
                     const void *buf,
                     uint64_t buf_size,
-                    uint64_t *read_size);
+                    uint64_t *write_result);
 
 /** Set the position of the next read or write operation.
  * @param file An initialized file structure.

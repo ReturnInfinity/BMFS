@@ -1,6 +1,11 @@
-/* BareMetal File System Utility */
-/* Written by Ian Seyler of Return Infinity */
-/* v1.3.0 (2017 10 11) */
+/* ===============================================================
+ * Baremetal File System - A file system designed for BareMetal OS
+ * Copyright (C) 2008 - 2018 Return Infinity
+ * See COPYING for license information.
+ * ===============================================================
+ */
+
+/** @file */
 
 #ifndef BMFS_DISK_H
 #define BMFS_DISK_H
@@ -66,6 +71,7 @@ struct BMFSDisk
 /** Initializes the members of the disk structure
  * for pointer safety. This function must be called
  * before any others.
+ * @param disk The disk to initialize.
  * @ingroup disk-api
  * */
 
@@ -73,6 +79,7 @@ void bmfs_disk_init(struct BMFSDisk *disk);
 
 /** Called when the disk is no longer going
  * to be used by the caller.
+ * @param disk An initialized disk structure.
  * @ingroup disk-api
  * */
 

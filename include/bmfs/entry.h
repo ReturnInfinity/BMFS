@@ -1,6 +1,11 @@
-/* BareMetal File System Utility */
-/* Written by Ian Seyler of Return Infinity */
-/* v1.3.0 (2017 10 11) */
+/* ===============================================================
+ * Baremetal File System - A file system designed for BareMetal OS
+ * Copyright (C) 2008 - 2018 Return Infinity
+ * See COPYING for license information.
+ * ===============================================================
+ */
+
+/** @file */
 
 #ifndef BMFS_ENTRY_H
 #define BMFS_ENTRY_H

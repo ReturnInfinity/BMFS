@@ -1,6 +1,9 @@
-/* BareMetal File System Utility */
-/* Written by Ian Seyler of Return Infinity */
-/* v1.3.0 (2017 10 11) */
+/* ===============================================================
+ * Baremetal File System - A file system designed for BareMetal OS
+ * Copyright (C) 2008 - 2018 Return Infinity
+ * See COPYING for license information.
+ * ===============================================================
+ */
 
 /** @file */
 
@@ -45,12 +48,18 @@ struct BMFSTableEntry
 	uint64_t Reserved;
 };
 
+/** Initializes a table entry.
+ * @param entry The table entry to initialize.
+ * @ingroup table-api
+ * */
+
 void bmfs_table_entry_init(struct BMFSTableEntry *entry);
 
 /** Reads a table entry from the current position on the disk.
  * @param entry The structure to put the entry data into.
  * @param disk The disk to read the entry from.
  * @returns Zero on success, an error code on failure.
+ * @ingroup table-api
  * */
 
 int bmfs_table_entry_read(struct BMFSTableEntry *entry,
@@ -60,6 +69,7 @@ int bmfs_table_entry_read(struct BMFSTableEntry *entry,
  * @param entry The entry to write to disk.
  * @param disk The disk to write the entry to.
  * @returns Zero on success, an error code on failure.
+ * @ingroup table-api
  * */
 
 int bmfs_table_entry_write(const struct BMFSTableEntry *entry,

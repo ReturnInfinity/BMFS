@@ -1,6 +1,11 @@
-/* BareMetal File System Utility */
-/* Written by Ian Seyler of Return Infinity */
-/* v1.2.3 (2017 04 07) */
+/* ===============================================================
+ * Baremetal File System - A file system designed for BareMetal OS
+ * Copyright (C) 2008 - 2018 Return Infinity
+ * See COPYING for license information.
+ * ===============================================================
+ */
+
+/** @file */
 
 #ifndef BMFS_PATH_H
 #define BMFS_PATH_H
@@ -12,9 +17,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/** @defgroup path-api Path API
+ * Used for manipulating and reading paths.
+ * */
+
 /** Used to walk a path without
  * allocated any memory or parsing
  * any strings.
+ * @ingroup path-api
  * */
 
 struct BMFSPathVisitor
@@ -29,25 +39,31 @@ struct BMFSPathVisitor
 
 /** A path that references a file
  * or directory on the file system.
+ * @ingroup path-api
  * */
 
 struct BMFSPath
 {
+	/** A string pointer containing the characters
+	 * of the path. */
 	const char *String;
+	/** The number of characters in the path, not
+	 * including the null terminator. */
 	uint64_t Length;
 };
 
-/** Initializes the path to an
- * empty string.
+/** Initializes the path to an empty string.
+ * @param path The path structure to initialize.
+ * @ingroup path-api
  */
 
 void bmfs_path_init(struct BMFSPath *path);
 
-/** Inidicates whether or not the path is
- * empty.
+/** Inidicates whether or not the path is empty.
  * @param path An initialized path structure.
  * @returns One if the path is empty, zero if
  *  it is not.
+ *  @ingroup path-api
  * */
 
 int bmfs_path_empty(const struct BMFSPath *path);
@@ -61,6 +77,7 @@ int bmfs_path_empty(const struct BMFSPath *path);
  *  root directory of @p path.
  * @returns Zero if the root was found, a negative
  *  number if it wasn't.
+ *  @ingroup path-api
  */
 
 int bmfs_path_split_root(struct BMFSPath *path,
@@ -74,6 +91,7 @@ int bmfs_path_split_root(struct BMFSPath *path,
  * @param length The length of @p string. This
  *  should not include the null-terminator, if
  *  there is one.
+ *  @ingroup path-api
  */
 
 void bmfs_path_set(struct BMFSPath *path,
@@ -91,6 +109,7 @@ void bmfs_path_set(struct BMFSPath *path,
  * @returns Zero if the path is visited entirely
  * without an error from the visitor. If non-zero
  * is returned, it is returned from the visitor.
+ * @ingroup path-api
  * */
 
 int bmfs_path_visit(struct BMFSPath *path,

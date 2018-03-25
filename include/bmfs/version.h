@@ -1,15 +1,28 @@
-/* BareMetal File System Utility */
-/* Written by Ian Seyler of Return Infinity */
-/* v1.3.0 (2017 10 11) */
+/* ===============================================================
+ * Baremetal File System - A file system designed for BareMetal OS
+ * Copyright (C) 2008 - 2018 Return Infinity
+ * See COPYING for license information.
+ * ===============================================================
+ */
+
+/** @file */
 
 #ifndef BMFS_VERSION_H
 #define BMFS_VERSION_H
 
-#define BMFS_VERSION 0x010400
-#define BMFS_VERSION_MAJOR 1
-#define BMFS_VERSION_MINOR 4
-#define BMFS_VERSION_PATCH 0
-#define BMFS_VERSION_STRING "BareMetal File System Utility v1.4.0"
+/** The version of BMFS.
+ * This may be used to test for
+ * certain prototypes or functions.
+ * */
+
+#define BMFS_VERSION 0x020000
+
+/** The version string of the file system.
+ * This may be used to print to a terminal
+ * or file, for informational purposes.
+ * */
+
+#define BMFS_VERSION_STRING "BareMetal File System v2.0.0"
 
 #endif /* BMFS_VERSION_H */
 

@@ -1,6 +1,11 @@
-/* BareMetal File System Utility */
-/* Written by Ian Seyler of Return Infinity */
-/* v1.3.0 (2017 10 11) */
+/* ===============================================================
+ * Baremetal File System - A file system designed for BareMetal OS
+ * Copyright (C) 2008 - 2018 Return Infinity
+ * See COPYING for license information.
+ * ===============================================================
+ */
+
+/** @file */
 
 #ifndef BMFS_RAMDISK_H
 #define BMFS_RAMDISK_H
@@ -40,12 +45,14 @@ struct BMFSRamdisk
 /** Initializes the ram disk. This function initializes
  * the structure for pointer-safety. This function must
  * be called before the ramdisk is used.
+ * @param ramdisk The ramdisk structure to initialize.
  * @ingroup ramdisk-api
  * */
 
 void bmfs_ramdisk_init(struct BMFSRamdisk *ramdisk);
 
 /** Called when the ramdisk is no longer going to be used.
+ * @param ramdisk An initialized ramdisk.
  * @ingroup ramdisk-api
  * */
 
