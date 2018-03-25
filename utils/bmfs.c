@@ -355,7 +355,7 @@ static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
 	{
 		if (argv[i][0] != '-') {
 			break;
-		} else if (is_opt(argv[i], 'l', "list")) {
+		} else if (is_opt(argv[i], 'l', "long-list")) {
 			info_mode = info_all;
 		} else if (is_opt(argv[i], 'c', "color")) {
 			if ((i + 1) >= argc) {
@@ -417,9 +417,39 @@ static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
 
 static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv)
 {
-	(void) bmfs;
-	(void) argc;
-	(void) argv;
+	int i = 0;
+
+	while (i < argc)
+	{
+		if (argv[i][0] != '-')
+		{
+			break;
+		}
+		else
+		{
+			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
+			return EXIT_FAILURE;
+		}
+	}
+
+	while (i < argc)
+	{
+		if (argv[i][0] == '-') {
+			fprintf(stderr, "Error: Options must be specified before directory paths.\n");
+			return EXIT_FAILURE;
+		}
+
+		int err = bmfs_create_file(bmfs, argv[i]);
+		if (err != 0)
+		{
+			fprintf(stderr, "Failed to create '%s'.\n", argv[i]);
+			fprintf(stderr, "Reason: %s\n", strerror(-err));
+			return EXIT_FAILURE;
+		}
+
+		i++;
+	}
+
 	return EXIT_FAILURE;
 }
 
@@ -475,7 +505,14 @@ static void print_help(const char *argv0, int argc, const char **argv)
 		printf("%s mkdir PATH\n", argv0);
 		break;
 	case BMFS_CMD_LS:
-		printf("%s ls PATH\n", argv0);
+		printf("%s ls [options] PATH\n", argv0);
+		printf("\n");
+		printf("Options:\n");
+		printf("\t-c, --color MODE : Specify coloring mode ('always', 'never', 'auto').\n");
+		printf("\t-l, --long-list  : Use long listing format.\n");
+		break;
+	case BMFS_CMD_TOUCH:
+		printf("%s touch PATH\n", argv0);
 		break;
 	default:
 		printf("No help available for '%s'\n", argv[0]);
