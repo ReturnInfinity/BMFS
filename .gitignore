@@ -28,8 +28,8 @@ bmfs.img
 /tests/dir-test
 /tests/fs-test
 /tests/path-test
-/tests/sspec-test
 /tests/size-test
+/tests/sizeof-test
 /tests/table-test
 # Mac crap
 .DS_Store
