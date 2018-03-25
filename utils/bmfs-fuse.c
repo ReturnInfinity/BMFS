@@ -57,25 +57,27 @@ static int bmfs_fuse_access(const char *path, int mode)
 {
 	(void) mode;
 
-	struct BMFSDir dir;
+	if (S_ISDIR(mode))
+	{
+		struct BMFSDir dir;
 
-	bmfs_dir_init(&dir);
+		bmfs_dir_init(&dir);
 
-	int err = bmfs_open_dir(&fs, &dir, path);
-	if (err == 0)
-		return 0;
+		return bmfs_open_dir(&fs, &dir, path);
+	}
 
-	struct BMFSFile file;
+	if (S_ISREG(mode))
+	{
+		struct BMFSFile file;
 
-	bmfs_file_init(&file);
+		bmfs_file_init(&file);
 
-	err = bmfs_open_file(&fs, &file, path);
-	if (err == 0)
-		return 0;
+		return bmfs_open_file(&fs, &file, path);
+	}
 
-	/* file not found */
+	/* Unsupported file type */
 
-	return -ENOENT;
+	return -ENOSYS;
 }
 
 /** Gets permissions and size of a
@@ -172,9 +174,14 @@ static int bmfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler
 
 static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
-	(void) mode;
 	(void) fi;
-	return bmfs_create_file(&fs, path);
+
+	if (S_ISREG(mode))
+		return bmfs_create_file(&fs, path);
+	else if (S_ISDIR(mode))
+		return bmfs_create_dir(&fs, path);
+	else
+		return -ENOSYS;
 }
 
 /** Deletes a file.
@@ -182,14 +189,7 @@ static int bmfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info
 
 static int bmfs_fuse_unlink(const char *path)
 {
-	/* TODO : implement this again
-	 *
-	 * return bmfs_disk_delete_file(&disk, path + 1);
-	 */
-
-	(void) path;
-
-	return -ENOSYS;
+	return bmfs_delete_file(&fs, path);
 }
 
 /** This function opens a file.
@@ -206,7 +206,7 @@ static int bmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 	bmfs_file_init(&file);
 
 	int err = bmfs_open_file(&fs, &file, path);
-	if (err != 0)
+	if (err == 0)
 		return err;
 
 	return 0;
