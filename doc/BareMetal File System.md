@@ -14,14 +14,61 @@ BMFS was inspired by the [RT11 File System](http://en.wikipedia.org/wiki/RT11#Fi
 - Disk is divided into 2 MiB blocks
 
 
-## Disk structure
+## Disk Structure
 
 #### Blocks
 
 For simplicity, BMFS acts as an abstraction layer where a number of contiguous [sectors](http://en.wikipedia.org/wiki/Disk_sector) are accessed instead of individual sectors. With BMFS, each disk block is 2MiB. The disk driver will handle the optimal way to access the disk (based on if the disk uses 512 byte sectors or supports the new [Advanced Format](http://en.wikipedia.org/wiki/Advanced_Format) 4096 byte sectors). 2MiB blocks were chosen to match the 2MiB memory page allocation that is used within BareMetal.
 
-#### Disk layout
+#### Disk Layout
 
-The first and last disk blocks are reserved for file system usage. All other disk blocks can be used for data.
+The layout begins with a file system header.
+The file system header describes where to find the allocation table and root directory, among other things.
+Although it's not required, the allocation table usually follows the file system header.
+The allocation table tracks all the space allocations for files and directories.
+The table currently holds up to 1024 allocations, but is subject to change in the future.
+After the allocation table is the root directory.
+The root directory is like all other directories, except its name is an empty string.
 
-#### Directory Record structure:
+#### Header Structure
+
+The header is padded 512 bytes. All fields are encoded as little-endian, unsigned integers.
+
+| Offset | Size   | Name            | Description                                          |
+|--------|--------|-----------------|------------------------------------------------------|
+| 0x00   | 0x0008 | Signature       | Used to indicate the presence of the header.         |
+| 0x08   | 0x0008 | RootOffset      | The offset, in bytes, of the root directory.         |
+| 0x10   | 0x0008 | TableOffset     | The offset, in bytes, of the allocation table.       |
+| 0x18   | 0x0008 | TableEntryCount | The number of entries used in the allocation table.  |
+| 0x20   | 0x0008 | TotalSize       | The total size that the file system may grow to.     |
+| 0x28   | 0x01D8 | Reserved        | Used for padding until it's needed for other fields. |
+
+#### Allocation Table Entry
+
+An allocation table entry is used to reserve space on disk for files and directories.
+Here's the layout of a single entry.
+
+| Offset | Size | Name     | Description                                              |
+|--------|------|----------|----------------------------------------------------------|
+| 0x00   | 0x08 | Offset   | The offset, in bytes, of the allocation.                 |
+| 0x08   | 0x08 | Used     | The current number of bytes used by the allocation.      |
+| 0x10   | 0x08 | Reserved | The number of bytes reserved for the allocation to grow. |
+
+#### Directory Entry Structure:
+
+A directory can either indicate a file or a directory.
+If the entry is a directory, then the data offset points to the entries of the subdirectory.
+If the entry is a file, then the data offset points to the file data.
+
+| Offset | Size | Name              | Description                                       |
+|--------|------|-------------------|---------------------------------------------------|
+| 0x00   | 0xC0 | Entry Name        | The name of the file or directory.                |
+| 0xC0   | 0x08 | Data Offset       | The offset, in bytes, of the entry data.          |
+| 0xC8   | 0x08 | Data Size         | The size, in bytes, of the entry data.            |
+| 0xD0   | 0x08 | Creation Time     | The time that the entry was created.              |
+| 0xD8   | 0x08 | Modification Time | The time that the entry data was lasted modified. |
+| 0xE0   | 0x08 | Flags             | Indicates entry type and permissions.             |
+| 0xE8   | 0x08 | User ID           | The owner's user ID.                              |
+| 0xF0   | 0x08 | Group ID          | The group's user ID.                              |
+| 0xF8   | 0x08 | Entry Offset      | The offset, in bytes, of this entry structure.    |
+
