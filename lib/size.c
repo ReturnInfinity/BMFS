@@ -35,7 +35,7 @@ int bmfs_size_parse(struct BMFSSize *size, const char *str)
 		str++;
 	}
 
-	int err = to_type(str, &size->type);
+	int err = to_type(str, &size->Suffix);
 	if (err != 0)
 		return err;
 
@@ -57,7 +57,7 @@ int bmfs_size_to_string(const struct BMFSSize *size, char *str, uint64_t str_len
 
 int bmfs_size_set_bytes(struct BMFSSize *size, uint64_t bytes)
 {
-	size->type = BMFS_SIZE_SUFFIX_NONE;
+	size->Suffix = BMFS_SIZE_SUFFIX_NONE;
 	size->Value = bytes;
 	return 0;
 }
@@ -67,23 +67,23 @@ int bmfs_size_bytes(const struct BMFSSize *size, uint64_t *bytes)
 	if ((size == NULL) || (bytes == NULL))
 		return -EFAULT;
 
-	if (size->type == BMFS_SIZE_SUFFIX_TEBI)
+	if (size->Suffix == BMFS_SIZE_SUFFIX_TEBI)
 		*bytes = size->Value * 1024ULL * 1024ULL * 1024ULL * 1024ULL;
-	else if (size->type == BMFS_SIZE_SUFFIX_TERA)
+	else if (size->Suffix == BMFS_SIZE_SUFFIX_TERA)
 		*bytes = size->Value * 1000ULL * 1000ULL * 1000ULL * 1000ULL;
-	else if (size->type == BMFS_SIZE_SUFFIX_GIBI)
+	else if (size->Suffix == BMFS_SIZE_SUFFIX_GIBI)
 		*bytes = size->Value * 1024ULL * 1024ULL * 1024ULL;
-	else if (size->type == BMFS_SIZE_SUFFIX_GIGA)
+	else if (size->Suffix == BMFS_SIZE_SUFFIX_GIGA)
 		*bytes = size->Value * 1000ULL * 1000ULL * 1000ULL;
-	else if (size->type == BMFS_SIZE_SUFFIX_MEBI)
+	else if (size->Suffix == BMFS_SIZE_SUFFIX_MEBI)
 		*bytes = size->Value * 1024ULL * 1024ULL;
-	else if (size->type == BMFS_SIZE_SUFFIX_MEGA)
+	else if (size->Suffix == BMFS_SIZE_SUFFIX_MEGA)
 		*bytes = size->Value * 1000ULL * 1000ULL;
-	else if (size->type == BMFS_SIZE_SUFFIX_KIBI)
+	else if (size->Suffix == BMFS_SIZE_SUFFIX_KIBI)
 		*bytes = size->Value * 1024ULL;
-	else if (size->type == BMFS_SIZE_SUFFIX_KILO)
+	else if (size->Suffix == BMFS_SIZE_SUFFIX_KILO)
 		*bytes = size->Value * 1000ULL;
-	else if (size->type == BMFS_SIZE_SUFFIX_NONE)
+	else if (size->Suffix == BMFS_SIZE_SUFFIX_NONE)
 		*bytes = size->Value;
 
 	return 0;

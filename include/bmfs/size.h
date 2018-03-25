@@ -7,8 +7,8 @@
 
 /** @file */
 
-#ifndef BMFS_SSPEC_H
-#define BMFS_SSPEC_H
+#ifndef BMFS_SIZE_H
+#define BMFS_SIZE_H
 
 #include <stdint.h>
 
@@ -54,7 +54,7 @@ enum BMFSSizeSuffix
 struct BMFSSize
 {
 	/** The type of storage specification */
-	enum BMFSSizeSuffix type;
+	enum BMFSSizeSuffix Suffix;
 	/** The number of storage units of the
 	 * specifications type. For example: a
 	 * value of two and a type of Mebibytes,
@@ -131,5 +131,5 @@ int bmfs_size_mebibytes(const struct BMFSSize *size, uint64_t *mebibytes);
 } /* extern "C" { */
 #endif /* __cplusplus */
 
-#endif /* BMFS_SSPEC_H */
+#endif /* BMFS_SIZE_H */
 
