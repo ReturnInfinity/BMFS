@@ -22,10 +22,10 @@ libfiles += entry.o
 libfiles += file.o
 libfiles += fs.o
 libfiles += path.o
-libfiles += ramdisk.o
 libfiles += table.o
 
-stdlibfiles += stdlib.o
+stdlibfiles += filedisk.o
+stdlibfiles += ramdisk.o
 stdlibfiles += time.o
 stdlibfiles += size.o
 

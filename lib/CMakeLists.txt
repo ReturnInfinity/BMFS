@@ -8,15 +8,15 @@ add_library("bmfs-library"
 	"fs.c"
 	"header.c"
 	"path.c"
-	"ramdisk.c"
 	"table.c")
 
 # Tell cmake that we want 'libbmfs.so' and not 'libbmfs-library.so'
 set_target_properties("bmfs-library" PROPERTIES OUTPUT_NAME "bmfs")
 
 add_library("bmfs-stdlib-library"
+	"filedisk.c"
+	"ramdisk.c"
 	"size.c"
-	"stdlib.c"
 	"time.c")
 
 # Tell CMake that we want 'libbmfs-stdlib.so' and not 'libbmfs-stdlib-library.so'

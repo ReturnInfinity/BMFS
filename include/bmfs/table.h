@@ -10,7 +10,7 @@
 #ifndef BMFS_TABLE_H
 #define BMFS_TABLE_H
 
-/** @defgroup table-api Table
+/** @defgroup table-api Table API
  * Examine and manipulate the disk space
  * allocation table.
  */

@@ -20,9 +20,9 @@ $CC $CFLAGS -c table.c
 
 $AR $ARFLAGS libbmfs.a dir.o disk.o entry.o file.o fs.o header.o path.o table.o
 
-$CC $CFLAGS -c stdlib.c
-$CC $CFLAGS -c size.c
+$CC $CFLAGS -c filedisk.c
 $CC $CFLAGS -c ramdisk.c
+$CC $CFLAGS -c size.c
 $CC $CFLAGS -c time.c
 
-$AR $ARFLAGS libbmfs-stdlib.a stdlib.o size.o ramdisk.o time.o
+$AR $ARFLAGS libbmfs-stdlib.a filedisk.o ramdisk.o size.o time.o

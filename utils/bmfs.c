@@ -7,7 +7,7 @@
 
 #include <bmfs/bmfs.h>
 #include <bmfs/size.h>
-#include <bmfs/stdlib.h>
+#include <bmfs/filedisk.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -191,30 +191,29 @@ int main(int argc, const char **argv)
 	if ((cmd == BMFS_CMD_FORMAT) && (!file_exists(diskname)))
 		mode = "wb";
 
-	FILE *diskfile = fopen(diskname, mode);
-	if (diskfile == NULL)
+	struct BMFSFileDisk filedisk;
+
+	bmfs_filedisk_init(&filedisk);
+
+	int err = bmfs_filedisk_open(&filedisk, diskname, mode);
+	if (err != 0)
 	{
-		int err = errno;
 		printf("Error: Unable to open disk '%s'\n", diskname);
-		printf("Reason: %s\n", strerror(err));
+		printf("Reason: %s\n", strerror(-err));
 		return EXIT_FAILURE;
 	}
-
-	struct BMFSDisk disk;
-
-	bmfs_disk_init_file(&disk, diskfile);
 
 	struct BMFS bmfs;
 
 	bmfs_init(&bmfs);
 
-	bmfs_set_disk(&bmfs, &disk);
+	bmfs_set_disk(&bmfs, &filedisk.base);
 
 	if (cmd == BMFS_CMD_FORMAT)
 	{
 		int err = cmd_format(&bmfs, argc - i, &argv[i]);
 
-		fclose(diskfile);
+		bmfs_filedisk_done(&filedisk);
 
 		if (err != 0)
 			return EXIT_FAILURE;
@@ -222,12 +221,12 @@ int main(int argc, const char **argv)
 		return EXIT_SUCCESS;
 	}
 
-	int err = bmfs_import(&bmfs);
+	err = bmfs_import(&bmfs);
 	if (err != 0)
 	{
 		fprintf(stderr, "Error: Failed to import file system.\n");
 		fprintf(stderr, "Reason: %s\n", strerror(-err));
-		fclose(diskfile);
+		bmfs_filedisk_done(&filedisk);
 		return EXIT_FAILURE;
 	}
 
@@ -250,11 +249,11 @@ int main(int argc, const char **argv)
 		break;
 	default:
 		fprintf(stderr, "Error: Command not supported yet.\n");
-		fclose(diskfile);
+		bmfs_filedisk_done(&filedisk);
 		return EXIT_FAILURE;
 	}
 
-	fclose(diskfile);
+	bmfs_filedisk_done(&filedisk);
 
 	if (err != 0)
 		return EXIT_FAILURE;

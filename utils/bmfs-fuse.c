@@ -6,7 +6,7 @@
  */
 
 #include <bmfs/bmfs.h>
-#include <bmfs/stdlib.h>
+#include <bmfs/filedisk.h>
 
 #define FUSE_USE_VERSION 30
 
@@ -339,38 +339,36 @@ int main(int argc, char *argv[])
 
 	/* Open the disk file. */
 
-	FILE *diskfile = fopen(options.disk, "r+b");
-	if (diskfile == NULL)
+	struct BMFSFileDisk filedisk;
+
+	bmfs_filedisk_init(&filedisk);
+
+	int err = bmfs_filedisk_open(&filedisk, options.disk, "r+b");
+	if (err != 0)
 	{
 		fprintf(stderr, "%s: Failed to open '%s': %s\n", argv[0], options.disk, strerror(errno));
+		bmfs_filedisk_done(&filedisk);
 		return EXIT_FAILURE;
 	}
-
-	/* Initialize the disk structure. */
-
-	struct BMFSDisk disk;
-
-	bmfs_disk_init_file(&disk, diskfile);
 
 	/* Initialize the file system. */
 
 	bmfs_init(&fs);
 
-	bmfs_set_disk(&fs, &disk);
+	bmfs_set_disk(&fs, &filedisk.base);
 
-	int err = bmfs_import(&fs);
+	err = bmfs_import(&fs);
 	if (err != 0)
 	{
 		fprintf(stderr, "Error: Failed to import file system.\n");
 		fprintf(stderr, "Reason: %s\n", strerror(-err));
-		fclose(diskfile);
+		bmfs_filedisk_done(&filedisk);
 		return EXIT_FAILURE;
 	}
 
 	int retval = fuse_main(args.argc, args.argv, &bmfs_fuse_operations, NULL);
 
-	if (diskfile != NULL)
-		fclose(diskfile);
+	bmfs_filedisk_done(&filedisk);
 
 	return retval;
 }
