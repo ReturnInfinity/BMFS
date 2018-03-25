@@ -1,5 +1,11 @@
 #!/bin/sh
 
-cd src
+set -e
+
+cd lib
+./build.sh
+cd ..
+
+cd utils
 ./build.sh
 cd ..

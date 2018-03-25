@@ -1,5 +1,9 @@
 #!/bin/sh
 
-cd src
+cd lib
+./clean.sh
+cd ..
+
+cd utils
 ./clean.sh
 cd ..
