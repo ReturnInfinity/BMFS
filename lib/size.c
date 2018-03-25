@@ -1,4 +1,4 @@
-#include <bmfs/sspec.h>
+#include <bmfs/size.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -9,11 +9,11 @@
 
 static int to_string(uint64_t bytes, char *str, uint64_t str_len);
 
-static int to_type(const char *suffix, enum bmfs_sspec_type *type);
+static int to_type(const char *suffix, enum BMFSSizeSuffix *type);
 
-int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *str)
+int bmfs_size_parse(struct BMFSSize *size, const char *str)
 {
-	if ((sspec == NULL) || (str == NULL))
+	if ((size == NULL) || (str == NULL))
 		return -EFAULT;
 
 	uint64_t value = 0;
@@ -35,67 +35,67 @@ int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *str)
 		str++;
 	}
 
-	int err = to_type(str, &sspec->type);
+	int err = to_type(str, &size->type);
 	if (err != 0)
 		return err;
 
-	sspec->value = value;
+	size->Value = value;
 
 	return 0;
 }
 
-int bmfs_sspec_to_string(const struct bmfs_sspec *sspec, char *str, uint64_t str_len)
+int bmfs_size_to_string(const struct BMFSSize *size, char *str, uint64_t str_len)
 {
 	uint64_t bytes = 0;
 
-	int err = bmfs_sspec_bytes(sspec, &bytes);
+	int err = bmfs_size_bytes(size, &bytes);
 	if (err != 0)
 		return err;
 
 	return to_string(bytes, str, str_len);
 }
 
-int bmfs_sspec_set_bytes(struct bmfs_sspec *sspec, uint64_t bytes)
+int bmfs_size_set_bytes(struct BMFSSize *size, uint64_t bytes)
 {
-	sspec->type = BMFS_SSPEC_NONE;
-	sspec->value = bytes;
+	size->type = BMFS_SIZE_SUFFIX_NONE;
+	size->Value = bytes;
 	return 0;
 }
 
-int bmfs_sspec_bytes(const struct bmfs_sspec *sspec, uint64_t *bytes)
+int bmfs_size_bytes(const struct BMFSSize *size, uint64_t *bytes)
 {
-	if ((sspec == NULL) || (bytes == NULL))
+	if ((size == NULL) || (bytes == NULL))
 		return -EFAULT;
 
-	if (sspec->type == BMFS_SSPEC_TEBI)
-		*bytes = sspec->value * 1024ULL * 1024ULL * 1024ULL * 1024ULL;
-	else if (sspec->type == BMFS_SSPEC_TERA)
-		*bytes = sspec->value * 1000ULL * 1000ULL * 1000ULL * 1000ULL;
-	else if (sspec->type == BMFS_SSPEC_GIBI)
-		*bytes = sspec->value * 1024ULL * 1024ULL * 1024ULL;
-	else if (sspec->type == BMFS_SSPEC_GIGA)
-		*bytes = sspec->value * 1000ULL * 1000ULL * 1000ULL;
-	else if (sspec->type == BMFS_SSPEC_MEBI)
-		*bytes = sspec->value * 1024ULL * 1024ULL;
-	else if (sspec->type == BMFS_SSPEC_MEGA)
-		*bytes = sspec->value * 1000ULL * 1000ULL;
-	else if (sspec->type == BMFS_SSPEC_KIBI)
-		*bytes = sspec->value * 1024ULL;
-	else if (sspec->type == BMFS_SSPEC_KILO)
-		*bytes = sspec->value * 1000ULL;
-	else if (sspec->type == BMFS_SSPEC_NONE)
-		*bytes = sspec->value;
+	if (size->type == BMFS_SIZE_SUFFIX_TEBI)
+		*bytes = size->Value * 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+	else if (size->type == BMFS_SIZE_SUFFIX_TERA)
+		*bytes = size->Value * 1000ULL * 1000ULL * 1000ULL * 1000ULL;
+	else if (size->type == BMFS_SIZE_SUFFIX_GIBI)
+		*bytes = size->Value * 1024ULL * 1024ULL * 1024ULL;
+	else if (size->type == BMFS_SIZE_SUFFIX_GIGA)
+		*bytes = size->Value * 1000ULL * 1000ULL * 1000ULL;
+	else if (size->type == BMFS_SIZE_SUFFIX_MEBI)
+		*bytes = size->Value * 1024ULL * 1024ULL;
+	else if (size->type == BMFS_SIZE_SUFFIX_MEGA)
+		*bytes = size->Value * 1000ULL * 1000ULL;
+	else if (size->type == BMFS_SIZE_SUFFIX_KIBI)
+		*bytes = size->Value * 1024ULL;
+	else if (size->type == BMFS_SIZE_SUFFIX_KILO)
+		*bytes = size->Value * 1000ULL;
+	else if (size->type == BMFS_SIZE_SUFFIX_NONE)
+		*bytes = size->Value;
 
 	return 0;
 }
 
-int bmfs_sspec_mebibytes(const struct bmfs_sspec *sspec, uint64_t *mebibytes)
+int bmfs_size_mebibytes(const struct BMFSSize *size, uint64_t *mebibytes)
 {
-	if ((sspec == NULL)
+	if ((size == NULL)
 	 || (mebibytes == NULL))
 		return -EFAULT;
 
-	int err = bmfs_sspec_bytes(sspec, mebibytes);
+	int err = bmfs_size_bytes(size, mebibytes);
 	if (err != 0)
 		return err;
 
@@ -188,18 +188,18 @@ static int to_string(uint64_t bytes, char *str, uint64_t str_len)
 	return 0;
 }
 
-static int to_type(const char *suffix, enum bmfs_sspec_type *type)
+static int to_type(const char *suffix, enum BMFSSizeSuffix *type)
 {
 	if (suffix[0] == 0)
 	{
-		*type = BMFS_SSPEC_NONE;
+		*type = BMFS_SIZE_SUFFIX_NONE;
 		return 0;
 	}
 
 	if ((suffix[0] == 'B')
 	 && (suffix[1] == 0))
 	{
-		*type = BMFS_SSPEC_NONE;
+		*type = BMFS_SIZE_SUFFIX_NONE;
 		return 0;
 	}
 
@@ -207,7 +207,7 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 	 && (suffix[1] == 'B')
 	 && (suffix[2] == 0))
 	{
-		*type = BMFS_SSPEC_KILO;
+		*type = BMFS_SIZE_SUFFIX_KILO;
 		return 0;
 	}
 
@@ -215,7 +215,7 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 	 && (suffix[1] == 'B')
 	 && (suffix[2] == 0))
 	{
-		*type = BMFS_SSPEC_MEGA;
+		*type = BMFS_SIZE_SUFFIX_MEGA;
 		return 0;
 	}
 
@@ -223,7 +223,7 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 	 && (suffix[1] == 'B')
 	 && (suffix[2] == 0))
 	{
-		*type = BMFS_SSPEC_GIGA;
+		*type = BMFS_SIZE_SUFFIX_GIGA;
 		return 0;
 	}
 
@@ -231,7 +231,7 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 	 && (suffix[1] == 'B')
 	 && (suffix[2] == 0))
 	{
-		*type = BMFS_SSPEC_TERA;
+		*type = BMFS_SIZE_SUFFIX_TERA;
 		return 0;
 	}
 
@@ -240,7 +240,7 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 	 && (suffix[2] == 'B')
 	 && (suffix[3] == 0))
 	{
-		*type = BMFS_SSPEC_KIBI;
+		*type = BMFS_SIZE_SUFFIX_KIBI;
 		return 0;
 	}
 
@@ -249,7 +249,7 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 	 && (suffix[2] == 'B')
 	 && (suffix[3] == 0))
 	{
-		*type = BMFS_SSPEC_MEBI;
+		*type = BMFS_SIZE_SUFFIX_MEBI;
 		return 0;
 	}
 
@@ -258,7 +258,7 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 	 && (suffix[2] == 'B')
 	 && (suffix[3] == 0))
 	{
-		*type = BMFS_SSPEC_GIBI;
+		*type = BMFS_SIZE_SUFFIX_GIBI;
 		return 0;
 	}
 
@@ -267,35 +267,35 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 	 && (suffix[2] == 'B')
 	 && (suffix[3] == 0))
 	{
-		*type = BMFS_SSPEC_TEBI;
+		*type = BMFS_SIZE_SUFFIX_TEBI;
 		return 0;
 	}
 
 	if ((suffix[0] == 'K')
 	 && (suffix[1] == 0))
 	{
-		*type = BMFS_SSPEC_KIBI;
+		*type = BMFS_SIZE_SUFFIX_KIBI;
 		return 0;
 	}
 
 	if ((suffix[0] == 'M')
 	 && (suffix[1] == 0))
 	{
-		*type = BMFS_SSPEC_MEBI;
+		*type = BMFS_SIZE_SUFFIX_MEBI;
 		return 0;
 	}
 
 	if ((suffix[0] == 'G')
 	 && (suffix[1] == 0))
 	{
-		*type = BMFS_SSPEC_GIBI;
+		*type = BMFS_SIZE_SUFFIX_GIBI;
 		return 0;
 	}
 
 	if ((suffix[0] == 'T')
 	 && (suffix[1] == 0))
 	{
-		*type = BMFS_SSPEC_TEBI;
+		*type = BMFS_SIZE_SUFFIX_TEBI;
 		return 0;
 	}
 

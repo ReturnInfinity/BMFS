@@ -16,52 +16,50 @@
 extern "C" {
 #endif
 
-/** @defgroup sspec-api Storage Specifiers
+/** @defgroup size-api Size Specification API
  * Read and write values like 'MiB', 'GB' and others.
  */
 
 /** Specifies which suffix is used
  * in the storage specification.
- * @ingroup sspec-api
+ * @ingroup size-api
  */
 
-enum bmfs_sspec_type
+enum BMFSSizeSuffix
 {
 	/** equivalent to 1024 ^ 0 */
-	BMFS_SSPEC_NONE,
+	BMFS_SIZE_SUFFIX_NONE,
 	/** equivalent to 1024 ^ 4 */
-	BMFS_SSPEC_TEBI,
+	BMFS_SIZE_SUFFIX_TEBI,
 	/** equivalent to 1024 ^ 3 */
-	BMFS_SSPEC_GIBI,
+	BMFS_SIZE_SUFFIX_GIBI,
 	/** equivalent to 1024 ^ 2 */
-	BMFS_SSPEC_MEBI,
+	BMFS_SIZE_SUFFIX_MEBI,
 	/** equivalent to 1024 */
-	BMFS_SSPEC_KIBI,
+	BMFS_SIZE_SUFFIX_KIBI,
 	/** equivalent to 1000 ^ 4 */
-	BMFS_SSPEC_TERA,
+	BMFS_SIZE_SUFFIX_TERA,
 	/** equivalent to 1000 ^ 3 */
-	BMFS_SSPEC_GIGA,
+	BMFS_SIZE_SUFFIX_GIGA,
 	/** equivalent to 1000 ^ 2 */
-	BMFS_SSPEC_MEGA,
+	BMFS_SIZE_SUFFIX_MEGA,
 	/** equivalent to 1000 */
-	BMFS_SSPEC_KILO
+	BMFS_SIZE_SUFFIX_KILO
 };
 
-/** Used to specify a numerical value
- * of storage capacity. It is an abbreviated
- * name of 'storage specification'.
- * @ingroup sspec-api
+/** Used to specify a numerical value of storage capacity.
+ * @ingroup size-api
  */
 
-struct bmfs_sspec
+struct BMFSSize
 {
 	/** The type of storage specification */
-	enum bmfs_sspec_type type;
+	enum BMFSSizeSuffix type;
 	/** The number of storage units of the
 	 * specifications type. For example: a
 	 * value of two and a type of Mebibytes,
 	 * would be equivalent to 2MiB. */
-	uint64_t value;
+	uint64_t Value;
 };
 
 /** Parses a string describing a storage capacity.
@@ -70,64 +68,64 @@ struct bmfs_sspec
  *  - 9B
  *  - 7 (equivalent to 7B)
  *  - 0
- * @param sspec A storage specification structure.
+ * @param size A storage specification structure.
  *  This parameter is initialized by the function.
  * @param arg A string representation of a storage
  *  capacity. The string must contain no spaces and
  *  is case-sensitive.
  * @returns Zero on success, a negative error code on
  *  failure.
- * @ingroup sspec-api
+ * @ingroup size-api
  */
 
-int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *arg);
+int bmfs_size_parse(struct BMFSSize *size, const char *arg);
 
 /** Converts a storage specification structure
  * to a human-reabable string.
- * @param sspec An initialized storage specification.
+ * @param size An initialized storage specification.
  * @param str A string to write the storage value to.
  * @param str_len The number of bytes available for @p str.
  *  This value must be at least eight.
  * @returns Zero on success, a negative error code on
  *  failure.
- * @ingroup sspec-api
+ * @ingroup size-api
  */
 
-int bmfs_sspec_to_string(const struct bmfs_sspec *sspec, char *str, uint64_t str_len);
+int bmfs_size_to_string(const struct BMFSSize *size, char *str, uint64_t str_len);
 
 /** Sets the value, in bytes, of the storage specification.
- * @param sspec A storage specifier structure. This parameter
+ * @param size A storage specifier structure. This parameter
  *  is set by the function.
  * @param bytes The value to set the storage specifier to.
  * @returns Zero on success, a negative error code on failure.
- * @ingroup sspec-api
+ * @ingroup size-api
  */
 
-int bmfs_sspec_set_bytes(struct bmfs_sspec *sspec, uint64_t bytes);
+int bmfs_size_set_bytes(struct BMFSSize *size, uint64_t bytes);
 
 /** Retrives the number of bytes of the storage specification.
  * This function may fail if the storage specification is not
  * able to be represented by a 64-bit unsigned integer.
- * @param sspec An initialized storage specification.
+ * @param size An initialized storage specification.
  * @param bytes The address of the variable that will receive
  *  the number of bytes of the storage specifier.
  * @returns Zero on success, a negative error on failure.
- * @ingroup sspec-api
+ * @ingroup size-api
  */
 
-int bmfs_sspec_bytes(const struct bmfs_sspec *sspec, uint64_t *bytes);
+int bmfs_size_bytes(const struct BMFSSize *size, uint64_t *bytes);
 
 /** Retrives the number of mebibytes of the storage specification.
  * This function may fail if the storage specification is not
  * able to be represented by a 64-bit unsigned integer.
- * @param sspec An initialized storage specification.
+ * @param size An initialized storage specification.
  * @param mebibytes The address of the variable that will receive
  *  the number of mebibytes of the storage specifier.
  * @returns Zero on success, a negative error on failure.
- * @ingroup sspec-api
+ * @ingroup size-api
  */
 
-int bmfs_sspec_mebibytes(const struct bmfs_sspec *sspec, uint64_t *mebibytes);
+int bmfs_size_mebibytes(const struct BMFSSize *size, uint64_t *mebibytes);
 
 #ifdef __cplusplus
 } /* extern "C" { */

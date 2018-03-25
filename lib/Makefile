@@ -27,7 +27,7 @@ libfiles += table.o
 
 stdlibfiles += stdlib.o
 stdlibfiles += time.o
-stdlibfiles += sspec.o
+stdlibfiles += size.o
 
 libs += libbmfs.a
 libs += libbmfs-stdlib.a
@@ -51,7 +51,7 @@ path.o: path.c path.h
 
 ramdisk.o: ramdisk.c ramdisk.h disk.h dir.h entry.h limits.h
 
-sspec.o: sspec.c sspec.h
+size.o: size.c size.h
 
 table.o: table.c table.h disk.h
 

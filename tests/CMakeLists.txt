@@ -14,9 +14,9 @@ add_bmfs_test("fs-test" "fs-test.c")
 
 add_bmfs_test("path-test" "path-test.c")
 
-add_bmfs_test("size-test" "size-test.c")
+add_bmfs_test("sizeof-test" "sizeof-test.c")
 
-add_bmfs_test("sspec-test" "sspec-test.c")
+add_bmfs_test("size-test" "size-test.c")
 
 add_bmfs_test("table-test" "table-test.c")
 

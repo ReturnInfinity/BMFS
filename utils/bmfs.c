@@ -6,7 +6,7 @@
  */
 
 #include <bmfs/bmfs.h>
-#include <bmfs/sspec.h>
+#include <bmfs/size.h>
 #include <bmfs/stdlib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -268,9 +268,9 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 
 	unsigned int force_flag = 0;
 
-	struct bmfs_sspec disk_size;
+	struct BMFSSize disk_size;
 
-	if (bmfs_sspec_parse(&disk_size, "64MiB") != 0)
+	if (bmfs_size_parse(&disk_size, "64MiB") != 0)
 	{
 		fprintf(stderr, "Failed to parse default disk size.\n");
 		return EXIT_FAILURE;
@@ -289,7 +289,7 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 				fprintf(stderr, "Error: Disk size not specified.\n");
 				return EXIT_FAILURE;
 			}
-			if (bmfs_sspec_parse(&disk_size, argv[i + 1]))
+			if (bmfs_size_parse(&disk_size, argv[i + 1]))
 			{
 				fprintf(stderr, "Error: Failed to parse disk size '%s'.\n", argv[i]);
 				return EXIT_FAILURE;
@@ -311,7 +311,7 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 
 	uint64_t disk_byte_count = 0;
 
-	if (bmfs_sspec_bytes(&disk_size, &disk_byte_count) != 0)
+	if (bmfs_size_bytes(&disk_size, &disk_byte_count) != 0)
 	{
 		fprintf(stderr, "Error: Disk size too large.\n");
 		return EXIT_FAILURE;

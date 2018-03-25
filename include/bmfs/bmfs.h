@@ -14,7 +14,6 @@
 #include "file.h"
 #include "fs.h"
 #include "limits.h"
-#include "sspec.h"
 #include "version.h"
 
 #endif /* BMFS_H */

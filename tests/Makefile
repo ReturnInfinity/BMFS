@@ -19,8 +19,8 @@ tests += dir-test
 tests += disk-test
 tests += fs-test
 tests += path-test
+tests += sizeof-test
 tests += size-test
-tests += sspec-test
 tests += table-test
 
 libs += -lbmfs -lbmfs-stdlib
@@ -48,11 +48,11 @@ path-test.o: path-test.c
 
 path-test: path-test.o $(libs)
 
+sizeof-test.o: sizeof-test.c
+
 size-test.o: size-test.c
 
-sspec-test.o: sspec-test.c
-
-sspec-test: sspec-test.o $(libs)
+size-test: size-test.o $(libs)
 
 table-test.o: table-test.c
 
@@ -68,7 +68,7 @@ test:
 	$(VALGRIND) ./disk-test
 	$(VALGRIND) ./fs-test
 	$(VALGRIND) ./path-test
-	$(VALGRIND) ./sspec-test
+	$(VALGRIND) ./size-test
 	$(VALGRIND) ./table-test
 
 .PHONY: install

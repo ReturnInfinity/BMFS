@@ -15,7 +15,7 @@ add_library("bmfs-library"
 set_target_properties("bmfs-library" PROPERTIES OUTPUT_NAME "bmfs")
 
 add_library("bmfs-stdlib-library"
-	"sspec.c"
+	"size.c"
 	"stdlib.c"
 	"time.c")
 
