@@ -71,6 +71,25 @@ struct BMFSFile
 
 void bmfs_file_init(struct BMFSFile *file);
 
+/** Closes the file. If the file was opened for
+ * writing, this function updates the file size
+ * and modification time.
+ * @param file An initialized file structure.
+ * @ingroup file-api
+ * */
+
+void bmfs_file_close(struct BMFSFile *file);
+
+/** Indicates whether or not the end of the file
+ * position has been reached.
+ * @param file An initialized file structure.
+ * @returns Zero if the end of file has not been
+ * eached, one if it has been reached.
+ * @ingroup file-api
+ * */
+
+int bmfs_file_eof(const struct BMFSFile *file);
+
 /** Assigns the disk that will be used
  * to read and write file data, as well
  * as import the meta-data on the file itself.
