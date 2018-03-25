@@ -1,12 +1,13 @@
-#include <assert.h>
 #include <bmfs/size.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "assert.h"
+
 static int test_string(const char *str, uint64_t value);
 
-#define test(a, b) assert(test_string(a, b) == 0)
+#define test(a, b) bmfs_assert(test_string(a, b) == 0)
 
 int main(void)
 {

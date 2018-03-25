@@ -1,9 +1,10 @@
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <bmfs/path.h>
+
+#include "assert.h"
 
 static void test1(void)
 {
@@ -16,11 +17,11 @@ static void test1(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == 0);
-	assert(root.Length == (sizeof("usr") - 1));
-	assert(memcmp(root.String, "usr", (size_t) root.Length) == 0);
-	assert(path.Length == (sizeof("include") - 1));
-	assert(memcmp(path.String, "include", (size_t) path.Length) == 0);
+	bmfs_assert(err == 0);
+	bmfs_assert(root.Length == (sizeof("usr") - 1));
+	bmfs_assert(memcmp(root.String, "usr", (size_t) root.Length) == 0);
+	bmfs_assert(path.Length == (sizeof("include") - 1));
+	bmfs_assert(memcmp(path.String, "include", (size_t) path.Length) == 0);
 }
 
 static void test2(void)
@@ -34,11 +35,11 @@ static void test2(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == 0);
-	assert(root.Length == (sizeof("usr") - 1));
-	assert(memcmp(root.String, "usr", (size_t) root.Length) == 0);
-	assert(path.Length == (sizeof("include") - 1));
-	assert(memcmp(path.String, "include", (size_t) path.Length) == 0);
+	bmfs_assert(err == 0);
+	bmfs_assert(root.Length == (sizeof("usr") - 1));
+	bmfs_assert(memcmp(root.String, "usr", (size_t) root.Length) == 0);
+	bmfs_assert(path.Length == (sizeof("include") - 1));
+	bmfs_assert(memcmp(path.String, "include", (size_t) path.Length) == 0);
 }
 
 static void test3(void)
@@ -52,11 +53,11 @@ static void test3(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == 0);
-	assert(root.Length == (sizeof("usr") - 1));
-	assert(memcmp(root.String, "usr", (size_t) root.Length) == 0);
-	assert(path.Length == (sizeof("include") - 1));
-	assert(memcmp(path.String, "include", (size_t) path.Length) == 0);
+	bmfs_assert(err == 0);
+	bmfs_assert(root.Length == (sizeof("usr") - 1));
+	bmfs_assert(memcmp(root.String, "usr", (size_t) root.Length) == 0);
+	bmfs_assert(path.Length == (sizeof("include") - 1));
+	bmfs_assert(memcmp(path.String, "include", (size_t) path.Length) == 0);
 }
 
 static void test4(void)
@@ -70,11 +71,11 @@ static void test4(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == 0);
-	assert(root.Length == (sizeof("Program Files") - 1));
-	assert(memcmp(root.String, "Program Files", (size_t) root.Length) == 0);
-	assert(path.Length == (sizeof("BMFS") - 1));
-	assert(memcmp(path.String, "BMFS", (size_t) path.Length) == 0);
+	bmfs_assert(err == 0);
+	bmfs_assert(root.Length == (sizeof("Program Files") - 1));
+	bmfs_assert(memcmp(root.String, "Program Files", (size_t) root.Length) == 0);
+	bmfs_assert(path.Length == (sizeof("BMFS") - 1));
+	bmfs_assert(memcmp(path.String, "BMFS", (size_t) path.Length) == 0);
 }
 
 static void test5(void)
@@ -88,10 +89,10 @@ static void test5(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == 0);
-	assert(root.Length == (sizeof("empty-base") - 1));
-	assert(memcmp(root.String, "empty-base", (size_t) path.Length) == 0);
-	assert(path.Length == 0);
+	bmfs_assert(err == 0);
+	bmfs_assert(root.Length == (sizeof("empty-base") - 1));
+	bmfs_assert(memcmp(root.String, "empty-base", (size_t) path.Length) == 0);
+	bmfs_assert(path.Length == 0);
 }
 
 static void test6(void) {
@@ -105,10 +106,10 @@ static void test6(void) {
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == 0);
-	assert(root.Length == (sizeof("tmp") - 1));
-	assert(memcmp(root.String, "tmp", (size_t) path.Length) == 0);
-	assert(path.Length == 0);
+	bmfs_assert(err == 0);
+	bmfs_assert(root.Length == (sizeof("tmp") - 1));
+	bmfs_assert(memcmp(root.String, "tmp", (size_t) path.Length) == 0);
+	bmfs_assert(path.Length == 0);
 }
 
 static void test_failure1(void)
@@ -122,10 +123,10 @@ static void test_failure1(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == 0);
-	assert(root.Length == (sizeof("no-slash") - 1));
-	assert(memcmp(root.String, "no-slash", (size_t) path.Length) == 0);
-	assert(path.Length == 0);
+	bmfs_assert(err == 0);
+	bmfs_assert(root.Length == (sizeof("no-slash") - 1));
+	bmfs_assert(memcmp(root.String, "no-slash", (size_t) path.Length) == 0);
+	bmfs_assert(path.Length == 0);
 }
 
 static void test_failure2(void)
@@ -139,9 +140,9 @@ static void test_failure2(void)
 	bmfs_path_set(&path, path_str, sizeof(path_str) - 1);
 
 	err = bmfs_path_split_root(&path, &root);
-	assert(err == 0);
-	assert(path.Length == 0);
-	assert(root.Length == 0);
+	bmfs_assert(err == 0);
+	bmfs_assert(path.Length == 0);
+	bmfs_assert(root.Length == 0);
 }
 
 #if 0
@@ -153,14 +154,14 @@ static void visit_parent(void *data_ptr, const char *name, uint64_t name_size)
 {
 	struct VisitorData *data = (struct VisitorData *) data_ptr;
 
-	assert(data->name_index <= 1);
+	bmfs_assert(data->name_index <= 1);
 
 	if (data->name_index == 0) {
-		assert(name_size == 2);
-		assert(memcmp(name, "ab", 3) == 0);
+		bmfs_assert(name_size == 2);
+		bmfs_assert(memcmp(name, "ab", 3) == 0);
 	} else if (data->name_index == 1) {
-		assert(name_size == 3);
-		assert(memcmp(name, "cde", 3) == 0);
+		bmfs_assert(name_size == 3);
+		bmfs_assert(memcmp(name, "cde", 3) == 0);
 	}
 }
 
@@ -168,10 +169,10 @@ static void visit_basename(void *data_ptr, const void *name, uint64_t name_size)
 {
 	struct VisitorData *data = (struct VisitorData *) data_ptr;
 
-	assert(data->name_index == 2);
+	bmfs_assert(data->name_index == 2);
 
-	assert(name_size == 2);
-	assert(memcmp(name, "fg", 2) == 0);
+	bmfs_assert(name_size == 2);
+	bmfs_assert(memcmp(name, "fg", 2) == 0);
 }
 
 static void test_visitor(void)
@@ -192,7 +193,7 @@ static void test_visitor(void)
 	visitor.visit_basename = visit_basename;
 
 	int ret = bmfs_path_visit(&path, &visitor);
-	assert(ret == 0);
+	bmfs_assert(ret == 0);
 }
 
 #endif

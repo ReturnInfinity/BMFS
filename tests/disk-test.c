@@ -1,5 +1,6 @@
-#include <assert.h>
 #include <bmfs/disk.h>
+
+#include "assert.h"
 
 int main(void)
 {
