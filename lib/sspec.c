@@ -17,15 +17,21 @@ int bmfs_sspec_parse(struct bmfs_sspec *sspec, const char *str)
 		return -EFAULT;
 
 	uint64_t value = 0;
+
 	uint64_t base = 1;
+
 	while (*str)
 	{
 		char c = *str;
-		if ((c < '0')
-		 || (c > '9'))
+		if ((c < '0') || (c > '9'))
 			break;
-		value += (c - '0') * base;
+
+		value *= base;
+
+		value += (c - '0');
+
 		base *= 10;
+
 		str++;
 	}
 
