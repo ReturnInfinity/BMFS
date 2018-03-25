@@ -315,10 +315,32 @@ static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
 
 	int i = 0;
 
+	const int color_always = 1;
+
+	const int color_never = 0;
+
+	int color_mode = color_always;
+
 	while (i < argc)
 	{
 		if (argv[i][0] != '-') {
 			break;
+		} else if (is_opt(argv[i], 'c', "color")) {
+			if ((i + 1) >= argc) {
+				fprintf(stderr, "Error: Color mode not specified.\n");
+				return EXIT_FAILURE;
+			} else if (strcmp(argv[i + 1], "always") == 0) {
+				color_mode = color_always;
+			} else if (strcmp(argv[i + 1], "never") == 0) {
+				color_mode = color_never;
+			} else if (strcmp(argv[i + 1], "auto") == 0) {
+				fprintf(stderr, "Error: Auto coloring not supported.\n");
+				return EXIT_FAILURE;
+			} else {
+				fprintf(stderr, "Error: Unknown coloring mode '%s'.\n", argv[i + 1]);
+				return EXIT_FAILURE;
+			}
+			i++;
 		} else {
 			fprintf(stderr, "Error: Unknown option '%s'\n", argv[i]);
 			return EXIT_FAILURE;
@@ -340,25 +362,16 @@ static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
 		return EXIT_FAILURE;
 	}
 
-	printf("| Name                             |             Size (B) | Type      |\n");
-	printf("|----------------------------------|----------------------|-----------|\n");
-
 	for (size_t i = 0; i < 64; i++)
 	{
 		const struct BMFSEntry *entry = bmfs_dir_next(&dir);
 		if (entry == NULL)
 			break;
 
-		if (bmfs_entry_is_empty(entry))
-			continue;
-		else if (bmfs_entry_is_terminator(entry))
-			break;
-		else if (bmfs_entry_is_directory(entry))
-			printf("| %-32s | %20llu | Directory |\n",
-			       entry->Name, (unsigned long long)(entry->Size));
+		if (bmfs_entry_is_directory(entry) && (color_mode == color_always))
+			printf("\033[34;1m%s\033[0m\n", entry->Name);
 		else
-			printf("| %-32s | %20llu | File      |\n",
-			       entry->Name, (unsigned long long)(entry->Size));
+			printf("%s\n", entry->Name);
 	}
 
 	return EXIT_SUCCESS;
