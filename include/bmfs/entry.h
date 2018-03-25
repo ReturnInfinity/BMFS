@@ -103,71 +103,6 @@ int bmfs_entry_read(struct BMFSEntry *entry,
 int bmfs_entry_write(const struct BMFSEntry *entry,
                      struct BMFSDisk *disk);
 
-/** Compares two entries by file name.
- * This function can be used by @ref bmfs_dir_sort.
- * @param a An initialized entry.
- * @param b An additional initialized entry.
- * @returns If the entries have the same
- *  file name, zero is returned. If entry
- *  @p a contains a byte higher than entry
- *  @p b, then a number greater than zero
- *  is returned. If the opposite occurs, then
- *  a negative number is returned.
- * @ingroup entry-api
- */
-
-int bmfs_entry_cmp_by_filename(const struct BMFSEntry *a,
-                               const struct BMFSEntry *b);
-
-/** Compares two entries by starting block.
- * This function can be used by @ref bmfs_dir_sort.
- * @param a An initialized entry.
- * @param b An additional initialized entry.
- * @returns If the entries have the same
- *  starting block, zero is returned. If entry
- *  @p a contains a starting block greater than
- *  entry @p b, then a number greater than zero
- *  is returned. If the opposite occurs, then
- *  a negative number is returned.
- * @ingroup entry-api
- */
-
-int bmfs_entry_cmp_by_starting_block(const struct BMFSEntry *a,
-                                     const struct BMFSEntry *b);
-
-/** Compares an entry's file name with
- * another file name parameter.
- * @param entry An initialized entry.
- * @param filename A file name to compare.
- * @returns Zero if the file name in the
- *  entry matches the file name in the
- *  parameter, one if the entry's file
- *  name is greater, negative one if it's
- *  less than the file name parameter.
- * @ingroup entry-api
- */
-
-int bmfs_entry_cmp_filename(const struct BMFSEntry *entry,
-                            const char *filename);
-
-/** Compares an entry's starting block with
- * another starting block.
- * @param entry The entry containing a starting
- *  block.
- * @param starting_block The starting block to
- *  compare with.
- * @returns Zero on success, if they're equal.
- *  If the starting block in @p entry is greater
- *  than @p starting_block, then one is returned.
- *  If the starting block in @p entry is less
- *  than @p starting_block, then negative one is
- *  returned.
- * @ingroup entry-api
- */
-
-int bmfs_entry_cmp_starting_block(const struct BMFSEntry *entry,
-                                  uint64_t starting_block);
-
 /** Gets the absolute byte offset of the
  * entry on disk.
  * @param entry An initialized entry.
@@ -215,18 +150,6 @@ void bmfs_entry_set_file_size(struct BMFSEntry *entry,
 void bmfs_entry_set_starting_block(struct BMFSEntry *entry,
                                    uint64_t starting_block);
 
-/** Sets the number of reserved blocks
- * for the entry.
- * @param entry An initialized or
- *  uninitialized entry.
- * @param reserved_blocks The new number
- *  of reserved blocks for the entry.
- * @ingroup entry-api
- */
-
-void bmfs_entry_set_reserved_blocks(struct BMFSEntry *entry,
-                                    uint64_t reserved_blocks);
-
 /** Sets the type of entry.
  * @param entry An initialized entry.
  * @param entry_type The type of entry.
@@ -247,16 +170,6 @@ void bmfs_entry_set_type(struct BMFSEntry *entry,
 int bmfs_entry_is_directory(const struct BMFSEntry *entry);
 
 /** Indicates wether or not the
- * entry is empty.
- * @param entry An initialized entry.
- * @returns One if the entry is the
- *  empty, zero if it is not.
- * @ingroup entry-api
- */
-
-int bmfs_entry_is_empty(const struct BMFSEntry *entry);
-
-/** Indicates wether or not the
  * entry is a file.
  * @param entry An initialized entry.
  * @returns One if the entry is a file,
@@ -265,17 +178,6 @@ int bmfs_entry_is_empty(const struct BMFSEntry *entry);
  */
 
 int bmfs_entry_is_file(const struct BMFSEntry *entry);
-
-/** Indicates wether or not the
- * entry marks the end of the directory.
- * @param entry An initialized entry.
- * @returns One if the entry is the
- *  end-of-directory marker, zero if
- *  it is not.
- * @ingroup entry-api
- */
-
-int bmfs_entry_is_terminator(const struct BMFSEntry *entry);
 
 #ifdef __cplusplus
 } /* extern "C" { */

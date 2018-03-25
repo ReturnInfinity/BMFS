@@ -88,69 +88,6 @@ int bmfs_entry_write(const struct BMFSEntry *entry,
 	return 0;
 }
 
-int bmfs_entry_cmp_by_filename(const struct BMFSEntry *a,
-                               const struct BMFSEntry *b)
-{
-	if (bmfs_entry_is_empty(a)
-	 && bmfs_entry_is_empty(b))
-		return 0;
-
-	if (bmfs_entry_is_empty(a))
-		return 1;
-	else if (bmfs_entry_is_empty(b))
-		return -1;
-
-	return bmfs_entry_cmp_filename(a, b->Name);
-}
-
-int bmfs_entry_cmp_by_starting_block(const struct BMFSEntry *a,
-                                     const struct BMFSEntry *b)
-{
-	if (bmfs_entry_is_empty(a)
-	 && bmfs_entry_is_empty(b))
-		return 0;
-
-	if (bmfs_entry_is_empty(a))
-		return 1;
-	else if (bmfs_entry_is_empty(b))
-		return -1;
-
-	return bmfs_entry_cmp_starting_block(a, b->Offset);
-}
-
-int bmfs_entry_cmp_filename(const struct BMFSEntry *entry, const char *filename)
-{
-	uint64_t i = 0;
-
-	while (1)
-	{
-		if (entry->Name[i] > filename[i])
-			return 1;
-		else if (entry->Name[i] < filename[i])
-			return -1;
-		else if (entry->Name[i] == 0)
-			break;
-		else if (i >= BMFS_FILE_NAME_MAX)
-			return -1;
-		else
-			i++;
-	}
-
-	return 0;
-}
-
-int bmfs_entry_cmp_starting_block(const struct BMFSEntry *entry, uint64_t starting_block)
-{
-	uint64_t starting_offset = starting_block * BMFS_BLOCK_SIZE;
-
-	if (entry->Offset > starting_offset)
-		return 1;
-	else if (entry->Offset < starting_offset)
-		return -1;
-
-	return 0;
-}
-
 int bmfs_entry_get_offset(const struct BMFSEntry *entry, uint64_t *offset)
 {
 	if ((entry == NULL) || (offset == NULL))
@@ -201,25 +138,10 @@ int bmfs_entry_is_directory(const struct BMFSEntry *entry)
 		return 0;
 }
 
-int bmfs_entry_is_empty(const struct BMFSEntry *entry)
-{
-	if ((entry->Flags & BMFS_MASK_TYPE) == 0)
-		return 1;
-	else
-		return 0;
-}
-
 int bmfs_entry_is_file(const struct BMFSEntry *entry)
 {
 	if ((entry->Flags & BMFS_MASK_TYPE) == BMFS_FLAG_FILE)
 		return 1;
 	else
 		return 0;
-}
-
-int bmfs_entry_is_terminator(const struct BMFSEntry *entry)
-{
-	/* No longer supported */
-	(void) entry;
-	return 0;
 }
