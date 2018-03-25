@@ -8,6 +8,7 @@
 #include "dir.h"
 #include "disk.h"
 #include "entry.h"
+#include "file.h"
 #include "fs.h"
 #include "limits.h"
 #include "sspec.h"
