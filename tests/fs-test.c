@@ -55,6 +55,11 @@ int main(void)
 	err = bmfs_create_file(&fs, "/tmp/b.txt");
 	bmfs_assert(err == 0);
 
+	/* Test that the same file can't be created twice. */
+
+	err = bmfs_create_file(&fs, "/tmp/a.txt");
+	bmfs_assert(err == -EEXIST);
+
 	/* Test the creation of subdirectories. */
 
 	err = bmfs_create_dir(&fs, "/usr/local");
@@ -65,6 +70,11 @@ int main(void)
 
 	err = bmfs_create_file(&fs, "/tmp2/b.txt");
 	bmfs_assert(err != 0);
+
+	/* Test that the same directory can't be created twice. */
+
+	err = bmfs_create_dir(&fs, "/usr/local");
+	bmfs_assert(err == -EEXIST);
 
 	/* Test that directories can be opened. */
 

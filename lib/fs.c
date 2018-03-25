@@ -96,6 +96,22 @@ static int find_entry(struct BMFS *fs,
 	return -ENOENT;
 }
 
+static int entry_exists(struct BMFS *fs,
+                        const struct BMFSEntry *parent_dir,
+                        const char *name,
+                        uint64_t name_size)
+{
+	struct BMFSEntry tmp_entry;
+
+	bmfs_entry_init(&tmp_entry);
+
+	int err = find_entry(fs, parent_dir, &tmp_entry, name, name_size);
+	if (err == -ENOENT)
+		return 0;
+	else
+		return 1;
+}
+
 static int find_dir(struct BMFS *fs,
                     const struct BMFSEntry *parent_dir,
                     struct BMFSDir *dir,
@@ -259,6 +275,11 @@ static int create_entry(struct BMFS *fs,
 		entry->Name[i] = name[i];
 
 	entry->Name[name_size] = 0;
+
+	/* Make sure that the entry doesn't exist. */
+
+	if (entry_exists(fs, &root, name, name_size))
+		return -EEXIST;
 
 	err = add_entry(fs, &root, entry);
 	if (err != 0)
