@@ -265,6 +265,34 @@ static int to_type(const char *suffix, enum bmfs_sspec_type *type)
 		return 0;
 	}
 
+	if ((suffix[0] == 'K')
+	 && (suffix[1] == 0))
+	{
+		*type = BMFS_SSPEC_KIBI;
+		return 0;
+	}
+
+	if ((suffix[0] == 'M')
+	 && (suffix[1] == 0))
+	{
+		*type = BMFS_SSPEC_MEBI;
+		return 0;
+	}
+
+	if ((suffix[0] == 'G')
+	 && (suffix[1] == 0))
+	{
+		*type = BMFS_SSPEC_GIBI;
+		return 0;
+	}
+
+	if ((suffix[0] == 'T')
+	 && (suffix[1] == 0))
+	{
+		*type = BMFS_SSPEC_TEBI;
+		return 0;
+	}
+
 	return -EINVAL;
 }
 
