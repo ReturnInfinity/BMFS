@@ -10,6 +10,7 @@ build
 *.dll
 # Default image path
 disk.image
+bmfs.img
 # Executables
 *.exe
 *.out
