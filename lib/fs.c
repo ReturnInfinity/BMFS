@@ -121,7 +121,11 @@ static int find_dir(struct BMFS *fs,
 			return err;
 
 		err = bmfs_dir_import(dir);
-		if ((err == 0) && (is_entry(&dir->Entry, name, name_size)))
+		if ((err != 0) && (err == -ENOTDIR) && (is_entry(&dir->Entry, name, name_size)))
+			return err;
+		else if ((err != 0) && (err != -ENOTDIR))
+			return err;
+		else if ((err == 0) && (is_entry(&dir->Entry, name, name_size)))
 			return 0;
 
 		pos += BMFS_ENTRY_SIZE;
