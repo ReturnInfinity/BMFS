@@ -27,6 +27,10 @@ enum bmfs_command {
 	BMFS_CMD_NONE,
 	/** Unknown command */
 	BMFS_CMD_UNKNOWN,
+	/** Concatenate files to standard output. */
+	BMFS_CMD_CAT,
+	/** Copy a file from one location to another. */
+	BMFS_CMD_CP,
 	/** List directory contents */
 	BMFS_CMD_LS,
 	/** Format a BMFS image. */
@@ -49,6 +53,11 @@ static enum bmfs_command command_parse(const char *cmd)
 {
 	if (cmd == NULL)
 		return BMFS_CMD_NONE;
+	else if (strcmp(cmd, "cat") == 0)
+		return BMFS_CMD_CAT;
+	else if ((strcmp(cmd, "cp") == 0)
+	      || (strcmp(cmd, "copy") == 0))
+		return BMFS_CMD_CP;
 	else if ((strcmp(cmd, "ls") == 0)
 	      || (strcmp(cmd, "list") == 0)
 	      || (strcmp(cmd, "dir") == 0))
@@ -102,9 +111,22 @@ static int is_opt(const char *arg,
 	return 0;
 }
 
+static int file_exists(const char *path)
+{
+	FILE *f = fopen(path, "rb");
+	if (f == NULL)
+		return 0;
+	else
+		return 1;
+}
+
 static int cmd_format(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_mkdir(struct BMFS *bmfs, int argc, const char **argv);
+
+static int cmd_cat(struct BMFS *bmfs, int argc, const char **argv);
+
+static int cmd_cp(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv);
 
@@ -163,7 +185,12 @@ int main(int argc, const char **argv)
 
 	i++;
 
-	FILE *diskfile = fopen(diskname, "r+b");
+	const char *mode = "rb+";
+
+	if ((cmd == BMFS_CMD_FORMAT) && (!file_exists(diskname)))
+		mode = "wb";
+
+	FILE *diskfile = fopen(diskname, mode);
 	if (diskfile == NULL)
 	{
 		int err = errno;
@@ -205,6 +232,12 @@ int main(int argc, const char **argv)
 
 	switch (cmd)
 	{
+	case BMFS_CMD_CAT:
+		err = cmd_cat(&bmfs, argc - i, &argv[i]);
+		break;
+	case BMFS_CMD_CP:
+		err = cmd_cp(&bmfs, argc - i, &argv[i]);
+		break;
 	case BMFS_CMD_LS:
 		err =  cmd_ls(&bmfs, argc - i, &argv[i]);
 		break;
@@ -325,6 +358,163 @@ static int cmd_mkdir(struct BMFS *bmfs, int argc, const char **argv)
 	}
 
 	return 0;
+}
+
+static int cmd_cat(struct BMFS *bmfs, int argc, const char **argv)
+{
+	int i = 0;
+
+	char buf[512];
+
+	while (i < argc)
+	{
+		struct BMFSFile file;
+
+		bmfs_file_init(&file);
+
+		int err = bmfs_open_file(bmfs, &file, argv[i]);
+		if (err != 0)
+		{
+			fprintf(stderr, "Error: Failed to open '%s'.\n", argv[i]);
+			fprintf(stderr, "Reason: %s\n", strerror(-err));
+			bmfs_file_close(&file);
+			return EXIT_FAILURE;
+		}
+
+		while (!bmfs_file_eof(&file))
+		{
+			uint64_t read_result = 0;
+
+			err = bmfs_file_read(&file, buf, 512, &read_result);
+			if (err != 0)
+			{
+				fprintf(stderr, "Error: Failed to read '%s'.\n", argv[i]);
+				fprintf(stderr, "Reason: %s\n", strerror(-err));
+				bmfs_file_close(&file);
+				return EXIT_FAILURE;
+			}
+
+			size_t write_result = fwrite(buf, 1, read_result, stdout);
+			if (write_result != read_result)
+			{
+				fprintf(stderr, "Error: Failed to write data to standard output.\n");
+				bmfs_file_close(&file);
+				return EXIT_FAILURE;
+			}
+		}
+
+		bmfs_file_close(&file);
+
+		i++;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+static int cmd_cp(struct BMFS *bmfs, int argc, const char **argv)
+{
+	if (argc < 1)
+	{
+		fprintf(stderr, "Error: Missing source path.\n");
+		return EXIT_FAILURE;
+	}
+	else if (argc < 2)
+	{
+		fprintf(stderr, "Error: Missing destination path.\n");
+		return EXIT_FAILURE;
+	}
+	else if (argc > 2)
+	{
+		fprintf(stderr, "Error: Trailing arguments.\n");
+		return EXIT_FAILURE;
+	}
+
+	const char *src_path = argv[0];
+
+	FILE *src = fopen(src_path, "rb");
+	if (src == NULL)
+	{
+		int err = errno;
+		fprintf(stderr, "Error: Failed to open '%s' for reading.\n", src_path);
+		fprintf(stderr, "Reason: %s\n", strerror(err));
+		return EXIT_FAILURE;
+	}
+
+	const char *dst_path = argv[1];
+
+	struct BMFSFile dst;
+
+	bmfs_file_init(&dst);
+
+	int err = bmfs_create_file(bmfs, dst_path);
+	if ((err != 0) && (err != -EEXIST))
+	{
+		fprintf(stderr, "Failed to create '%s'.\n", dst_path);
+		fprintf(stderr, "Reason: %s\n", strerror(-err));
+		fclose(src);
+		return EXIT_FAILURE;
+	}
+
+	err = bmfs_open_file(bmfs, &dst, dst_path);
+	if (err != 0)
+	{
+		fprintf(stderr, "Failed to open '%s' for writing.\n", dst_path);
+		fprintf(stderr ,"Reason: %s\n", strerror(-err));
+		fclose(src);
+		return EXIT_FAILURE;
+	}
+
+	bmfs_file_set_mode(&dst, BMFS_FILE_MODE_WRITE);
+
+	size_t buf_size = 4096;
+
+	void *buf = malloc(buf_size);
+	if (buf == NULL)
+	{
+		fprintf(stderr, "Failed to allocate memory for data transfer.\n");
+		fclose(src);
+		bmfs_file_close(&dst);
+		return EXIT_FAILURE;
+	}
+
+	while (!feof(src))
+	{
+		size_t read_result = fread(buf, 1, buf_size, src);
+		if (ferror(src))
+		{
+			err = errno;
+			fprintf(stderr, "Error: Failed to read from '%s'.\n", src_path);
+			fprintf(stderr, "Reason: %s\n", strerror(err));
+			fclose(src);
+			bmfs_file_close(&dst);
+			free(buf);
+			return EXIT_FAILURE;
+		}
+
+		uint64_t write_result = 0;
+
+		err = bmfs_file_write(&dst, buf, read_result, &write_result);
+		if ((err != 0) || (write_result != read_result))
+		{
+			if (err == 0)
+				err = -EIO;
+
+			fprintf(stderr, "Error: Failed to write to '%s'.\n", dst_path);
+			fprintf(stderr, "Reason: %s\n", strerror(-err));
+			fclose(src);
+			bmfs_file_close(&dst);
+			free(buf);
+			return EXIT_FAILURE;
+		}
+	}
+
+	free(buf);
+
+	fclose(src);
+
+	bmfs_file_close(&dst);
+
+	return EXIT_SUCCESS;
 }
 
 static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
@@ -493,6 +683,9 @@ static void print_help(const char *argv0, int argc, const char **argv)
 		break;
 	case BMFS_CMD_UNKNOWN:
 		fprintf(stderr, "Error: Unknown command '%s'.\n", argv[0]);
+		break;
+	case BMFS_CMD_CP:
+		printf("%s cp SOURCE DESTINATION\n", argv[0]);
 		break;
 	case BMFS_CMD_FORMAT:
 		printf("%s format [options]\n", argv0);
