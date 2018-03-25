@@ -6,6 +6,7 @@
  */
 
 #include <bmfs/bmfs.h>
+#include <bmfs/sspec.h>
 #include <bmfs/stdlib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -265,9 +266,15 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 {
 	int i = 0;
 
-	unsigned long long int disk_size = BMFS_DEFAULT_DISK_SIZE / (1024 * 1024);
-
 	unsigned int force_flag = 0;
+
+	struct bmfs_sspec disk_size;
+
+	if (bmfs_sspec_parse(&disk_size, "64MiB") != 0)
+	{
+		fprintf(stderr, "Failed to parse default disk size.\n");
+		return EXIT_FAILURE;
+	}
 
 	while (i < argc)
 	{
@@ -282,7 +289,7 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 				fprintf(stderr, "Error: Disk size not specified.\n");
 				return EXIT_FAILURE;
 			}
-			if (sscanf(argv[i + 1], "%llu", &disk_size) != 1)
+			if (bmfs_sspec_parse(&disk_size, argv[i + 1]))
 			{
 				fprintf(stderr, "Error: Failed to parse disk size '%s'.\n", argv[i]);
 				return EXIT_FAILURE;
@@ -302,13 +309,19 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 		i++;
 	}
 
-	if (disk_size == 0)
+	uint64_t disk_byte_count = 0;
+
+	if (bmfs_sspec_bytes(&disk_size, &disk_byte_count) != 0)
+	{
+		fprintf(stderr, "Error: Disk size too large.\n");
+		return EXIT_FAILURE;
+	}
+
+	if (disk_byte_count == 0)
 	{
 		fprintf(stderr, "Error: Disk size must be greater than zero.\n");
 		return EXIT_FAILURE;
 	}
-
-	disk_size *= 1024 * 1024;
 
 	int err = bmfs_check_signature(bmfs);
 	if ((err == 0) && !force_flag)
@@ -318,7 +331,7 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 		return EXIT_FAILURE;
 	}
 
-	err = bmfs_disk_seek(bmfs->Disk, disk_size - 1, BMFS_SEEK_SET);
+	err = bmfs_disk_seek(bmfs->Disk, disk_byte_count - 1, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
@@ -326,7 +339,7 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 	if (err != 0)
 		return err;
 
-	err = bmfs_format(bmfs, (uint64_t) disk_size);
+	err = bmfs_format(bmfs, (uint64_t) disk_byte_count);
 	if (err != 0)
 		return err;
 
@@ -692,7 +705,7 @@ static void print_help(const char *argv0, int argc, const char **argv)
 		printf("\n");
 		printf("Options\n");
 		printf("\t-f, --force     : Format an existing file system.\n");
-		printf("\t-s, --size SIZE : Specify the size, in mebibytes, of the file system.\n");
+		printf("\t-s, --size SIZE : Specify the size of the file system.\n");
 		break;
 	case BMFS_CMD_MKDIR:
 		printf("%s mkdir PATH\n", argv0);
