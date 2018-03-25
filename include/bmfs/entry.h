@@ -21,7 +21,7 @@ extern "C" {
 
 struct BMFSDisk;
 
-/** @defgroup entry-api Entries
+/** @defgroup entry-api Entry API
  * Examine and manipulate file entry data.
  */
 

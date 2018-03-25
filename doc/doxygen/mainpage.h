@@ -4,17 +4,19 @@
  *
  * <h3>Getting Started</h3>
  *
- * At anytime the BMFS API is to be used, the very first
+ * At anytime the library is to be used, the very first
  * thing to do is to initialize the disk structure.
  *
  * Initializing the disk structure requires that the seek,
  * tell, read and write methods be implemented and assigned
- * to the structure. See the @ref BMFSDisk structure for
+ * to the structure. See the @ref disk-api for
  * details. If you plan on using a file to represent a disk,
- * you can use @ref bmfs_disk_init_file.
+ * you can use the @ref filedisk-api to make it easier.
  *
- * Once the disk is initialized, you can use any of the other
- * functions in the library (see Modules for details).
+ * Once the disk is initialized, you can create the file system
+ * structure using the @ref fs-api. Be sure to assign the disk
+ * to the file system structure, using @ref bmfs_set_disk, before
+ * calling any of the file system functions.
  *
  * <h3>Error Checking</h3>
  *

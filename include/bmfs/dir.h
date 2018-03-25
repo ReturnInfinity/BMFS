@@ -19,11 +19,12 @@ extern "C" {
 struct BMFSDisk;
 
 /** @defgroup dir-api Directory API
- * Directory traversal, entry addition
- * or deletion and sorting.
+ * Used for reading directory entries.
  */
 
-/** A BMFS directory.
+/** This is a directory structure.
+ * It is used for examining the contents
+ * of a directory.
  * @ingroup dir-api
  */
 

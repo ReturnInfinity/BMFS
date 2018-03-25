@@ -24,6 +24,13 @@ extern "C" {
  * Used for binding a disk to a file.
  * */
 
+/** This structure is made for making it
+ * easy to bind a file to a disk structure.
+ * It can be used to open and close the file
+ * as well.
+ * @ingroup filedisk-api
+ * */
+
 struct BMFSFileDisk
 {
 	/** The file containing the disk data. */

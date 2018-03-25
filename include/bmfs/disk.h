@@ -18,8 +18,7 @@ extern "C" {
 #endif
 
 /** @defgroup disk-api Disk API
- * Read and write from a BMFS formatted
- * disk.
+ * Read and write from a formatted disk.
  */
 
 /** Used with the function @ref bmfs_disk_seek
