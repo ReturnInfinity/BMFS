@@ -21,10 +21,12 @@ libs += -lbmfs-stdlib
 
 ifndef NO_UTIL
 utils += bmfs
+install_targets += bmfs-install
 endif
 
 ifndef NO_FUSE
 utils += bmfs-fuse
+install_targets += bmfs-fuse-install
 CFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
@@ -48,8 +50,18 @@ clean:
 test:
 
 .PHONY: install
-install: $(utils)
+install: $(install_targets)
+
+.PHONY: bmfs-bin-install
+bmfs-bin-install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp --update $(utils) $(DESTDIR)$(PREFIX)/bin/
+
+.PHONY: bmfs-install
+bmfs-install: bmfs bmfs-bin-install
+	cp --update $< $(DESTDIR)$(PREFIX)/bin/
+
+.PHONY: bmfs-fuse-install
+bmfs-fuse-install: bmfs-fuse bmfs-bin-install
+	cp --update $< $(DESTDIR)$(PREFIX)/bin/
 
 $(V).SILENT:
