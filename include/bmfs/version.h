@@ -15,14 +15,14 @@
  * certain prototypes or functions.
  * */
 
-#define BMFS_VERSION 0x020000
+#define BMFS_VERSION 0x020100
 
 /** The version string of the file system.
  * This may be used to print to a terminal
  * or file, for informational purposes.
  * */
 
-#define BMFS_VERSION_STRING "BareMetal File System v2.0.0"
+#define BMFS_VERSION_STRING "BareMetal File System v2.1.0"
 
 #endif /* BMFS_VERSION_H */
 
