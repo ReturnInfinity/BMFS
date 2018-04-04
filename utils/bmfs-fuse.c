@@ -243,7 +243,7 @@ static int bmfs_fuse_read(const char *path, char *buf, size_t size, off_t offset
 	if (err != 0)
 		return err;
 
-	uint64_t read_count = 0;
+	bmfs_uint64 read_count = 0;
 
 	err = bmfs_file_read(&file, buf, size, &read_count);
 	if (err != 0)
@@ -278,7 +278,7 @@ static int bmfs_fuse_write(const char *path, const char *buf, size_t size, off_t
 	if (err != 0)
 		return err;
 
-	uint64_t write_count = 0;
+	bmfs_uint64 write_count = 0;
 
 	err = bmfs_file_write(&file, buf, size, &write_count);
 	if (err != 0)
