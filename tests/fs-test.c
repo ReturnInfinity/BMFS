@@ -1,9 +1,9 @@
 #include <bmfs/dir.h>
+#include <bmfs/errno.h>
 #include <bmfs/fs.h>
 #include <bmfs/limits.h>
 #include <bmfs/ramdisk.h>
 
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -62,7 +62,7 @@ int main(void)
 	/* Test that the same file can't be created twice. */
 
 	err = bmfs_create_file(&fs, "/tmp/a.txt");
-	bmfs_assert(err == -EEXIST);
+	bmfs_assert(err == BMFS_EEXIST);
 
 	/* Test the creation of subdirectories. */
 
@@ -78,7 +78,7 @@ int main(void)
 	/* Test that the same directory can't be created twice. */
 
 	err = bmfs_create_dir(&fs, "/usr/local");
-	bmfs_assert(err == -EEXIST);
+	bmfs_assert(err == BMFS_EEXIST);
 
 	/* Test that directories can be opened. */
 
