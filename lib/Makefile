@@ -1,6 +1,7 @@
 TOP ?= ..
+CONFIG ?= full
 
-include $(TOP)/make/config.mk
+include $(TOP)/make/$(CONFIG)-config.mk
 include $(TOP)/make/patterns.mk
 
 VPATH += $(TOP)/include/bmfs
@@ -12,7 +13,7 @@ else
 CFLAGS += -O3
 endif
 
-CFLAGS += -fno-stack-protector -fomit-frame-pointer -mno-red-zone -fPIC
+CFLAGS += -fPIC
 CFLAGS += -I$(TOP)/include
 
 libfiles += header.o
@@ -30,7 +31,9 @@ stdlibfiles += time.o
 stdlibfiles += size.o
 
 libs += libbmfs.a
+ifndef NO_STDLIB
 libs += libbmfs-stdlib.a
+endif
 
 .PHONY: all
 all: $(libs)

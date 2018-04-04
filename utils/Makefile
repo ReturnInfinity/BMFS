@@ -1,7 +1,7 @@
-
 TOP ?= ..
+CONFIG ?= full
 
-include $(TOP)/make/config.mk
+include $(TOP)/make/$(CONFIG)-config.mk
 include $(TOP)/make/patterns.mk
 
 VPATH += $(TOP)/include/bmfs
@@ -19,7 +19,9 @@ CFLAGS += -I$(TOP)/include
 libs += -lbmfs
 libs += -lbmfs-stdlib
 
+ifndef NO_UTIL
 utils += bmfs
+endif
 
 ifndef NO_FUSE
 utils += bmfs-fuse

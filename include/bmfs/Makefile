@@ -1,4 +1,7 @@
-include $(TOP)/make/config.mk
+TOP ?= ../..
+CONFIG ?= full
+
+include $(TOP)/make/$(CONFIG)-config.mk
 
 .PHONY: all
 all:

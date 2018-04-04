@@ -1,6 +1,7 @@
 TOP ?= ..
+CONFIG ?= full
 
-include $(TOP)/make/config.mk
+include $(TOP)/make/$(CONFIG)-config.mk
 include $(TOP)/make/patterns.mk
 
 VPATH += $(TOP)/include/bmfs
@@ -15,6 +16,7 @@ endif
 
 CFLAGS += -I$(TOP)/include
 
+ifndef NO_TESTS
 tests += dir-test
 tests += disk-test
 tests += fs-test
@@ -22,6 +24,7 @@ tests += path-test
 tests += sizeof-test
 tests += size-test
 tests += table-test
+endif
 
 libs += -lbmfs -lbmfs-stdlib
 
