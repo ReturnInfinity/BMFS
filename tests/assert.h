@@ -2,6 +2,7 @@
 #define BMFS_ASSERT_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifndef bmfs_assert
 #define bmfs_assert(expr)                                                                     \

@@ -8,22 +8,23 @@
 #include <bmfs/fs.h>
 
 #include <bmfs/disk.h>
+#include <bmfs/dir.h>
 #include <bmfs/entry.h>
+#include <bmfs/errno.h>
 #include <bmfs/file.h>
 #include <bmfs/path.h>
 #include <bmfs/table.h>
 #include <bmfs/time.h>
-
-#include <errno.h>
+#include <bmfs/types.h>
 
 static int is_entry(struct BMFSEntry *entry,
                     const char *name,
-                    uint64_t name_size) {
+                    bmfs_uint64 name_size) {
 
 	if ((name_size == 0) || (name_size >= BMFS_FILE_NAME_MAX))
 		return 0;
 
-	for (uint64_t i = 0; i < name_size; i++) {
+	for (bmfs_uint64 i = 0; i < name_size; i++) {
 		if (name[i] != entry->Name[i])
 			return 0;
 	}
@@ -36,9 +37,9 @@ static int add_entry(struct BMFS *fs,
                      const struct BMFSEntry *entry)
 {
 	if ((root->Size + BMFS_ENTRY_SIZE) > BMFS_BLOCK_SIZE)
-		return -ENOSPC;
+		return BMFS_ENOSPC;
 
-	uint64_t pos = root->Offset + root->Size;
+	bmfs_uint64 pos = root->Offset + root->Size;
 
 	int err = bmfs_disk_seek(fs->Disk, pos, BMFS_SEEK_SET);
 	if (err != 0)
@@ -67,15 +68,15 @@ static int find_entry(struct BMFS *fs,
                       const struct BMFSEntry *parent_dir,
                       struct BMFSEntry *entry,
                       const char *name,
-                      uint64_t name_size)
+                      bmfs_uint64 name_size)
 {
 	int err = bmfs_disk_seek(fs->Disk, parent_dir->Offset, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
-	uint64_t pos = 0;
+	bmfs_uint64 pos = 0;
 
-	uint64_t pos_max = parent_dir->Size;
+	bmfs_uint64 pos_max = parent_dir->Size;
 
 	while (pos < pos_max) {
 
@@ -93,20 +94,20 @@ static int find_entry(struct BMFS *fs,
 		pos += BMFS_ENTRY_SIZE;
 	}
 
-	return -ENOENT;
+	return BMFS_ENOENT;
 }
 
 static int entry_exists(struct BMFS *fs,
                         const struct BMFSEntry *parent_dir,
                         const char *name,
-                        uint64_t name_size)
+                        bmfs_uint64 name_size)
 {
 	struct BMFSEntry tmp_entry;
 
 	bmfs_entry_init(&tmp_entry);
 
 	int err = find_entry(fs, parent_dir, &tmp_entry, name, name_size);
-	if (err == -ENOENT)
+	if (err == BMFS_ENOENT)
 		return 0;
 	else
 		return 1;
@@ -116,11 +117,11 @@ static int find_dir(struct BMFS *fs,
                     const struct BMFSEntry *parent_dir,
                     struct BMFSDir *dir,
                     const char *name,
-                    uint64_t name_size)
+                    bmfs_uint64 name_size)
 {
-	uint64_t pos = 0;
+	bmfs_uint64 pos = 0;
 
-	uint64_t pos_max = parent_dir->Size;
+	bmfs_uint64 pos_max = parent_dir->Size;
 
 	bmfs_dir_init(dir);
 
@@ -128,18 +129,18 @@ static int find_dir(struct BMFS *fs,
 
 	while (pos < pos_max) {
 
-		int64_t offset = 0;
-		offset += (int64_t) parent_dir->Offset;
-		offset += (int64_t) pos;
+		bmfs_uint64 offset = 0;
+		offset += parent_dir->Offset;
+		offset += pos;
 
 		int err = bmfs_disk_seek(fs->Disk, offset, BMFS_SEEK_SET);
 		if (err != 0)
 			return err;
 
 		err = bmfs_dir_import(dir);
-		if ((err != 0) && (err == -ENOTDIR) && (is_entry(&dir->Entry, name, name_size)))
+		if ((err != 0) && (err == BMFS_ENOTDIR) && (is_entry(&dir->Entry, name, name_size)))
 			return err;
-		else if ((err != 0) && (err != -ENOTDIR))
+		else if ((err != 0) && (err != BMFS_ENOTDIR))
 			return err;
 		else if ((err == 0) && (is_entry(&dir->Entry, name, name_size)))
 			return 0;
@@ -147,24 +148,24 @@ static int find_dir(struct BMFS *fs,
 		pos += BMFS_ENTRY_SIZE;
 	}
 
-	return -ENOENT;
+	return BMFS_ENOENT;
 }
 
 static int find_file(struct BMFS *fs,
                     const struct BMFSEntry *parent_dir,
                     struct BMFSFile *file,
                     const char *name,
-                    uint64_t name_size)
+                    bmfs_uint64 name_size)
 {
-	uint64_t pos = 0;
+	bmfs_uint64 pos = 0;
 
-	uint64_t pos_max = parent_dir->Size;
+	bmfs_uint64 pos_max = parent_dir->Size;
 
 	while (pos < pos_max) {
 
-		int64_t offset = 0;
-		offset += (int64_t) parent_dir->Offset;
-		offset += (int64_t) pos;
+		bmfs_uint64 offset = 0;
+		offset += parent_dir->Offset;
+		offset += pos;
 
 		int err = bmfs_disk_seek(fs->Disk, offset, BMFS_SEEK_SET);
 		if (err != 0)
@@ -173,7 +174,7 @@ static int find_file(struct BMFS *fs,
 		err = bmfs_file_import(file);
 		if (err != 0)
 		{
-			if (err == -EISDIR)
+			if (err == BMFS_EISDIR)
 				return err;
 		}
 		else if (is_entry(&file->Entry, name, name_size))
@@ -184,7 +185,7 @@ static int find_file(struct BMFS *fs,
 		pos += BMFS_ENTRY_SIZE;
 	}
 
-	return -ENOENT;
+	return BMFS_ENOENT;
 }
 
 static int create_entry(struct BMFS *fs,
@@ -193,7 +194,7 @@ static int create_entry(struct BMFS *fs,
 {
 	/* Get the length of the path. */
 
-	uint64_t path_size = 0;
+	bmfs_uint64 path_size = 0;
 
 	while (path_string[path_size] != 0)
 		path_size++;
@@ -246,7 +247,7 @@ static int create_entry(struct BMFS *fs,
 
 	while ((bmfs_path_split_root(&path, &parent) == 0) && (path.Length > 0)) {
 
-		uint64_t name_size = parent.Length;
+		bmfs_uint64 name_size = parent.Length;
 		if (name_size == 0) {
 			/* Reached the base name */
 			break;
@@ -265,13 +266,13 @@ static int create_entry(struct BMFS *fs,
 
 	/* Copy over file name */
 
-	uint64_t name_size = parent.Length;
+	bmfs_uint64 name_size = parent.Length;
 	if ((name_size == 0) || (name_size >= BMFS_FILE_NAME_MAX))
-		return -EINVAL;
+		return BMFS_EINVAL;
 
 	const char *name = parent.String;
 
-	for (uint64_t i = 0; i < name_size; i++)
+	for (bmfs_uint64 i = 0; i < name_size; i++)
 		entry->Name[i] = name[i];
 
 	entry->Name[name_size] = 0;
@@ -279,7 +280,7 @@ static int create_entry(struct BMFS *fs,
 	/* Make sure that the entry doesn't exist. */
 
 	if (entry_exists(fs, &root, name, name_size))
-		return -EEXIST;
+		return BMFS_EEXIST;
 
 	err = add_entry(fs, &root, entry);
 	if (err != 0)
@@ -294,7 +295,7 @@ static int open_dir(struct BMFS *fs,
 {
 	/* Get the length of the path. */
 
-	uint64_t path_size = 0;
+	bmfs_uint64 path_size = 0;
 
 	while (path_string[path_size] != 0)
 		path_size++;
@@ -347,7 +348,7 @@ static int open_dir(struct BMFS *fs,
 
 	while ((bmfs_path_split_root(&path, &parent) == 0) && (path.Length > 0))
 	{
-		uint64_t name_size = parent.Length;
+		bmfs_uint64 name_size = parent.Length;
 		if (name_size == 0) {
 			/* Reached the base name */
 			break;
@@ -366,9 +367,9 @@ static int open_dir(struct BMFS *fs,
 
 	/* Open the entry */
 
-	uint64_t name_size = parent.Length;
+	bmfs_uint64 name_size = parent.Length;
 	if (name_size >= BMFS_FILE_NAME_MAX)
-		return -EINVAL;
+		return BMFS_EINVAL;
 
 	if (name_size == 0)
 	{
@@ -404,7 +405,7 @@ static int open_file(struct BMFS *fs,
 
 	/* Get the length of the path. */
 
-	uint64_t path_size = 0;
+	bmfs_uint64 path_size = 0;
 
 	while (path_string[path_size] != 0)
 		path_size++;
@@ -457,7 +458,7 @@ static int open_file(struct BMFS *fs,
 
 	while ((bmfs_path_split_root(&path, &parent) == 0) && (path.Length > 0))
 	{
-		uint64_t name_size = parent.Length;
+		bmfs_uint64 name_size = parent.Length;
 		if (name_size == 0) {
 			/* Reached the base name */
 			break;
@@ -476,15 +477,15 @@ static int open_file(struct BMFS *fs,
 
 	/* Open the entry */
 
-	uint64_t name_size = parent.Length;
+	bmfs_uint64 name_size = parent.Length;
 	if (name_size == 0)
 	{
 		/* The root directory was passed. */
-		return -EISDIR;
+		return BMFS_EISDIR;
 	}
 	else if (name_size >= BMFS_FILE_NAME_MAX)
 	{
-		return -EINVAL;
+		return BMFS_EINVAL;
 	}
 
 	const char *name = parent.String;
@@ -501,34 +502,36 @@ static int open_file(struct BMFS *fs,
 void bmfs_init(struct BMFS *fs)
 {
 	bmfs_header_init(&fs->Header);
-	fs->Disk = NULL;
+	fs->Disk = BMFS_NULL;
 }
 
 void bmfs_done(struct BMFS *fs)
 {
-	if (fs->Disk != NULL) {
+	if (fs->Disk != BMFS_NULL) {
 		bmfs_disk_done(fs->Disk);
-		fs->Disk = NULL;
+		fs->Disk = BMFS_NULL;
 	}
 }
 
 void bmfs_set_disk(struct BMFS *fs,
                    struct BMFSDisk *disk) {
-	if ((fs != NULL) && (disk != NULL)) {
+	if ((fs != BMFS_NULL) && (disk != BMFS_NULL)) {
 		fs->Disk = disk;
 	}
 }
 
-int bmfs_allocate(struct BMFS *fs, uint64_t size, uint64_t *offset_ptr)
+int bmfs_allocate(struct BMFS *fs, bmfs_uint64 size, bmfs_uint64 *offset_ptr)
 {
-	if ((fs == NULL) || (fs->Disk == NULL) || (offset_ptr == NULL))
-		return -EFAULT;
+	if ((fs == BMFS_NULL)
+	 || (fs->Disk == BMFS_NULL)
+	 || (offset_ptr == BMFS_NULL))
+		return BMFS_EFAULT;
 
 	/* Check to see if the allocation
 	 * table is already full. */
 
 	if (fs->Header.TableEntryCount >= BMFS_TABLE_ENTRY_COUNT_MAX) {
-		return -ENOSPC;
+		return BMFS_ENOSPC;
 	}
 
 	struct BMFSTableEntry entry;
@@ -547,7 +550,7 @@ int bmfs_allocate(struct BMFS *fs, uint64_t size, uint64_t *offset_ptr)
 
 	if (fs->Header.TableEntryCount > 0) {
 
-		uint64_t entry_offset = 0;
+		bmfs_uint64 entry_offset = 0;
 		entry_offset += fs->Header.TableOffset;
 		entry_offset += (fs->Header.TableEntryCount - 1) * sizeof(struct BMFSTableEntry);
 
@@ -569,12 +572,12 @@ int bmfs_allocate(struct BMFS *fs, uint64_t size, uint64_t *offset_ptr)
 	/* Check to make sure that the offset can fit into the disk. */
 
 	if ((entry.Offset + entry.Reserved) > fs->Header.TotalSize) {
-		return -ENOSPC;
+		return BMFS_ENOSPC;
 	}
 
 	/* Write the table entry. */
 
-	uint64_t entry_offset = 0;
+	bmfs_uint64 entry_offset = 0;
 	entry_offset += fs->Header.TableOffset;
 	entry_offset += sizeof(struct BMFSTableEntry) * fs->Header.TableEntryCount;
 
@@ -605,15 +608,15 @@ int bmfs_allocate(struct BMFS *fs, uint64_t size, uint64_t *offset_ptr)
 	return 0;
 }
 
-int bmfs_allocate_mebibytes(struct BMFS *fs, uint64_t mebibytes, uint64_t *offset)
+int bmfs_allocate_mebibytes(struct BMFS *fs, bmfs_uint64 mebibytes, bmfs_uint64 *offset)
 {
 	return bmfs_allocate(fs, mebibytes * 1024 * 1024, offset);
 }
 
 int bmfs_check_signature(struct BMFS *fs)
 {
-	if (fs->Disk == NULL)
-		return -EFAULT;
+	if (fs->Disk == BMFS_NULL)
+		return BMFS_EFAULT;
 
 	int err = bmfs_disk_seek(fs->Disk, 0, BMFS_SEEK_SET);
 	if (err != 0)
@@ -635,17 +638,17 @@ int bmfs_check_signature(struct BMFS *fs)
 	 || (header.Signature[5] != 0)
 	 || (header.Signature[6] != 0)
 	 || (header.Signature[7] != 0))
-		return -EINVAL;
+		return BMFS_EINVAL;
 
 	return 0;
 }
 
 int bmfs_create_file(struct BMFS *fs, const char *path)
 {
-	if ((fs == NULL) || (fs->Disk == NULL) || (path == NULL))
-		return -EFAULT;
+	if ((fs == BMFS_NULL) || (fs->Disk == BMFS_NULL) || (path == BMFS_NULL))
+		return BMFS_EFAULT;
 
-	uint64_t offset = 0;
+	bmfs_uint64 offset = 0;
 
 	int err = bmfs_allocate_mebibytes(fs, 2, &offset);
 	if (err != 0)
@@ -667,10 +670,10 @@ int bmfs_create_file(struct BMFS *fs, const char *path)
 
 int bmfs_create_dir(struct BMFS *fs, const char *path)
 {
-	if ((fs == NULL) || (fs->Disk == NULL) || (path == NULL))
-		return -EFAULT;
+	if ((fs == BMFS_NULL) || (fs->Disk == BMFS_NULL) || (path == BMFS_NULL))
+		return BMFS_EFAULT;
 
-	uint64_t offset = 0;
+	bmfs_uint64 offset = 0;
 
 	int err = bmfs_allocate_mebibytes(fs, 2 /* 2MiB */, &offset);
 	if (err != 0)
@@ -694,8 +697,8 @@ int bmfs_open_dir(struct BMFS *fs,
                   struct BMFSDir *dir,
                   const char *path)
 {
-	if ((fs == NULL) || (dir == NULL))
-		return -EFAULT;
+	if ((fs == BMFS_NULL) || (dir == BMFS_NULL))
+		return BMFS_EFAULT;
 
 	int err = open_dir(fs, dir, path);
 	if (err != 0)
@@ -708,8 +711,8 @@ int bmfs_open_file(struct BMFS *fs,
                    struct BMFSFile *file,
                    const char *path)
 {
-	if ((fs == NULL) || (file == NULL) || (path == NULL))
-		return -EFAULT;
+	if ((fs == BMFS_NULL) || (file == BMFS_NULL) || (path == BMFS_NULL))
+		return BMFS_EFAULT;
 
 	return open_file(fs, file, path);
 }
@@ -725,13 +728,13 @@ int bmfs_delete_file(struct BMFS *fs, const char *path)
 	(void) fs;
 	(void) path;
 
-	return -ENOSYS;
+	return BMFS_ENOSYS;
 }
 
 int bmfs_import(struct BMFS *fs)
 {
-	if ((fs == NULL) || (fs->Disk == NULL))
-		return -EFAULT;
+	if ((fs == BMFS_NULL) || (fs->Disk == BMFS_NULL))
+		return BMFS_EFAULT;
 
 	int err = bmfs_disk_seek(fs->Disk, 0, BMFS_SEEK_SET);
 	if (err != 0)
@@ -744,7 +747,7 @@ int bmfs_import(struct BMFS *fs)
 	return 0;
 }
 
-int bmfs_format(struct BMFS *fs, uint64_t size)
+int bmfs_format(struct BMFS *fs, bmfs_uint64 size)
 {
 	/* Write the file system header. */
 
@@ -764,7 +767,7 @@ int bmfs_format(struct BMFS *fs, uint64_t size)
 	if (err != 0)
 		return err;
 
-	for (uint64_t i = 0; i < BMFS_TABLE_ENTRY_COUNT_MAX; i++) {
+	for (bmfs_uint64 i = 0; i < BMFS_TABLE_ENTRY_COUNT_MAX; i++) {
 
 		struct BMFSTableEntry table_entry;
 

@@ -8,14 +8,13 @@
 #include <bmfs/file.h>
 
 #include <bmfs/disk.h>
+#include <bmfs/errno.h>
 #include <bmfs/time.h>
-
-#include <errno.h>
 
 void bmfs_file_init(struct BMFSFile *file)
 {
 	bmfs_entry_init(&file->Entry);
-	file->Disk = NULL;
+	file->Disk = BMFS_NULL;
 	file->CurrentPosition = 0;
 	file->ReservedSize = 0;
 	file->Mode = BMFS_FILE_MODE_READ;
@@ -43,7 +42,7 @@ void bmfs_file_close(struct BMFSFile *file)
 void bmfs_file_set_disk(struct BMFSFile *file,
                         struct BMFSDisk *disk)
 {
-	if ((file != NULL) && (disk != NULL))
+	if ((file != BMFS_NULL) && (disk != BMFS_NULL))
 	{
 		file->Disk = disk;
 	}
@@ -52,7 +51,7 @@ void bmfs_file_set_disk(struct BMFSFile *file,
 void bmfs_file_set_mode(struct BMFSFile *file,
                         enum BMFSFileMode mode)
 {
-	if (file != NULL)
+	if (file != BMFS_NULL)
 		file->Mode = mode;
 }
 
@@ -77,12 +76,12 @@ int bmfs_file_eof(const struct BMFSFile *file)
 
 int bmfs_file_read(struct BMFSFile *file,
                    void *buf,
-                   uint64_t buf_size,
-                   uint64_t *read_result_ptr)
+                   bmfs_uint64 buf_size,
+                   bmfs_uint64 *read_result_ptr)
 {
 	if ((file->Mode != BMFS_FILE_MODE_READ)
 	 && (file->Mode != BMFS_FILE_MODE_RW))
-		return -EINVAL;
+		return BMFS_EINVAL;
 
 	if (file->CurrentPosition > file->Entry.Size)
 		file->CurrentPosition = file->Entry.Size;
@@ -94,7 +93,7 @@ int bmfs_file_read(struct BMFSFile *file,
 	if ((file->CurrentPosition + buf_size) > file->Entry.Size)
 		buf_size = file->Entry.Size - file->CurrentPosition;
 
-	uint64_t read_result = 0;
+	bmfs_uint64 read_result = 0;
 
 	err = bmfs_disk_read(file->Disk, buf, buf_size, &read_result);
 	if (err != 0)
@@ -102,7 +101,7 @@ int bmfs_file_read(struct BMFSFile *file,
 
 	file->CurrentPosition += read_result;
 
-	if (read_result_ptr != NULL)
+	if (read_result_ptr != BMFS_NULL)
 		*read_result_ptr = read_result;
 
 	return 0;
@@ -110,20 +109,20 @@ int bmfs_file_read(struct BMFSFile *file,
 
 int bmfs_file_write(struct BMFSFile *file,
                     const void *buf,
-                    uint64_t buf_size,
-                    uint64_t *write_result_ptr)
+                    bmfs_uint64 buf_size,
+                    bmfs_uint64 *write_result_ptr)
 {
 	/* TODO : check how much space is reserved for the file. */
 
 	if ((file->Mode != BMFS_FILE_MODE_WRITE)
 	 && (file->Mode != BMFS_FILE_MODE_RW))
-		return -EINVAL;
+		return BMFS_EINVAL;
 
 	int err = bmfs_file_seek(file, file->CurrentPosition, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
 
-	uint64_t write_result = 0;
+	bmfs_uint64 write_result = 0;
 
 	err = bmfs_disk_write(file->Disk, buf, buf_size, &write_result);
 	if (err != 0)
@@ -131,7 +130,7 @@ int bmfs_file_write(struct BMFSFile *file,
 
 	file->CurrentPosition += write_result;
 
-	if (write_result_ptr != NULL)
+	if (write_result_ptr != BMFS_NULL)
 		*write_result_ptr = write_result;
 
 	if (file->Entry.Size < file->CurrentPosition)
@@ -141,29 +140,29 @@ int bmfs_file_write(struct BMFSFile *file,
 }
 
 int bmfs_file_seek(struct BMFSFile *file,
-                   int64_t pos,
+                   bmfs_uint64 pos,
                    int whence)
 {
-	uint64_t next_pos = 0;
+	bmfs_uint64 next_pos = 0;
 
 	if (whence == BMFS_SEEK_SET)
 	{
 		/* TODO : allocate more space for large seeks */
-		if (pos > ((int64_t) file->Entry.Size))
-			return -EINVAL;
+		if (pos > file->Entry.Size)
+			return BMFS_EINVAL;
 
-		next_pos = (uint64_t) pos;
+		next_pos = pos;
 	}
 	else if (whence == BMFS_SEEK_END)
 	{
-		if ((pos * -1) > ((int64_t) file->Entry.Size))
-			return -EINVAL;
+		if (pos > file->Entry.Size)
+			return BMFS_EINVAL;
 
-		next_pos = (uint64_t)(((int64_t) file->Entry.Size) - pos);
+		next_pos = file->Entry.Size - pos;
 	}
 	else
 	{
-		return -EINVAL;
+		return BMFS_EINVAL;
 	}
 
 	file->CurrentPosition = next_pos;
@@ -176,10 +175,10 @@ int bmfs_file_seek(struct BMFSFile *file,
 }
 
 int bmfs_file_tell(struct BMFSFile *file,
-                   uint64_t *pos)
+                   bmfs_uint64 *pos)
 {
-	if ((file == NULL) || (pos == NULL))
-		return -EFAULT;
+	if ((file == BMFS_NULL) || (pos == BMFS_NULL))
+		return BMFS_EFAULT;
 
 	*pos = file->CurrentPosition;
 

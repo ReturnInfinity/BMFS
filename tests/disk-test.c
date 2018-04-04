@@ -2,6 +2,8 @@
 
 #include "assert.h"
 
+#include <stdlib.h>
+
 int main(void)
 {
 	/* TODO : test disk functions */

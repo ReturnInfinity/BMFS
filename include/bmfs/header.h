@@ -10,7 +10,7 @@
 #ifndef BMFS_HEADER_H
 #define BMFS_HEADER_H
 
-#include <stdint.h>
+#include <bmfs/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,16 +38,16 @@ struct BMFSHeader
 	 * BMFS formatted. */
 	char Signature[8];
 	/** The offset, in bytes, of the root directory.*/
-	uint64_t RootOffset;
+	bmfs_uint64 RootOffset;
 	/** The offset, in bytes, of the allocation table. */
-	uint64_t TableOffset;
+	bmfs_uint64 TableOffset;
 	/** The number of used entries in the allocation table. */
-	uint64_t TableEntryCount;
+	bmfs_uint64 TableEntryCount;
 	/** The total size allowed for the file system to grow. */
-	uint64_t TotalSize;
+	bmfs_uint64 TotalSize;
 	/** Padding until the 512-byte marker.
 	 * This space is alos reserved for future use. */
-	uint64_t Reserved[59];
+	bmfs_uint64 Reserved[59];
 };
 
 /** Initializes a file system header.

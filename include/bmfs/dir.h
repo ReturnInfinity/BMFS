@@ -38,13 +38,13 @@ struct BMFSDir
 	/** The offset to the directory entry. This
 	 * is used if an entry is added to this directory,
 	 * and the directory size must be updated. */
-	int64_t EntryOffset;
+	bmfs_uint64 EntryOffset;
 	/** The entry that was last read from the
 	 * client. */
 	struct BMFSEntry CurrentEntry;
 	/** The index of the current entry that the
 	 * next read operation will read. */
-	uint64_t CurrentIndex;
+	bmfs_uint64 CurrentIndex;
 };
 
 /** Initializes a directory.

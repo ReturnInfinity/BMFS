@@ -10,8 +10,7 @@
 #ifndef BMFS_DISK_H
 #define BMFS_DISK_H
 
-#include "entry.h"
-#include "dir.h"
+#include <bmfs/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,24 +46,19 @@ extern "C" {
 struct BMFSDisk
 {
 	/** A pointer used by the disk implementation to
-	 * pass to the seek, tell, read and write methods.
-	 */
+	 * pass to the seek, tell, read and write methods. */
 	void *disk;
 	/** Called when the disk is no longer going to be
 	 * used. */
 	void (*done)(void *disk);
-	/** Points the disk to a particular location.
-	 */
-	int (*seek)(void *disk, int64_t offset, int whence);
-	/** Retrieves the current location of the disk.
-	 */
-	int (*tell)(void *disk, int64_t *offset);
-	/** Reads data from the disk.
-	 */
-	int (*read)(void *disk, void *buf, uint64_t len, uint64_t *read_len);
-	/** Writes data to the disk.
-	 */
-	int (*write)(void *disk, const void *buf, uint64_t len, uint64_t *write_len);
+	/** Points the disk to a particular location. */
+	int (*seek)(void *disk, bmfs_uint64 offset, int whence);
+	/** Retrieves the current location of the disk. */
+	int (*tell)(void *disk, bmfs_uint64 *offset);
+	/** Reads data from the disk. */
+	int (*read)(void *disk, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len);
+	/** Writes data to the disk. */
+	int (*write)(void *disk, const void *buf, bmfs_uint64 len, bmfs_uint64 *write_len);
 };
 
 /** Initializes the members of the disk structure
@@ -94,7 +88,7 @@ void bmfs_disk_done(struct BMFSDisk *disk);
  */
 
 int bmfs_disk_seek(struct BMFSDisk *disk,
-                   int64_t offset,
+                   bmfs_uint64 offset,
                    int whence);
 
 /** Retrieves the current offset of the disk.
@@ -107,7 +101,7 @@ int bmfs_disk_seek(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_tell(struct BMFSDisk *disk,
-                   int64_t *offset);
+                   bmfs_uint64 *offset);
 
 /** Reads data from the disk.
  * @param disk An initialized disk.
@@ -126,8 +120,8 @@ int bmfs_disk_tell(struct BMFSDisk *disk,
 
 int bmfs_disk_read(struct BMFSDisk *disk,
                    void *buf,
-                   uint64_t len,
-                   uint64_t *read_len);
+                   bmfs_uint64 len,
+                   bmfs_uint64 *read_len);
 
 /** Writes data to the disk.
  * @param disk An initialized disk.
@@ -145,8 +139,8 @@ int bmfs_disk_read(struct BMFSDisk *disk,
 
 int bmfs_disk_write(struct BMFSDisk *disk,
                     const void *buf,
-                    uint64_t len,
-                    uint64_t *write_len);
+                    bmfs_uint64 len,
+                    bmfs_uint64 *write_len);
 
 /** Determines the amount of bytes
  * available in the disk.
@@ -161,7 +155,7 @@ int bmfs_disk_write(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_bytes(struct BMFSDisk *disk,
-                    uint64_t *bytes);
+                    bmfs_uint64 *bytes);
 
 /** Determines the number of mebibytes
  * available on disk.
@@ -175,7 +169,7 @@ int bmfs_disk_bytes(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_mebibytes(struct BMFSDisk *disk,
-                        uint64_t *mebibytes);
+                        bmfs_uint64 *mebibytes);
 
 /** Determines the number of blocks
  * available on disk.
@@ -189,7 +183,7 @@ int bmfs_disk_mebibytes(struct BMFSDisk *disk,
  */
 
 int bmfs_disk_blocks(struct BMFSDisk *disk,
-                     uint64_t *blocks);
+                     bmfs_uint64 *blocks);
 
 #ifdef __cplusplus
 } /* extern "C" { */

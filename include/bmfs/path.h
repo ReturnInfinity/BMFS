@@ -10,8 +10,7 @@
 #ifndef BMFS_PATH_H
 #define BMFS_PATH_H
 
-#include <stdlib.h>
-#include <stdint.h>
+#include <bmfs/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,22 +19,6 @@ extern "C" {
 /** @defgroup path-api Path API
  * Used for manipulating and reading paths.
  * */
-
-/** Used to walk a path without
- * allocated any memory or parsing
- * any strings.
- * @ingroup path-api
- * */
-
-struct BMFSPathVisitor
-{
-	/** Used to pass data to the callback functions.  */
-	void *data;
-	/** Called when a parent directory is parsed. */
-	int (*visit_parent)(void *data, const char *name, uint64_t name_size);
-	/** Called when the basename of the path is parsed. */
-	int (*visit_basename)(void *data, const char *name, uint64_t name_size);
-};
 
 /** A path that references a file
  * or directory on the file system.
@@ -49,7 +32,7 @@ struct BMFSPath
 	const char *String;
 	/** The number of characters in the path, not
 	 * including the null terminator. */
-	uint64_t Length;
+	bmfs_uint64 Length;
 };
 
 /** Initializes the path to an empty string.
@@ -96,24 +79,7 @@ int bmfs_path_split_root(struct BMFSPath *path,
 
 void bmfs_path_set(struct BMFSPath *path,
                    const char *string,
-                   uint64_t length);
-
-/** Parses the path and calls the visitor
- * function everytime that it matches a parent
- * directory or the basename of the path.
- * This is used for opening or creating files
- * and directories.
- * @param path The path to visit.
- * @param visitor The visitor to call for each
- * path component.
- * @returns Zero if the path is visited entirely
- * without an error from the visitor. If non-zero
- * is returned, it is returned from the visitor.
- * @ingroup path-api
- * */
-
-int bmfs_path_visit(struct BMFSPath *path,
-                    struct BMFSPathVisitor *visitor);
+                   bmfs_uint64 length);
 
 #ifdef __cplusplus
 } /* extern "C" { */

@@ -10,7 +10,7 @@
 #ifndef BMFS_TIME_H
 #define BMFS_TIME_H
 
-#include <stdint.h>
+#include <bmfs/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +25,7 @@ extern "C" {
  * on failure.
  * */
 
-int bmfs_get_current_time(uint64_t *time);
+int bmfs_get_current_time(bmfs_uint64 *time);
 
 #ifdef __cplusplus
 } /* extern "C" { */

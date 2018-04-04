@@ -10,7 +10,7 @@
 #ifndef BMFS_FILEDISK_H
 #define BMFS_FILEDISK_H
 
-#include "bmfs.h"
+#include <bmfs/disk.h>
 
 #include <stdio.h>
 

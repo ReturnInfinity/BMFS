@@ -14,7 +14,7 @@
 #pragma warning(disable : 4244)
 #endif /* _MSC_VER */
 
-static int to_string(uint64_t bytes, char *str, uint64_t str_len);
+static int to_string(bmfs_uint64 bytes, char *str, bmfs_uint64 str_len);
 
 static int to_type(const char *suffix, enum BMFSSizeSuffix *type);
 
@@ -23,9 +23,9 @@ int bmfs_size_parse(struct BMFSSize *size, const char *str)
 	if ((size == NULL) || (str == NULL))
 		return -EFAULT;
 
-	uint64_t value = 0;
+	bmfs_uint64 value = 0;
 
-	uint64_t base = 1;
+	bmfs_uint64 base = 1;
 
 	while (*str)
 	{
@@ -51,9 +51,9 @@ int bmfs_size_parse(struct BMFSSize *size, const char *str)
 	return 0;
 }
 
-int bmfs_size_to_string(const struct BMFSSize *size, char *str, uint64_t str_len)
+int bmfs_size_to_string(const struct BMFSSize *size, char *str, bmfs_uint64 str_len)
 {
-	uint64_t bytes = 0;
+	bmfs_uint64 bytes = 0;
 
 	int err = bmfs_size_bytes(size, &bytes);
 	if (err != 0)
@@ -62,14 +62,14 @@ int bmfs_size_to_string(const struct BMFSSize *size, char *str, uint64_t str_len
 	return to_string(bytes, str, str_len);
 }
 
-int bmfs_size_set_bytes(struct BMFSSize *size, uint64_t bytes)
+int bmfs_size_set_bytes(struct BMFSSize *size, bmfs_uint64 bytes)
 {
 	size->Suffix = BMFS_SIZE_SUFFIX_NONE;
 	size->Value = bytes;
 	return 0;
 }
 
-int bmfs_size_bytes(const struct BMFSSize *size, uint64_t *bytes)
+int bmfs_size_bytes(const struct BMFSSize *size, bmfs_uint64 *bytes)
 {
 	if ((size == NULL) || (bytes == NULL))
 		return -EFAULT;
@@ -96,7 +96,7 @@ int bmfs_size_bytes(const struct BMFSSize *size, uint64_t *bytes)
 	return 0;
 }
 
-int bmfs_size_mebibytes(const struct BMFSSize *size, uint64_t *mebibytes)
+int bmfs_size_mebibytes(const struct BMFSSize *size, bmfs_uint64 *mebibytes)
 {
 	if ((size == NULL)
 	 || (mebibytes == NULL))
@@ -111,11 +111,11 @@ int bmfs_size_mebibytes(const struct BMFSSize *size, uint64_t *mebibytes)
 	return 0;
 }
 
-static int to_string(uint64_t bytes, char *str, uint64_t str_len)
+static int to_string(bmfs_uint64 bytes, char *str, bmfs_uint64 str_len)
 {
-	uint64_t base = 0;
-	uint64_t i = 0;
-	uint64_t n = 0;
+	bmfs_uint64 base = 0;
+	bmfs_uint64 i = 0;
+	bmfs_uint64 n = 0;
 	const char *suffix = NULL;
 
 	/* max string: "1024YiB" plus '\0' = 8 */

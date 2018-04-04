@@ -10,7 +10,7 @@
 #ifndef BMFS_SIZE_H
 #define BMFS_SIZE_H
 
-#include <stdint.h>
+#include <bmfs/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,7 +59,7 @@ struct BMFSSize
 	 * specifications type. For example: a
 	 * value of two and a type of Mebibytes,
 	 * would be equivalent to 2MiB. */
-	uint64_t Value;
+	bmfs_uint64 Value;
 };
 
 /** Parses a string describing a storage capacity.
@@ -91,7 +91,7 @@ int bmfs_size_parse(struct BMFSSize *size, const char *arg);
  * @ingroup size-api
  */
 
-int bmfs_size_to_string(const struct BMFSSize *size, char *str, uint64_t str_len);
+int bmfs_size_to_string(const struct BMFSSize *size, char *str, bmfs_uint64 str_len);
 
 /** Sets the value, in bytes, of the storage specification.
  * @param size A storage specifier structure. This parameter
@@ -101,7 +101,7 @@ int bmfs_size_to_string(const struct BMFSSize *size, char *str, uint64_t str_len
  * @ingroup size-api
  */
 
-int bmfs_size_set_bytes(struct BMFSSize *size, uint64_t bytes);
+int bmfs_size_set_bytes(struct BMFSSize *size, bmfs_uint64 bytes);
 
 /** Retrives the number of bytes of the storage specification.
  * This function may fail if the storage specification is not
@@ -113,7 +113,7 @@ int bmfs_size_set_bytes(struct BMFSSize *size, uint64_t bytes);
  * @ingroup size-api
  */
 
-int bmfs_size_bytes(const struct BMFSSize *size, uint64_t *bytes);
+int bmfs_size_bytes(const struct BMFSSize *size, bmfs_uint64 *bytes);
 
 /** Retrives the number of mebibytes of the storage specification.
  * This function may fail if the storage specification is not
@@ -125,7 +125,7 @@ int bmfs_size_bytes(const struct BMFSSize *size, uint64_t *bytes);
  * @ingroup size-api
  */
 
-int bmfs_size_mebibytes(const struct BMFSSize *size, uint64_t *mebibytes);
+int bmfs_size_mebibytes(const struct BMFSSize *size, bmfs_uint64 *mebibytes);
 
 #ifdef __cplusplus
 } /* extern "C" { */

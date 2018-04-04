@@ -1,6 +1,10 @@
-#include <bmfs/ramdisk.h>
+#include <bmfs/dir.h>
 #include <bmfs/fs.h>
+#include <bmfs/limits.h>
+#include <bmfs/ramdisk.h>
+
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "assert.h"

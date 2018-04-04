@@ -14,7 +14,7 @@ void test_alloc(void)
 	/* Allocate enough room for the file system
 	 * data and three allocations. */
 
-	size_t mem_size = BMFS_BLOCK_SIZE * 6;
+	bmfs_uint64 mem_size = BMFS_BLOCK_SIZE * 6;
 
 	void *mem = malloc(mem_size);
 	bmfs_assert(mem != NULL);
@@ -36,17 +36,17 @@ void test_alloc(void)
 	int err = bmfs_format(&bmfs, mem_size);
 	bmfs_assert(err == 0);
 
-	uint64_t offset1 = 0;
+	bmfs_uint64 offset1 = 0;
 
 	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE / 2, &offset1);
 	bmfs_assert(err == 0);
 
-	uint64_t offset2 = 0;
+	bmfs_uint64 offset2 = 0;
 
 	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE * 2, &offset2);
 	bmfs_assert(err == 0);
 
-	uint64_t offset3 = 0;
+	bmfs_uint64 offset3 = 0;
 
 	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE / 2, &offset3);
 	bmfs_assert(err == 0);

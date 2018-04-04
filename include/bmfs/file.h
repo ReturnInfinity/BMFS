@@ -12,8 +12,6 @@
 
 #include <bmfs/entry.h>
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,10 +53,10 @@ struct BMFSFile
 	struct BMFSEntry Entry;
 	/** The current position of the next read
 	 * or write operation. */
-	uint64_t CurrentPosition;
+	bmfs_uint64 CurrentPosition;
 	/** The number of bytes reserved for the
 	 * file to grow. */
-	uint64_t ReservedSize;
+	bmfs_uint64 ReservedSize;
 	/** The mode associated with the this file. */
 	enum BMFSFileMode Mode;
 };
@@ -138,8 +136,8 @@ int bmfs_file_import(struct BMFSFile *file);
 
 int bmfs_file_read(struct BMFSFile *file,
                    void *buf,
-                   uint64_t buf_size,
-                   uint64_t *read_result);
+                   bmfs_uint64 buf_size,
+                   bmfs_uint64 *read_result);
 
 /** Writes data to the file.
  * For this to work, the file must be open for writing.
@@ -154,8 +152,8 @@ int bmfs_file_read(struct BMFSFile *file,
 
 int bmfs_file_write(struct BMFSFile *file,
                     const void *buf,
-                    uint64_t buf_size,
-                    uint64_t *write_result);
+                    bmfs_uint64 buf_size,
+                    bmfs_uint64 *write_result);
 
 /** Set the position of the next read or write operation.
  * @param file An initialized file structure.
@@ -167,7 +165,7 @@ int bmfs_file_write(struct BMFSFile *file,
  * */
 
 int bmfs_file_seek(struct BMFSFile *file,
-                   int64_t pos,
+                   bmfs_uint64 pos,
                    int whence);
 
 /** Get the position of the next read or write operation.
@@ -179,7 +177,7 @@ int bmfs_file_seek(struct BMFSFile *file,
  * */
 
 int bmfs_file_tell(struct BMFSFile *file,
-                   uint64_t *pos);
+                   bmfs_uint64 *pos);
 
 #ifdef __cplusplus
 } /* extern "C" { */

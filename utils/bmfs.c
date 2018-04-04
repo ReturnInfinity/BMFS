@@ -308,7 +308,7 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 		i++;
 	}
 
-	uint64_t disk_byte_count = 0;
+	bmfs_uint64 disk_byte_count = 0;
 
 	if (bmfs_size_bytes(&disk_size, &disk_byte_count) != 0)
 	{
@@ -395,7 +395,7 @@ static int cmd_cat(struct BMFS *bmfs, int argc, const char **argv)
 
 		while (!bmfs_file_eof(&file))
 		{
-			uint64_t read_result = 0;
+			bmfs_uint64 read_result = 0;
 
 			err = bmfs_file_read(&file, buf, 512, &read_result);
 			if (err != 0)
@@ -503,7 +503,7 @@ static int cmd_cp(struct BMFS *bmfs, int argc, const char **argv)
 			return EXIT_FAILURE;
 		}
 
-		uint64_t write_result = 0;
+		bmfs_uint64 write_result = 0;
 
 		err = bmfs_file_write(&dst, buf, read_result, &write_result);
 		if ((err != 0) || (write_result != read_result))

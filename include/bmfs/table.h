@@ -10,6 +10,8 @@
 #ifndef BMFS_TABLE_H
 #define BMFS_TABLE_H
 
+#include <bmfs/types.h>
+
 /** @defgroup table-api Table API
  * Examine and manipulate the disk space
  * allocation table.
@@ -21,8 +23,6 @@
  * */
 
 #define BMFS_TABLE_ENTRY_COUNT_MAX 1024
-
-#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,11 +41,11 @@ struct BMFSDisk;
 struct BMFSTableEntry
 {
 	/** The offset, in bytes, of the region. */
-	uint64_t Offset;
+	bmfs_uint64 Offset;
 	/** The number of bytes used by the region. */
-	uint64_t Used;
+	bmfs_uint64 Used;
 	/** The number of bytes reserved for the region. */
-	uint64_t Reserved;
+	bmfs_uint64 Reserved;
 };
 
 /** Initializes a table entry.

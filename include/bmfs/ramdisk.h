@@ -10,7 +10,7 @@
 #ifndef BMFS_RAMDISK_H
 #define BMFS_RAMDISK_H
 
-#include "disk.h"
+#include <bmfs/disk.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,14 +32,14 @@ struct BMFSRamdisk
 	struct BMFSDisk base;
 	/** The pointer to the start of memory
 	 * that the file system resides in. */
-	unsigned char *buf;
+	bmfs_uint8 *buf;
 	/** The number of bytes occupied by the
 	 * memory buffer. */
-	uint64_t buf_size;
+	bmfs_uint64 buf_size;
 	/** The current position (in bytes) that
 	 * the disk is pointing to.
 	 * */
-	uint64_t buf_pos;
+	bmfs_uint64 buf_pos;
 };
 
 /** Initializes the ram disk. This function initializes
@@ -69,7 +69,7 @@ void bmfs_ramdisk_done(struct BMFSRamdisk *ramdisk);
  * */
 
 int bmfs_ramdisk_set_buf(struct BMFSRamdisk *ramdisk,
-                         void *buf, uint64_t buf_size);
+                         void *buf, bmfs_uint64 buf_size);
 
 #ifdef __cplusplus
 } /* extern "C" { */

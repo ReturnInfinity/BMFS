@@ -7,16 +7,15 @@
 
 #include <bmfs/ramdisk.h>
 
+#include <bmfs/errno.h>
 #include <bmfs/limits.h>
+#include <bmfs/types.h>
 
-#include <errno.h>
-#include <stdio.h>
-
-static void bmfs_memcpy(void *dst, const void *src, uint64_t size)
+static void bmfs_memcpy(void *dst, const void *src, bmfs_uint64 size)
 {
 	unsigned char *dst8 = (unsigned char *) dst;
 	const unsigned char *src8 = (const unsigned char *) src;
-	for (uint64_t i = 0; i < size; i++)
+	for (bmfs_uint64 i = 0; i < size; i++)
 		dst8[i] = src8[i];
 }
 
@@ -26,39 +25,32 @@ static void ramdisk_done(void *ramdisk_ptr)
 	(void) ramdisk_ptr;
 }
 
-static int ramdisk_seek(void *disk_ptr, int64_t offset, int whence)
+static int ramdisk_seek(void *disk_ptr, bmfs_uint64 offset, int whence)
 {
 	struct BMFSRamdisk *disk = (struct BMFSRamdisk *)(disk_ptr);
-	if (whence == SEEK_SET)
+	if (whence == BMFS_SEEK_SET)
 	{
-		if (offset > ((int64_t)(disk->buf_size)))
+		if (offset > disk->buf_size)
 			disk->buf_pos = disk->buf_size;
 		else
 			disk->buf_pos = offset;
 	}
-	else if (whence == SEEK_CUR)
+	else if (whence == BMFS_SEEK_END)
 	{
-		if ((disk->buf_pos + offset) > disk->buf_size)
-			disk->buf_pos = disk->buf_size;
-		else if ((((int64_t)(disk->buf_pos)) + offset) < 0)
-			disk->buf_pos = 0;
-		else
-			disk->buf_pos += offset;
-	}
-	else if (whence == SEEK_END)
-	{
-		if (offset > ((int64_t)(disk->buf_size)))
-			disk->buf_pos = 0;
-		else if (offset < 0)
+		if (offset > disk->buf_size)
 			disk->buf_pos = 0;
 		else
 			disk->buf_pos = disk->buf_size - offset;
+	}
+	else
+	{
+		return BMFS_EINVAL;
 	}
 
 	return 0;
 }
 
-static int ramdisk_tell(void *disk_ptr, int64_t *offset)
+static int ramdisk_tell(void *disk_ptr, bmfs_uint64 *offset)
 {
 	struct BMFSRamdisk *disk = (struct BMFSRamdisk *)(disk_ptr);
 
@@ -67,19 +59,16 @@ static int ramdisk_tell(void *disk_ptr, int64_t *offset)
 	return 0;
 }
 
-static int ramdisk_read(void *disk_ptr, void *buf, uint64_t len, uint64_t *read_len)
+static int ramdisk_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
 {
 	struct BMFSRamdisk *disk = (struct BMFSRamdisk *)(disk_ptr);
 
 	if ((disk->buf_pos + len) > disk->buf_size)
 		len = disk->buf_size - disk->buf_pos;
 
-	if (len > SIZE_MAX)
-		len = SIZE_MAX;
+	bmfs_memcpy(buf, &disk->buf[disk->buf_pos], len);
 
-	bmfs_memcpy(buf, &disk->buf[disk->buf_pos], (size_t) len);
-
-	if (read_len != NULL)
+	if (read_len != BMFS_NULL)
 		*read_len = len;
 
 	disk->buf_pos += len;
@@ -87,19 +76,16 @@ static int ramdisk_read(void *disk_ptr, void *buf, uint64_t len, uint64_t *read_
 	return 0;
 }
 
-static int ramdisk_write(void *disk_ptr, const void *buf, uint64_t len, uint64_t *write_len)
+static int ramdisk_write(void *disk_ptr, const void *buf, bmfs_uint64 len, bmfs_uint64 *write_len)
 {
 	struct BMFSRamdisk *disk = (struct BMFSRamdisk *)(disk_ptr);
 
 	if ((disk->buf_pos + len) > disk->buf_size)
 		len = disk->buf_size - disk->buf_pos;
 
-	if (len > SIZE_MAX)
-		len = SIZE_MAX;
+	bmfs_memcpy(&disk->buf[disk->buf_pos], buf, len);
 
-	bmfs_memcpy(&disk->buf[disk->buf_pos], buf, (size_t) len);
-
-	if (write_len != NULL)
+	if (write_len != BMFS_NULL)
 		*write_len = len;
 
 	disk->buf_pos += len;
@@ -116,7 +102,7 @@ void bmfs_ramdisk_init(struct BMFSRamdisk *ramdisk)
 	ramdisk->base.tell = ramdisk_tell;
 	ramdisk->base.read = ramdisk_read;
 	ramdisk->base.write = ramdisk_write;
-	ramdisk->buf = NULL;
+	ramdisk->buf = BMFS_NULL;
 	ramdisk->buf_size = 0;
 	ramdisk->buf_pos = 0;
 }
@@ -127,12 +113,12 @@ void bmfs_ramdisk_done(struct BMFSRamdisk *ramdisk)
 }
 
 int bmfs_ramdisk_set_buf(struct BMFSRamdisk *ramdisk,
-                         void *buf, uint64_t buf_size)
+                         void *buf, bmfs_uint64 buf_size)
 {
 	if (buf_size < BMFS_MINIMUM_DISK_SIZE)
-		return -ENOSPC;
-	else if (buf == NULL)
-		return -EFAULT;
+		return BMFS_ENOSPC;
+	else if (buf == BMFS_NULL)
+		return BMFS_EFAULT;
 
 	ramdisk->buf = (unsigned char *) buf;
 	ramdisk->buf_size = buf_size;

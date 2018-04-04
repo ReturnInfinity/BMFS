@@ -8,8 +8,7 @@
 #include <bmfs/table.h>
 
 #include <bmfs/disk.h>
-
-#include <errno.h>
+#include <bmfs/errno.h>
 
 void bmfs_table_entry_init(struct BMFSTableEntry *entry)
 {
@@ -21,13 +20,13 @@ void bmfs_table_entry_init(struct BMFSTableEntry *entry)
 int bmfs_table_entry_read(struct BMFSTableEntry *entry,
                           struct BMFSDisk *disk)
 {
-	uint64_t read_count = 0;
+	bmfs_uint64 read_count = 0;
 
 	int err = bmfs_disk_read(disk, entry, sizeof(*entry), &read_count);
 	if (err != 0)
 		return err;
 	else if (read_count != sizeof(*entry))
-		return -EIO;
+		return BMFS_EIO;
 
 	return 0;
 }
@@ -35,13 +34,13 @@ int bmfs_table_entry_read(struct BMFSTableEntry *entry,
 int bmfs_table_entry_write(const struct BMFSTableEntry *entry,
                            struct BMFSDisk *disk)
 {
-	uint64_t write_count = 0;
+	bmfs_uint64 write_count = 0;
 
 	int err = bmfs_disk_write(disk, entry, sizeof(*entry), &write_count);
 	if (err != 0)
 		return err;
 	else if (write_count != sizeof(*entry))
-		return -EIO;
+		return BMFS_EIO;
 
 	return 0;
 }

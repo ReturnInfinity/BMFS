@@ -5,7 +5,7 @@
 
 #include "assert.h"
 
-static int test_string(const char *str, uint64_t value);
+static int test_string(const char *str, bmfs_uint64 value);
 
 #define test(a, b) bmfs_assert(test_string(a, b) == 0)
 
@@ -27,7 +27,7 @@ int main(void)
 	return EXIT_SUCCESS;
 }
 
-static int test_string(const char *str, uint64_t value)
+static int test_string(const char *str, bmfs_uint64 value)
 {
 	struct BMFSSize sspec;
 
@@ -35,7 +35,7 @@ static int test_string(const char *str, uint64_t value)
 	if (err != 0)
 		return err;
 
-	uint64_t actual_value;
+	bmfs_uint64 actual_value;
 	err = bmfs_size_bytes(&sspec, &actual_value);
 	if (err != 0)
 		return err;

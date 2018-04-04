@@ -7,8 +7,6 @@
 
 #include <bmfs/path.h>
 
-#include <stdlib.h>
-
 static int is_separator(char c)
 {
 	if ((c == '/')
@@ -20,7 +18,7 @@ static int is_separator(char c)
 
 void bmfs_path_init(struct BMFSPath *path)
 {
-	path->String = NULL;
+	path->String = BMFS_NULL;
 	path->Length = 0;
 }
 
@@ -32,15 +30,15 @@ int bmfs_path_empty(const struct BMFSPath *path)
 int bmfs_path_split_root(struct BMFSPath *path,
                          struct BMFSPath *root)
 {
-	uint64_t i;
-	uint64_t path_len;
+	bmfs_uint64 i;
+	bmfs_uint64 path_len;
 	const char *path_str;
 
 	path_str = path->String;
 	path_len = path->Length;
 
 	if (path_len == 0) {
-		root->String = NULL;
+		root->String = BMFS_NULL;
 		root->Length = 0;
 	}
 
@@ -76,7 +74,7 @@ int bmfs_path_split_root(struct BMFSPath *path,
 
 void bmfs_path_set(struct BMFSPath *path,
                    const char *string,
-                   uint64_t length)
+                   bmfs_uint64 length)
 {
 	path->String = string;
 	path->Length = length;

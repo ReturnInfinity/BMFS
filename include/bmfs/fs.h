@@ -72,8 +72,8 @@ void bmfs_set_disk(struct BMFS *bmfs,
  */
 
 int bmfs_allocate(struct BMFS *fs,
-                  uint64_t bytes,
-                  uint64_t *offset);
+                  bmfs_uint64 bytes,
+                  bmfs_uint64 *offset);
 
 /** Locates a region that can fit a certain number of mebibytes.
  * @param fs An initialized file system structure.
@@ -85,8 +85,8 @@ int bmfs_allocate(struct BMFS *fs,
  */
 
 int bmfs_allocate_mebibytes(struct BMFS *fs,
-                            uint64_t mebibytes,
-                            uint64_t *offset);
+                            bmfs_uint64 mebibytes,
+                            bmfs_uint64 *offset);
 
 /** Checks for the file system signature.
  * This is useful for determining wether or
@@ -106,7 +106,7 @@ int bmfs_check_signature(struct BMFS *fs);
  * @ingroup fs-api
  * */
 
-int bmfs_format(struct BMFS *bmfs, uint64_t size);
+int bmfs_format(struct BMFS *bmfs, bmfs_uint64 size);
 
 /** Imports a BMFS file system from the disk.
  * @param bmfs An initialized file system structure.

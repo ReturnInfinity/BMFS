@@ -8,12 +8,11 @@
 #include <bmfs/dir.h>
 
 #include <bmfs/disk.h>
-
-#include <errno.h>
+#include <bmfs/errno.h>
 
 void bmfs_dir_init(struct BMFSDir *dir)
 {
-	dir->Disk = NULL;
+	dir->Disk = BMFS_NULL;
 	dir->EntryOffset = 0;
 	dir->CurrentIndex = 0;
 	bmfs_entry_init(&dir->Entry);
@@ -23,7 +22,7 @@ void bmfs_dir_init(struct BMFSDir *dir)
 void bmfs_dir_set_disk(struct BMFSDir *dir,
                        struct BMFSDisk *disk)
 {
-	if ((dir != NULL) && (disk != NULL))
+	if ((dir != BMFS_NULL) && (disk != BMFS_NULL))
 	{
 		dir->Disk = disk;
 	}
@@ -31,7 +30,7 @@ void bmfs_dir_set_disk(struct BMFSDir *dir,
 
 int bmfs_dir_import(struct BMFSDir *dir)
 {
-	int64_t entry_offset = 0;
+	bmfs_uint64 entry_offset = 0;
 
 	int err = bmfs_disk_tell(dir->Disk, &entry_offset);
 	if (err != 0)
@@ -45,7 +44,7 @@ int bmfs_dir_import(struct BMFSDir *dir)
 	if (err != 0)
 		return err;
 	else if (!bmfs_entry_is_directory(&entry))
-		return -ENOTDIR;
+		return BMFS_ENOTDIR;
 
 	dir->Entry = entry;
 	dir->EntryOffset = entry_offset;
@@ -56,21 +55,21 @@ int bmfs_dir_import(struct BMFSDir *dir)
 
 const struct BMFSEntry *bmfs_dir_next(struct BMFSDir *dir)
 {
-	int64_t offset = 0;
-	offset += (int64_t) dir->CurrentIndex;
+	bmfs_uint64 offset = 0;
+	offset += (bmfs_uint64) dir->CurrentIndex;
 	offset *= BMFS_ENTRY_SIZE;
-	offset += (int64_t) dir->Entry.Offset;
+	offset += (bmfs_uint64) dir->Entry.Offset;
 
 	if ((offset + BMFS_ENTRY_SIZE) > (dir->Entry.Offset + dir->Entry.Size))
-		return NULL;
+		return BMFS_NULL;
 
 	int err = bmfs_disk_seek(dir->Disk, offset, BMFS_SEEK_SET);
 	if (err != 0)
-		return NULL;
+		return BMFS_NULL;
 
 	err = bmfs_entry_read(&dir->CurrentEntry, dir->Disk);
 	if (err != 0)
-		return NULL;
+		return BMFS_NULL;
 
 	dir->CurrentIndex++;
 

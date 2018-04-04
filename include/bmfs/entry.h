@@ -11,9 +11,7 @@
 #define BMFS_ENTRY_H
 
 #include <bmfs/limits.h>
-
-#include <stdlib.h>
-#include <stdint.h>
+#include <bmfs/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,22 +49,22 @@ struct BMFSEntry
 	/** The name of the entry. */
 	char Name[BMFS_FILE_NAME_MAX];
 	/** The offset of the entry data, in bytes. */
-	uint64_t Offset;
+	bmfs_uint64 Offset;
 	/** The number of bytes used by the entry data. */
-	uint64_t Size;
+	bmfs_uint64 Size;
 	/** The time that the entry was created. */
-	uint64_t CreationTime;
+	bmfs_uint64 CreationTime;
 	/** The time that the entry was last modified. */
-	uint64_t ModificationTime;
+	bmfs_uint64 ModificationTime;
 	/** Stores information on entry type
 	 * and permissions. */
-	uint64_t Flags;
+	bmfs_uint64 Flags;
 	/** The owner user ID */
-	uint64_t UserID;
+	bmfs_uint64 UserID;
 	/** The group ID */
-	uint64_t GroupID;
+	bmfs_uint64 GroupID;
 	/** The offset of the entry within it's parent directory. */
-	uint64_t EntryOffset;
+	bmfs_uint64 EntryOffset;
 };
 
 /** Initializes an entry.
@@ -120,7 +118,7 @@ int bmfs_entry_write(const struct BMFSEntry *entry,
  */
 
 int bmfs_entry_get_offset(const struct BMFSEntry *entry,
-                          uint64_t *offset);
+                          bmfs_uint64 *offset);
 
 /** Sets the file name of an entry.
  * @param entry An initialized or
@@ -142,7 +140,7 @@ void bmfs_entry_set_file_name(struct BMFSEntry *entry,
  */
 
 void bmfs_entry_set_file_size(struct BMFSEntry *entry,
-                              uint64_t file_size);
+                              bmfs_uint64 file_size);
 
 /** Sets the starting block of the entry.
  * @param entry An initialized or
@@ -153,7 +151,7 @@ void bmfs_entry_set_file_size(struct BMFSEntry *entry,
  */
 
 void bmfs_entry_set_starting_block(struct BMFSEntry *entry,
-                                   uint64_t starting_block);
+                                   bmfs_uint64 starting_block);
 
 /** Sets the type of entry.
  * @param entry An initialized entry.

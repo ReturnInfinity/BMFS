@@ -7,10 +7,8 @@
 
 #include <bmfs/entry.h>
 #include <bmfs/disk.h>
+#include <bmfs/errno.h>
 #include <bmfs/limits.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
 
 #define BMFS_MASK_TYPE 0x0f
 
@@ -44,21 +42,21 @@ void bmfs_entry_copy(struct BMFSEntry *dst,
 int bmfs_entry_read(struct BMFSEntry *entry,
                     struct BMFSDisk *disk) {
 
-	int64_t disk_pos = 0;
+	bmfs_uint64 disk_pos = 0;
 
 	int err = bmfs_disk_tell(disk, &disk_pos);
 	if (err != 0)
 		return err;
 
-	uint64_t read_size = 0;
+	bmfs_uint64 read_size = 0;
 
 	err = bmfs_disk_read(disk, entry, sizeof(struct BMFSEntry), &read_size);
 	if (err != 0)
 		return err;
 	else if (read_size != BMFS_ENTRY_SIZE)
-		return -EIO;
+		return BMFS_EIO;
 
-	entry->EntryOffset = (uint64_t) disk_pos;
+	entry->EntryOffset = (bmfs_uint64) disk_pos;
 
 	return 0;
 }
@@ -66,7 +64,7 @@ int bmfs_entry_read(struct BMFSEntry *entry,
 int bmfs_entry_write(const struct BMFSEntry *entry,
                      struct BMFSDisk *disk) {
 
-	int64_t disk_pos = 0;
+	bmfs_uint64 disk_pos = 0;
 
 	int err = bmfs_disk_tell(disk, &disk_pos);
 	if (err != 0)
@@ -78,23 +76,23 @@ int bmfs_entry_write(const struct BMFSEntry *entry,
 
 	bmfs_entry_copy(&tmp_entry, entry);
 
-	tmp_entry.EntryOffset = (uint64_t) disk_pos;
+	tmp_entry.EntryOffset = (bmfs_uint64) disk_pos;
 
-	uint64_t write_size = 0;
+	bmfs_uint64 write_size = 0;
 
 	err = bmfs_disk_write(disk, &tmp_entry, sizeof(tmp_entry), &write_size);
 	if (err != 0)
 		return err;
 	else if (write_size != BMFS_ENTRY_SIZE)
-		return -EIO;
+		return BMFS_EIO;
 
 	return 0;
 }
 
-int bmfs_entry_get_offset(const struct BMFSEntry *entry, uint64_t *offset)
+int bmfs_entry_get_offset(const struct BMFSEntry *entry, bmfs_uint64 *offset)
 {
-	if ((entry == NULL) || (offset == NULL))
-		return -EFAULT;
+	if ((entry == BMFS_NULL) || (offset == BMFS_NULL))
+		return BMFS_EFAULT;
 
 	*offset = entry->Offset;
 
@@ -103,7 +101,7 @@ int bmfs_entry_get_offset(const struct BMFSEntry *entry, uint64_t *offset)
 
 void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename)
 {
-	uint64_t i;
+	bmfs_uint64 i;
 	for (i = 0; (i < (BMFS_FILE_NAME_MAX - 1)) && (filename[i] != 0); i++)
 		entry->Name[i] = filename[i];
 
@@ -111,7 +109,7 @@ void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename)
 		entry->Name[i] = 0;
 }
 
-void bmfs_entry_set_starting_block(struct BMFSEntry *entry, uint64_t starting_block)
+void bmfs_entry_set_starting_block(struct BMFSEntry *entry, bmfs_uint64 starting_block)
 {
 	entry->Offset = starting_block * BMFS_BLOCK_SIZE;
 }
