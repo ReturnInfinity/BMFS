@@ -48,7 +48,7 @@ clean:
 test:
 
 .PHONY: install
-install: $(utils) $(libs)
+install: $(utils)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp --update $(utils) $(DESTDIR)$(PREFIX)/bin/
 
