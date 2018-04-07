@@ -251,9 +251,19 @@ static int bmfs_fuse_readlink(const char *path, char *buf, size_t buf_size)
 
 static int bmfs_fuse_rename(const char *old_path, const char *new_path)
 {
-	bmfs_log(__func__, "Function not implemented.\n");
-	bmfs_log(__func__, "Failing to move '%s' to '%s'\n", old_path, new_path);
-	return -ENOSYS;
+	int err = bmfs_rename(&fs, old_path, new_path);
+	if (err == BMFS_ENOENT)
+		return -ENOENT;
+	else if (err == BMFS_ENOSPC)
+		return -ENOSPC;
+	else if (err == BMFS_ENOTDIR)
+		return -ENOTDIR;
+	else if (err == BMFS_EISDIR)
+		return -EISDIR;
+	else if (err == BMFS_EPERM)
+		return -EPERM;
+
+	return 0;
 }
 
 static int bmfs_fuse_rmdir(const char *path)
