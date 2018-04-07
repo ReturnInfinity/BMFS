@@ -503,9 +503,7 @@ static int open_file(struct BMFS *fs,
 static int delete_table_entry(struct BMFS *fs,
                               bmfs_uint64 offset)
 {
-	(void) fs;
-	(void) offset;
-	return 0;
+	return bmfs_table_free(&fs->Table, offset);
 }
 
 static int delete_entry(struct BMFS *fs,
@@ -529,6 +527,7 @@ static int delete_entry(struct BMFS *fs,
 void bmfs_init(struct BMFS *fs)
 {
 	bmfs_header_init(&fs->Header);
+	bmfs_table_init(&fs->Table);
 	fs->Disk = BMFS_NULL;
 }
 
@@ -542,8 +541,10 @@ void bmfs_done(struct BMFS *fs)
 
 void bmfs_set_disk(struct BMFS *fs,
                    struct BMFSDisk *disk) {
+
 	if ((fs != BMFS_NULL) && (disk != BMFS_NULL)) {
 		fs->Disk = disk;
+		bmfs_table_set_disk(&fs->Table, disk);
 	}
 }
 
@@ -908,6 +909,12 @@ int bmfs_import(struct BMFS *fs)
 		return err;
 
 	err = bmfs_header_check(&fs->Header);
+	if (err != 0)
+		return err;
+
+	bmfs_table_set_offset(&fs->Table, fs->Header.TableOffset);
+
+	err = bmfs_table_import(&fs->Table);
 	if (err != 0)
 		return err;
 

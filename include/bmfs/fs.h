@@ -11,6 +11,7 @@
 #define BMFS_FS_H
 
 #include <bmfs/header.h>
+#include <bmfs/table.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +38,8 @@ struct BMFS
 	struct BMFSDisk *Disk;
 	/** The file system header. */
 	struct BMFSHeader Header;
+	/** The allocation table. */
+	struct BMFSTable Table;
 };
 
 /** Initializes the file system.
