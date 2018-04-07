@@ -9,6 +9,7 @@
 #include <bmfs/disk.h>
 #include <bmfs/errno.h>
 #include <bmfs/limits.h>
+#include <bmfs/time.h>
 
 #define BMFS_MASK_STATE 0xf0
 
@@ -70,6 +71,24 @@ int bmfs_entry_read(struct BMFSEntry *entry,
 		return BMFS_EIO;
 
 	entry->EntryOffset = (bmfs_uint64) disk_pos;
+
+	return 0;
+}
+
+int bmfs_entry_save(struct BMFSEntry *entry,
+                    struct BMFSDisk *disk)
+{
+	int err = bmfs_get_current_time(&entry->ModificationTime);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_seek(disk, entry->EntryOffset, BMFS_SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_entry_write(entry, disk);
+	if (err != 0)
+		return err;
 
 	return 0;
 }

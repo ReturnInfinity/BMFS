@@ -106,6 +106,21 @@ bmfs_bool bmfs_entry_is_deleted(const struct BMFSEntry *entry);
 int bmfs_entry_read(struct BMFSEntry *entry,
                     struct BMFSDisk *disk);
 
+/** Writes the entry, at its offset, to disk.
+ * The entry must have been read from disk, using
+ * the function @ref bmfs_entry_read, because the
+ * this function needs a location to write the entry
+ * to. If the entry just needs to be written to disk
+ * at the current location, use @ref bmfs_disk_write.
+ * @param entry An initialized entry structure.
+ * @param disk The disk to write the entry to.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup entry-api
+ * */
+
+int bmfs_entry_save(struct BMFSEntry *entry,
+                    struct BMFSDisk *disk);
+
 /** Writes an entry to disk.
  * @param entry The entry to write.
  * @param disk The disk to write the entry to.
