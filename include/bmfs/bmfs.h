@@ -11,6 +11,7 @@
 #include "dir.h"
 #include "disk.h"
 #include "entry.h"
+#include "errno.h"
 #include "file.h"
 #include "fs.h"
 #include "limits.h"
