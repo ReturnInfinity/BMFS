@@ -500,6 +500,30 @@ static int open_file(struct BMFS *fs,
 	return 0;
 }
 
+static int delete_table_entry(struct BMFS *fs,
+                              bmfs_uint64 offset)
+{
+	(void) fs;
+	(void) offset;
+	return 0;
+}
+
+static int delete_entry(struct BMFS *fs,
+                        struct BMFSEntry *entry)
+{
+	int err = delete_table_entry(fs, entry->Offset);
+	if (err != 0)
+		return err;
+
+	bmfs_entry_set_deleted(entry);
+
+	err = bmfs_entry_save(entry, fs->Disk);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
 /* public functions */
 
 void bmfs_init(struct BMFS *fs)
@@ -736,11 +760,57 @@ int bmfs_delete_file(struct BMFS *fs, const char *path)
 	if (err != 0)
 		return err;
 
-	bmfs_file_set_mode(&file, BMFS_FILE_MODE_WRITE);
+	err = delete_entry(fs, &file.Entry);
+	if (err != 0)
+		return err;
 
-	bmfs_entry_set_deleted(&file.Entry);
+	return 0;
+}
 
-	bmfs_file_close(&file);
+int bmfs_delete_dir(struct BMFS *fs, const char *path)
+{
+	struct BMFSDir dir;
+
+	bmfs_dir_init(&dir);
+
+	int err = bmfs_open_dir(fs, &dir, path);
+	if (err != 0)
+		return err;
+
+	if (bmfs_dir_next(&dir) != BMFS_NULL)
+		return BMFS_ENOTEMPTY;
+
+	err = delete_entry(fs, &dir.Entry);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+int bmfs_delete_dir_recursively(struct BMFS *fs, const char *path)
+{
+	struct BMFSDir dir;
+
+	bmfs_dir_init(&dir);
+
+	int err = bmfs_open_dir(fs, &dir, path);
+	if (err != 0)
+		return err;
+
+	for (;;)
+	{
+		struct BMFSEntry *entry = bmfs_dir_next(&dir);
+		if (entry == BMFS_NULL)
+			break;
+
+		err = delete_entry(fs, &dir.Entry);
+		if (err != 0)
+			return err;
+	}
+
+	err = delete_entry(fs, &dir.Entry);
+	if (err != 0)
+		return err;
 
 	return 0;
 }
@@ -755,6 +825,10 @@ int bmfs_import(struct BMFS *fs)
 		return err;
 
 	err = bmfs_header_read(&fs->Header, fs->Disk);
+	if (err != 0)
+		return err;
+
+	err = bmfs_header_check(&fs->Header);
 	if (err != 0)
 		return err;
 

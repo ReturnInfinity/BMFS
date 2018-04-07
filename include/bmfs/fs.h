@@ -185,11 +185,23 @@ int bmfs_delete_file(struct BMFS *bmfs,
  * @param bmfs An initialized file system structure.
  * @param path The path to the directory.
  * @returns Zero on success, an error code on failure.
+ * If the directory is not empty, then @ref BMFS_ENOTEMPTY
+ * is returned.
  * @ingroup fs-api
  * */
 
 int bmfs_delete_dir(struct BMFS *bmfs,
                     const char *path);
+
+/** Deletes a directory and everything that the directory contains.
+ * @param bmfs An initialized file system.
+ * @param path The path of the directory to delete.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup fs-api
+ * */
+
+int bmfs_delete_dir_recursively(struct BMFS *bmfs,
+                                const char *path);
 
 #ifdef __cplusplus
 } /* extern "C" { */
