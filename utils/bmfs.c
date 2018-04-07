@@ -141,25 +141,55 @@ static void print_version(void);
 int main(int argc, const char **argv)
 {
 	const char *diskname = "bmfs.img";
+	const char *offset_string = "512B";
 
 	int i = 1;
 
 	for (i = 1; i < argc; i++)
 	{
-		if (argv[i][0] != '-') {
+		if (argv[i][0] != '-')
+		{
 			break;
-		} else if (is_opt(argv[i], 'd', "disk")) {
+		}
+		else if (is_opt(argv[i], 'd', "disk"))
+		{
 			if ((i + 1) >= argc)
 			{
 				fprintf(stderr, "Error: No disk path specified.\n");
 				return EXIT_FAILURE;
 			}
 			diskname = argv[++i];
-		} else {
+		}
+		else if (is_opt(argv[i], 'o', "offset"))
+		{
+			if ((i + 1) >= argc)
+			{
+				fprintf(stderr, "Error: Disk size not specified.\n");
+				return EXIT_FAILURE;
+			}
+			offset_string = argv[++i];
+		}
+		else
+		{
 			fprintf(stderr, "Error: Unknown option '%s'.\n", argv[i]);
 			fprintf(stderr, "Run '%s help' for assistance.\n", argv[0]);
 			return EXIT_FAILURE;
 		}
+	}
+
+	struct BMFSSize offset;
+
+	if (bmfs_size_parse(&offset, offset_string) != 0)
+	{
+		fprintf(stderr, "Failed to parse offset '%s'.\n", offset_string);
+		return EXIT_FAILURE;
+	}
+
+	bmfs_uint64 offset_bytes = 0;
+
+	if (bmfs_size_bytes(&offset, &offset_bytes) != 0) {
+		fprintf(stderr, "Error: Offset not representable by 64-bit integer.\n");
+		return EXIT_FAILURE;
 	}
 
 	enum bmfs_command cmd = command_parse(argv[i]);
@@ -199,9 +229,11 @@ int main(int argc, const char **argv)
 	if (err != 0)
 	{
 		printf("Error: Unable to open disk '%s'\n", diskname);
-		printf("Reason: %s\n", strerror(-err));
+		printf("Reason: %s\n", bmfs_strerror(err));
 		return EXIT_FAILURE;
 	}
+
+	bmfs_filedisk_set_offset(&filedisk, offset_bytes);
 
 	struct BMFS bmfs;
 
@@ -221,11 +253,19 @@ int main(int argc, const char **argv)
 		return EXIT_SUCCESS;
 	}
 
+	err = bmfs_check_signature(&bmfs);
+	if (err != 0)
+	{
+		fprintf(stderr, "Error: Disk is not a BMFS formatted image.\n");
+		bmfs_filedisk_done(&filedisk);
+		return EXIT_FAILURE;
+	}
+
 	err = bmfs_import(&bmfs);
 	if (err != 0)
 	{
 		fprintf(stderr, "Error: Failed to import file system.\n");
-		fprintf(stderr, "Reason: %s\n", strerror(-err));
+		fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 		bmfs_filedisk_done(&filedisk);
 		return EXIT_FAILURE;
 	}
@@ -362,7 +402,7 @@ static int cmd_mkdir(struct BMFS *bmfs, int argc, const char **argv)
 		if (err != 0)
 		{
 			fprintf(stderr, "Error: Failed to create '%s'.\n", path);
-			fprintf(stderr, "\t%s\n", strerror(-err));
+			fprintf(stderr, "\t%s\n", bmfs_strerror(err));
 			return EXIT_FAILURE;
 		}
 
@@ -388,7 +428,7 @@ static int cmd_cat(struct BMFS *bmfs, int argc, const char **argv)
 		if (err != 0)
 		{
 			fprintf(stderr, "Error: Failed to open '%s'.\n", argv[i]);
-			fprintf(stderr, "Reason: %s\n", strerror(-err));
+			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 			bmfs_file_close(&file);
 			return EXIT_FAILURE;
 		}
@@ -401,7 +441,7 @@ static int cmd_cat(struct BMFS *bmfs, int argc, const char **argv)
 			if (err != 0)
 			{
 				fprintf(stderr, "Error: Failed to read '%s'.\n", argv[i]);
-				fprintf(stderr, "Reason: %s\n", strerror(-err));
+				fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 				bmfs_file_close(&file);
 				return EXIT_FAILURE;
 			}
@@ -462,7 +502,7 @@ static int cmd_cp(struct BMFS *bmfs, int argc, const char **argv)
 	if ((err != 0) && (err != -EEXIST))
 	{
 		fprintf(stderr, "Failed to create '%s'.\n", dst_path);
-		fprintf(stderr, "Reason: %s\n", strerror(-err));
+		fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 		fclose(src);
 		return EXIT_FAILURE;
 	}
@@ -471,7 +511,7 @@ static int cmd_cp(struct BMFS *bmfs, int argc, const char **argv)
 	if (err != 0)
 	{
 		fprintf(stderr, "Failed to open '%s' for writing.\n", dst_path);
-		fprintf(stderr ,"Reason: %s\n", strerror(-err));
+		fprintf(stderr ,"Reason: %s\n", bmfs_strerror(err));
 		fclose(src);
 		return EXIT_FAILURE;
 	}
@@ -512,7 +552,7 @@ static int cmd_cp(struct BMFS *bmfs, int argc, const char **argv)
 				err = -EIO;
 
 			fprintf(stderr, "Error: Failed to write to '%s'.\n", dst_path);
-			fprintf(stderr, "Reason: %s\n", strerror(-err));
+			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 			fclose(src);
 			bmfs_file_close(&dst);
 			free(buf);
@@ -592,7 +632,7 @@ static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv)
 	if (err != 0)
 	{
 		fprintf(stderr, "Error: Failed to read '%s'.\n", path);
-		fprintf(stderr, "Reason: %s\n", strerror(-err));
+		fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 		return EXIT_FAILURE;
 	}
 
@@ -645,7 +685,7 @@ static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv)
 		if (err != 0)
 		{
 			fprintf(stderr, "Failed to create '%s'.\n", argv[i]);
-			fprintf(stderr, "Reason: %s\n", strerror(-err));
+			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 			return EXIT_FAILURE;
 		}
 
