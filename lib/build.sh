@@ -12,7 +12,7 @@ ARFLAGS=rcs
 $CC $CFLAGS -c dir.c
 $CC $CFLAGS -c disk.c
 $CC $CFLAGS -c entry.c
-$CC $CFLAGS -c errno.o
+$CC $CFLAGS -c errno.c
 $CC $CFLAGS -c file.c
 $CC $CFLAGS -c fs.c
 $CC $CFLAGS -c header.c
