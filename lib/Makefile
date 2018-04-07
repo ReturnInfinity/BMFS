@@ -20,6 +20,7 @@ libfiles += header.o
 libfiles += dir.o
 libfiles += disk.o
 libfiles += entry.o
+libfiles += errno.o
 libfiles += file.o
 libfiles += fs.o
 libfiles += path.o
@@ -39,6 +40,8 @@ endif
 all: $(libs)
 
 entry.o: entry.c entry.h limits.h
+
+errno.o: errno.c errno.h
 
 dir.o: dir.c dir.h entry.h
 
