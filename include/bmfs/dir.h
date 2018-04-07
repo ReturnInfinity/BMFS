@@ -45,6 +45,10 @@ struct BMFSDir
 	/** The index of the current entry that the
 	 * next read operation will read. */
 	bmfs_uint64 CurrentIndex;
+	/** Indicates whether or not deleted directories
+	 * should be returned from @ref bmfs_dir_next. The
+	 * default is that they should not be returned. */
+	bmfs_bool IgnoreDeleted;
 };
 
 /** Initializes a directory.
@@ -55,6 +59,14 @@ struct BMFSDir
  * */
 
 void bmfs_dir_init(struct BMFSDir *dir);
+
+/** Indicate that it is okay to return
+ * deleted entries in the directory.
+ * @param dir An initialized directory structure.
+ * @ingroup dir-api
+ * */
+
+void bmfs_dir_view_deleted(struct BMFSDir *dir);
 
 /** Assigns the disk that will be used
  * for the directory operations.
