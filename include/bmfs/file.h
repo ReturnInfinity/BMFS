@@ -90,6 +90,15 @@ void bmfs_file_close(struct BMFSFile *file);
 
 int bmfs_file_eof(const struct BMFSFile *file);
 
+/** Reduces the size of the file to zero.
+ * This function only works if the file is
+ * in writing mode.
+ * @param file An initialized file structure.
+ * @ingroup file-api
+ * */
+
+void bmfs_file_truncate(struct BMFSFile *file);
+
 /** Assigns the disk that will be used
  * to read and write file data, as well
  * as import the meta-data on the file itself.

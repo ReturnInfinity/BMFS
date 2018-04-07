@@ -9,7 +9,17 @@
 
 #include <bmfs/disk.h>
 #include <bmfs/errno.h>
-#include <bmfs/time.h>
+
+static bmfs_bool file_can_write(const struct BMFSFile *file)
+{
+	if ((file->Mode == BMFS_FILE_MODE_WRITE)
+	 || (file->Mode == BMFS_FILE_MODE_RW))
+	{
+		return BMFS_TRUE;
+	}
+
+	return BMFS_FALSE;
+}
 
 void bmfs_file_init(struct BMFSFile *file)
 {
@@ -22,21 +32,21 @@ void bmfs_file_init(struct BMFSFile *file)
 
 void bmfs_file_close(struct BMFSFile *file)
 {
-	if ((file->Mode != BMFS_FILE_MODE_RW)
-	 && (file->Mode != BMFS_FILE_MODE_WRITE))
+	/* Only update information if writing
+	 * is enabled. */
+	if (!file_can_write(file))
+		return;
+
+	bmfs_entry_save(&file->Entry, file->Disk);
+}
+
+void bmfs_file_truncate(struct BMFSFile *file)
+{
+	if (file_can_write(file))
 	{
-		return;
+		file->CurrentPosition = 0;
+		file->Entry.Size = 0;
 	}
-
-	bmfs_get_current_time(&file->Entry.ModificationTime);
-
-	int err = bmfs_disk_seek(file->Disk, file->Entry.EntryOffset, BMFS_SEEK_SET);
-	if (err != 0)
-		return;
-
-	err = bmfs_entry_write(&file->Entry, file->Disk);
-	if (err != 0)
-		return;
 }
 
 void bmfs_file_set_disk(struct BMFSFile *file,
