@@ -38,6 +38,8 @@ enum bmfs_command {
 	BMFS_CMD_FORMAT,
 	/** Make a directory */
 	BMFS_CMD_MKDIR,
+	/** Move a file or directory. */
+	BMFS_CMD_MV,
 	/** Create a file and update modification time. */
 	BMFS_CMD_TOUCH,
 	/** Remove a file */
@@ -70,6 +72,9 @@ static enum bmfs_command command_parse(const char *cmd)
 	else if ((strcmp(cmd, "rm") == 0)
 	      || (strcmp(cmd, "delete") == 0))
 		return BMFS_CMD_RM;
+	else if ((strcmp(cmd, "mv") == 0)
+	      || (strcmp(cmd, "move") == 0))
+		return BMFS_CMD_MV;
 	else if ((strcmp(cmd, "create") == 0)
 	      || (strcmp(cmd, "touch") == 0))
 		return BMFS_CMD_TOUCH;
@@ -124,6 +129,8 @@ static int file_exists(const char *path)
 static int cmd_format(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_mkdir(struct BMFS *bmfs, int argc, const char **argv);
+
+static int cmd_mv(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_cat(struct BMFS *bmfs, int argc, const char **argv);
 
@@ -288,6 +295,9 @@ int main(int argc, const char **argv)
 	case BMFS_CMD_MKDIR:
 		err = cmd_mkdir(&bmfs, argc - i, &argv[i]);
 		break;
+	case BMFS_CMD_MV:
+		err = cmd_mv(&bmfs, argc - i, &argv[i]);
+		break;
 	case BMFS_CMD_TOUCH:
 		err = cmd_touch(&bmfs, argc - i, &argv[i]);
 		break;
@@ -420,6 +430,61 @@ static int cmd_mkdir(struct BMFS *bmfs, int argc, const char **argv)
 	}
 
 	return 0;
+}
+
+static int cmd_mv(struct BMFS *bmfs, int argc, const char **argv)
+{
+	int i = 0;
+
+	while (i < argc)
+	{
+		if (argv[i][0] != '-')
+		{
+			break;
+		}
+		else
+		{
+			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
+			return EXIT_FAILURE;
+		}
+	}
+
+	const char *src = NULL;
+	const char *dst = NULL;
+
+	while (i < argc)
+	{
+		if (argv[i][0] == '-')
+		{
+			fprintf(stderr, "Error: Options must be specified before file arguments.\n");
+			return EXIT_FAILURE;
+		}
+		else if (src == NULL)
+		{
+			src = argv[i];
+		}
+		else if (dst == NULL)
+		{
+			dst = argv[i];
+		}
+		else
+		{
+			fprintf(stderr, "Error: Trailing arguments.\n");
+			return EXIT_FAILURE;
+		}
+
+		i++;
+	}
+
+	int err = bmfs_rename(bmfs, src, dst);
+	if (err != 0)
+	{
+		fprintf(stderr, "Error: Failed to rename file.\n");
+		fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }
 
 static int cmd_cat(struct BMFS *bmfs, int argc, const char **argv)
@@ -824,6 +889,8 @@ static void print_usage(const char *argv0)
 	printf("\trmdir   : Deletes a directory, if it exists.\n");
 	printf("\tformat  : Formats an existing file with BMFS.\n");
 	printf("\tmkdir   : Creates a directory, if it doesn't exist.\n");
+	printf("\tmv      : Move a file or directory.\n");
+	printf("\tmove    : Alias for 'mv'.\n");
 	printf("\n");
 	printf("File: may be used in a read, write, create or delete operation\n");
 }
@@ -859,6 +926,9 @@ static void print_help(const char *argv0, int argc, const char **argv)
 	case BMFS_CMD_MKDIR:
 		printf("%s mkdir PATH\n", argv0);
 		break;
+	case BMFS_CMD_MV:
+		printf("%s mv SOURCE DESTINATION\n", argv0);
+		break;
 	case BMFS_CMD_LS:
 		printf("%s ls [options] PATH\n", argv0);
 		printf("\n");
@@ -890,5 +960,5 @@ static void print_help(const char *argv0, int argc, const char **argv)
 
 static void print_version(void)
 {
-	printf("BareMetal File System Utility v2.0.0 (2018 3 24)\n");
+	printf(BMFS_VERSION_STRING);
 }

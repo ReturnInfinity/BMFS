@@ -815,6 +815,85 @@ int bmfs_delete_dir_recursively(struct BMFS *fs, const char *path)
 	return 0;
 }
 
+int bmfs_rename(struct BMFS *fs,
+                const char *old_path,
+                const char *new_path)
+{
+	/* TODO : use an open_entry function instead
+	 * of using error checking. It will be more
+	 * efficient. */
+
+	/* The old entry will contain the proper
+	 * modification times, creation times, flags,
+	 * data offset, and data size. We'll need it
+	 * to copy the data over to the new entry. */
+
+	struct BMFSEntry old_entry;
+
+	bmfs_entry_init(&old_entry);
+
+	/* Open the existing file so that we
+	 * can get a hold of the entry structure. */
+
+	struct BMFSFile old_file;
+
+	bmfs_file_init(&old_file);
+
+	int err = bmfs_open_file(fs, &old_file, old_path);
+	if (err == BMFS_EISDIR)
+	{
+		struct BMFSDir dir;
+
+		bmfs_dir_init(&dir);
+
+		err = bmfs_open_dir(fs, &dir, old_path);
+		if (err != 0)
+			return err;
+
+		bmfs_entry_copy(&old_entry, &dir.Entry);
+	}
+	else if (err != 0)
+	{
+		return err;
+	}
+	else
+	{
+		bmfs_entry_copy(&old_entry, &old_file.Entry);
+	}
+
+	/* Make a copy of the entry, before we mark
+	 * it as deleted. */
+
+	struct BMFSEntry new_entry;
+
+	bmfs_entry_init(&new_entry);
+
+	bmfs_entry_copy(&new_entry, &old_entry);
+
+	/* Delete the entry without removing
+	 * the entry in the allocation table. */
+
+	bmfs_entry_set_deleted(&old_file.Entry);
+
+	/* Ensure that the old directory knows
+	 * that the entry is no longer active */
+
+	err = bmfs_entry_save(&old_file.Entry, fs->Disk);
+	if (err != 0)
+		return err;
+
+	/* Create the entry in the new location,
+	 * containing all of its old information except
+	 * for the entry offset and name, which are
+	 * set in this function. */
+
+	err = create_entry(fs, &new_entry, new_path);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
 int bmfs_import(struct BMFS *fs)
 {
 	if ((fs == BMFS_NULL) || (fs->Disk == BMFS_NULL))

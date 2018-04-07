@@ -203,6 +203,20 @@ int bmfs_delete_dir(struct BMFS *bmfs,
 int bmfs_delete_dir_recursively(struct BMFS *bmfs,
                                 const char *path);
 
+/** Rename a file or directory.
+ * The parent directories of both paths
+ * must exist.
+ * @param bmfs An initialized file system.
+ * @param old_path The path of the existing entry.
+ * @param new_path The path to move the existing entry to.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup fs-api
+ * */
+
+int bmfs_rename(struct BMFS *bmfs,
+                const char *old_path,
+                const char *new_path);
+
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
