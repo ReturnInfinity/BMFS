@@ -83,4 +83,15 @@
 
 #define BMFS_EPERM -10
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+const char *bmfs_strerror(int bmfs_errno);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* BMFS_ERRNO_H */
