@@ -133,6 +133,8 @@ static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv);
 
+static int cmd_rm(struct BMFS *bmfs, int argc, const char **argv);
+
 static void print_help(const char *argv0, int argc, const char **argv);
 
 static void print_version(void);
@@ -286,6 +288,9 @@ int main(int argc, const char **argv)
 		break;
 	case BMFS_CMD_TOUCH:
 		err = cmd_touch(&bmfs, argc - i, &argv[i]);
+		break;
+	case BMFS_CMD_RM:
+		err = cmd_rm(&bmfs, argc - i, &argv[i]);
 		break;
 	default:
 		fprintf(stderr, "Error: Command not supported yet.\n");
@@ -692,7 +697,51 @@ static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv)
 		i++;
 	}
 
-	return EXIT_FAILURE;
+	return EXIT_SUCCESS;
+}
+
+static int cmd_rm(struct BMFS *bmfs, int argc, const char **argv)
+{
+	int i = 0;
+
+	int force = 0;
+
+	while (i < argc)
+	{
+		if (argv[i][0] != '-')
+		{
+			break;
+		}
+		else if (is_opt(argv[i], 'f', "force"))
+		{
+			force = 1;
+		}
+		else
+		{
+			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
+			return EXIT_FAILURE;
+		}
+	}
+
+	while (i < argc)
+	{
+		if (argv[i][0] == '-') {
+			fprintf(stderr, "Error: Options must be specified before directory paths.\n");
+			return EXIT_FAILURE;
+		}
+
+		int err = bmfs_delete_file(bmfs, argv[i]);
+		if ((err != 0) && !force)
+		{
+			fprintf(stderr, "Failed to create '%s'.\n", argv[i]);
+			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
+			return EXIT_FAILURE;
+		}
+
+		i++;
+	}
+
+	return EXIT_SUCCESS;
 }
 
 static void print_usage(const char *argv0)
