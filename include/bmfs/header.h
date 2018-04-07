@@ -57,6 +57,16 @@ struct BMFSHeader
 
 void bmfs_header_init(struct BMFSHeader *header);
 
+/** Checks to make sure that a header is valid.
+ * This is useful after reading a header from disk.
+ * @param header An initialized header structure.
+ * @returns Zero if the header is valid, an error code
+ * if it is not.
+ * @ingroup header-api
+ * */
+
+int bmfs_header_check(const struct BMFSHeader *header);
+
 /** Reads a file system header from a disk.
  * @param header An initialized header structure.
  * @param disk The disk to read the header from.

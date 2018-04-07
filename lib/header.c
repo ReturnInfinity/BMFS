@@ -38,6 +38,19 @@ void bmfs_header_init(struct BMFSHeader *header)
 		header->Reserved[i] = 0;
 }
 
+int bmfs_header_check(const struct BMFSHeader *header)
+{
+	if ((header->Signature[0] != 'B')
+	 || (header->Signature[1] != 'M')
+	 || (header->Signature[2] != 'F')
+	 || (header->Signature[3] != 'S'))
+	{
+		return BMFS_EINVAL;
+	}
+
+	return 0;
+}
+
 int bmfs_header_read(struct BMFSHeader *header,
                      struct BMFSDisk *disk)
 {
