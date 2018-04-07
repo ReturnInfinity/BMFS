@@ -46,6 +46,8 @@ enum bmfs_command {
 	BMFS_CMD_RM,
 	/** Remove an empty directory */
 	BMFS_CMD_RMDIR,
+	/** Print file system structures */
+	BMFS_CMD_DUMP,
 	/** Print version */
 	BMFS_CMD_VERSION,
 	/** Print help contents of a command. */
@@ -80,6 +82,8 @@ static enum bmfs_command command_parse(const char *cmd)
 		return BMFS_CMD_TOUCH;
 	else if (strcmp(cmd, "rmdir") == 0)
 		return BMFS_CMD_RMDIR;
+	else if (strcmp(cmd, "dump") == 0)
+		return BMFS_CMD_DUMP;
 	else if (strcmp(cmd, "version") == 0)
 		return BMFS_CMD_VERSION;
 	else if (strcmp(cmd, "help") == 0)
@@ -143,6 +147,8 @@ static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv);
 static int cmd_rm(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_rmdir(struct BMFS *bmfs, int argc, const char **argv);
+
+static int cmd_dump(struct BMFS *bmfs, int argc, const char **argv);
 
 static void print_help(const char *argv0, int argc, const char **argv);
 
@@ -306,6 +312,9 @@ int main(int argc, const char **argv)
 		break;
 	case BMFS_CMD_RMDIR:
 		err = cmd_rmdir(&bmfs, argc - i, &argv[i]);
+		break;
+	case BMFS_CMD_DUMP:
+		err = cmd_dump(&bmfs, argc - i, &argv[i]);
 		break;
 	default:
 		fprintf(stderr, "Error: Command not supported yet.\n");
@@ -803,7 +812,7 @@ static int cmd_rm(struct BMFS *bmfs, int argc, const char **argv)
 		int err = bmfs_delete_file(bmfs, argv[i]);
 		if ((err != 0) && !force)
 		{
-			fprintf(stderr, "Failed to create '%s'.\n", argv[i]);
+			fprintf(stderr, "Failed to delete '%s'.\n", argv[i]);
 			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 			return EXIT_FAILURE;
 		}
@@ -858,13 +867,107 @@ static int cmd_rmdir(struct BMFS *bmfs, int argc, const char **argv)
 
 		if ((err != 0) && !force)
 		{
-			fprintf(stderr, "Failed to create '%s'.\n", argv[i]);
+			fprintf(stderr, "Failed to delete '%s'.\n", argv[i]);
 			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 			return EXIT_FAILURE;
 		}
 
 		i++;
 	}
+
+	return EXIT_SUCCESS;
+}
+
+static int dump_indent(FILE *outfile, unsigned int length)
+{
+	for (unsigned int i = 0; i < length; i++)
+		fprintf(outfile, "%c", ' ');
+
+	return 0;
+}
+
+static int dump_bmfs(struct BMFS *bmfs, FILE *outfile)
+{
+	fprintf(outfile, "{\n");
+
+	dump_indent(outfile, 2);
+	fprintf(outfile, "\"table\" : [\n");
+
+	struct BMFSTable *table = &bmfs->Table;
+
+	bmfs_table_begin(table);
+
+	for (;;)
+	{
+		struct BMFSTableEntry *entry = bmfs_table_next(table);
+		if (entry == NULL)
+			break;
+
+		dump_indent(outfile, 4);
+		fprintf(outfile, "{\n");
+
+		dump_indent(outfile, 6);
+		fprintf(outfile, "\"offset\" : \"%llx\",\n", entry->Offset);
+
+		dump_indent(outfile, 6);
+		fprintf(outfile, "\"used\" : \"%llx\",\n", entry->Used);
+
+		dump_indent(outfile, 6);
+		fprintf(outfile, "\"reserved\" : \"%llx\",\n", entry->Reserved);
+
+		dump_indent(outfile, 6);
+		fprintf(outfile, "\"flags\" : \"%lx\",\n", entry->Flags);
+
+		dump_indent(outfile, 6);
+		fprintf(outfile, "\"checksum\" : \"%lx\"\n", entry->Checksum);
+
+		dump_indent(outfile, 4);
+		fprintf(outfile, "},\n");
+	}
+
+	dump_indent(outfile, 4);
+	fprintf(outfile, "{\n");
+	dump_indent(outfile, 4);
+	fprintf(outfile, "}\n");
+
+	dump_indent(outfile, 2);
+	fprintf(outfile, "]\n");
+
+	fprintf(outfile, "}\n");
+
+	return 0;
+}
+
+static int cmd_dump(struct BMFS *bmfs, int argc, const char **argv)
+{
+	const char *outname = "bmfs-img.json";
+
+	int i = 0;
+
+	while (i < argc)
+	{
+		if (is_opt(argv[i], 'f', "file"))
+		{
+			outname = argv[++i];
+			if (outname == NULL)
+			{
+				fprintf(stderr, "Error: Output file not specified.\n");
+				return EXIT_FAILURE;
+			}
+		}
+		i++;
+	}
+
+	FILE *outfile = fopen(outname, "wb");
+	if (outfile == NULL)
+	{
+		fprintf(stderr, "Error: Failed to open '%s'.\n", outname);
+		return EXIT_FAILURE;
+	}
+
+	dump_bmfs(bmfs, outfile);
+
+	fclose(outfile);
 
 	return EXIT_SUCCESS;
 }
