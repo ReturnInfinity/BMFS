@@ -62,7 +62,9 @@ struct BMFSTableEntry
 	/** The number of bytes reserved for the region. */
 	bmfs_uint64 Reserved;
 	/** Flags associated with the allocation. */
-	bmfs_uint64 Flags;
+	bmfs_uint32 Flags;
+	/** Checksum of the entry. */
+	bmfs_uint32 Checksum;
 };
 
 /** Initializes a table entry.
@@ -102,6 +104,13 @@ int bmfs_table_entry_write(const struct BMFSTableEntry *entry,
 
 bmfs_bool bmfs_table_entry_is_deleted(const struct BMFSTableEntry *entry);
 
+/** Set the 'deleted' flag bit so that this entry
+ * is not counted in other allocation calls.
+ * @param entry The entry to mark as deleted.
+ * */
+
+void bmfs_table_entry_set_deleted(struct BMFSTableEntry *entry);
+
 /** The disk allocation table.
  * Used for allocation space on the disk
  * and ensuring that no two allocations
@@ -109,7 +118,8 @@ bmfs_bool bmfs_table_entry_is_deleted(const struct BMFSTableEntry *entry);
  * @ingroup table-api
  * */
 
-struct BMFSTable {
+struct BMFSTable
+{
 	/** A pointer to the associated disk. */
 	struct BMFSDisk *Disk;
 	/** A placeholder for the current entry. */
@@ -130,6 +140,23 @@ struct BMFSTable {
  * */
 
 void bmfs_table_init(struct BMFSTable *table);
+
+/** When iterating the table, allow for the
+ * deleted entries to be returned.
+ * @param table An initialized allocation table.
+ * @ingroup table-api
+ * */
+
+void bmfs_table_view_deleted(struct BMFSTable *table);
+
+/** When iterating the table, do not return
+ * the entries that have been deleted. This
+ * is the default behavior.
+ * @param table An initialized allocation table.
+ * @ingroup table-api
+ * */
+
+void bmfs_table_hide_deleted(struct BMFSTable *table);
 
 /** Allocates space on the disk, adding an
  * entry to the allocation table.
@@ -182,19 +209,17 @@ int bmfs_table_import(struct BMFSTable *table);
 
 /** Goes to the beginning of the table.
  * @param table An initialized table structure.
- * @returns The first entry in the table.
  * @ingroup table-api
  * */
 
-struct BMFSTableEntry *bmfs_table_begin(struct BMFSTable *table);
+void bmfs_table_begin(struct BMFSTable *table);
 
 /** Goes to the end of the table.
  * @param table An initialized table structure.
- * @returns The last entry in the table.
  * @ingroup table-api
  * */
 
-struct BMFSTableEntry *bmfs_table_end(struct BMFSTable *table);
+void bmfs_table_end(struct BMFSTable *table);
 
 /** Goes to the previous entry in the table.
  * @param table An initialized table structure.
