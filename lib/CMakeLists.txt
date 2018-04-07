@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 add_library("bmfs-library"
 	"entry.c"
+	"errno.c"
 	"dir.c"
 	"disk.c"
 	"file.c"
