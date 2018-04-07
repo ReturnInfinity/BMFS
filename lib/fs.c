@@ -21,6 +21,9 @@ static int is_entry(struct BMFSEntry *entry,
                     const char *name,
                     bmfs_uint64 name_size) {
 
+	if (bmfs_entry_is_deleted(entry))
+		return 0;
+
 	if ((name_size == 0) || (name_size >= BMFS_FILE_NAME_MAX))
 		return 0;
 
@@ -725,10 +728,21 @@ int bmfs_delete_file(struct BMFS *fs, const char *path)
 	 *  - delete the entry within the parent directory
 	 */
 
-	(void) fs;
-	(void) path;
+	struct BMFSFile file;
 
-	return BMFS_ENOSYS;
+	bmfs_file_init(&file);
+
+	int err = bmfs_open_file(fs, &file, path);
+	if (err != 0)
+		return err;
+
+	bmfs_file_set_mode(&file, BMFS_FILE_MODE_WRITE);
+
+	bmfs_entry_set_deleted(&file.Entry);
+
+	bmfs_file_close(&file);
+
+	return 0;
 }
 
 int bmfs_import(struct BMFS *fs)
