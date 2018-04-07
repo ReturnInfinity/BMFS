@@ -37,6 +37,9 @@ struct BMFSFileDisk
 	FILE *file;
 	/** The structure containing the disk callbacks. */
 	struct BMFSDisk base;
+	/** The offset, within the file, of the file system.
+	 * Initially, this field is set to 512 bytes. */
+	bmfs_uint64 offset;
 };
 
 /** Initializes a file disk for use.
@@ -53,6 +56,17 @@ void bmfs_filedisk_init(struct BMFSFileDisk *filedisk);
  * */
 
 void bmfs_filedisk_done(struct BMFSFileDisk *filedisk);
+
+/** Sets the offset of the file system on the file.
+ * This function is useful if the boot sector needs to
+ * be preserved, or if other disk contents need to be preserved as well.
+ * @param filedisk An initialized file disk structure.
+ * @param offset The offset, in bytes, of the file system on disk.
+ * @ingroup filedisk-api
+ * */
+
+void bmfs_filedisk_set_offset(struct BMFSFileDisk *filedisk,
+                              bmfs_uint64 offset);
 
 /** Opens a file for the file disk.
  * If a file is already open, it is closed before
