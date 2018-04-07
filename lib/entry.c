@@ -10,6 +10,10 @@
 #include <bmfs/errno.h>
 #include <bmfs/limits.h>
 
+#define BMFS_MASK_STATE 0xf0
+
+#define BMFS_STATE_DELETED 0x10
+
 #define BMFS_MASK_TYPE 0x0f
 
 #define BMFS_FLAG_FILE 0x01
@@ -37,6 +41,15 @@ void bmfs_entry_copy(struct BMFSEntry *dst,
                      const struct BMFSEntry *src)
 {
 	*dst = *src;
+}
+
+bmfs_bool bmfs_entry_is_deleted(const struct BMFSEntry *entry)
+{
+	bmfs_uint64 state = entry->Flags & BMFS_MASK_STATE;
+	if (state & BMFS_STATE_DELETED)
+		return BMFS_TRUE;
+
+	return BMFS_FALSE;
 }
 
 int bmfs_entry_read(struct BMFSEntry *entry,
@@ -97,6 +110,11 @@ int bmfs_entry_get_offset(const struct BMFSEntry *entry, bmfs_uint64 *offset)
 	*offset = entry->Offset;
 
 	return 0;
+}
+
+void bmfs_entry_set_deleted(struct BMFSEntry *entry)
+{
+	entry->Flags |= BMFS_STATE_DELETED;
 }
 
 void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename)

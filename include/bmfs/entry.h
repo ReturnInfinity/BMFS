@@ -35,7 +35,7 @@ enum BMFSEntryType
 	/** The entry is a directory. */
 	BMFS_TYPE_DIRECTORY,
 	/** The entry is a link to another entry. */
-	BMFS_TYPE_LINK
+	BMFS_TYPE_LINK,
 };
 
 /** An entry within a BMFS directory.
@@ -56,8 +56,8 @@ struct BMFSEntry
 	bmfs_uint64 CreationTime;
 	/** The time that the entry was last modified. */
 	bmfs_uint64 ModificationTime;
-	/** Stores information on entry type
-	 * and permissions. */
+	/** Stores information on entry type,
+	 * permissions, and state. */
 	bmfs_uint64 Flags;
 	/** The owner user ID */
 	bmfs_uint64 UserID;
@@ -85,6 +85,16 @@ void bmfs_entry_init(struct BMFSEntry *entry);
 
 void bmfs_entry_copy(struct BMFSEntry *dst,
                      const struct BMFSEntry *src);
+
+/** Indicates whether or not the entry
+ * has been deleted.
+ * @param entry An initialized entry structure.
+ * @returns @ref BMFS_TRUE if the entry has been
+ * deleted, @ref BMFS_FALSE if it has not been.
+ * @ingroup entry-api
+ * */
+
+bmfs_bool bmfs_entry_is_deleted(const struct BMFSEntry *entry);
 
 /** Reads an entry from disk.
  * @param entry The entry to read.
@@ -119,6 +129,13 @@ int bmfs_entry_write(const struct BMFSEntry *entry,
 
 int bmfs_entry_get_offset(const struct BMFSEntry *entry,
                           bmfs_uint64 *offset);
+
+/** Indicate that the entry is deleted.
+ * @param entry An initialized entry structure.
+ * @ingroup entry-api
+ * */
+
+void bmfs_entry_set_deleted(struct BMFSEntry *entry);
 
 /** Sets the file name of an entry.
  * @param entry An initialized or
