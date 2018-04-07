@@ -60,6 +60,17 @@ struct BMFSDir
 
 void bmfs_dir_init(struct BMFSDir *dir);
 
+/** Writes the directory back to the disk.
+ * You can only call this function after
+ * using @ref bmfs_open_dir.
+ * @param dir An initialized directory.
+ * @returns Zero on success, an error code
+ * on failure.
+ * @ingroup dir-api
+ */
+
+int bmfs_dir_save(struct BMFSDir *dir);
+
 /** Indicate that it is okay to return
  * deleted entries in the directory.
  * @param dir An initialized directory structure.
@@ -99,7 +110,7 @@ int bmfs_dir_import(struct BMFSDir *dir);
  * a null pointer is returned.
  * */
 
-const struct BMFSEntry *bmfs_dir_next(struct BMFSDir *dir);
+struct BMFSEntry *bmfs_dir_next(struct BMFSDir *dir);
 
  #ifdef __cplusplus
 } /* extern "C" { */

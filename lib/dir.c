@@ -10,7 +10,7 @@
 #include <bmfs/disk.h>
 #include <bmfs/errno.h>
 
-static const struct BMFSEntry *next_without_skipping(struct BMFSDir *dir)
+static struct BMFSEntry *next_without_skipping(struct BMFSDir *dir)
 {
 	bmfs_uint64 offset = 0;
 	offset += (bmfs_uint64) dir->CurrentIndex;
@@ -41,6 +41,15 @@ void bmfs_dir_init(struct BMFSDir *dir)
 	dir->IgnoreDeleted = BMFS_TRUE;
 	bmfs_entry_init(&dir->Entry);
 	bmfs_entry_init(&dir->CurrentEntry);
+}
+
+int bmfs_dir_save(struct BMFSDir *dir)
+{
+	int err = bmfs_entry_save(&dir->Entry, dir->Disk);
+	if (err != 0)
+		return err;
+
+	return 0;
 }
 
 void bmfs_dir_view_deleted(struct BMFSDir *dir)
@@ -82,9 +91,9 @@ int bmfs_dir_import(struct BMFSDir *dir)
 	return 0;
 }
 
-const struct BMFSEntry *bmfs_dir_next(struct BMFSDir *dir)
+struct BMFSEntry *bmfs_dir_next(struct BMFSDir *dir)
 {
-	const struct BMFSEntry *entry = BMFS_NULL;
+	struct BMFSEntry *entry = BMFS_NULL;
 
 	for (;;)
 	{
