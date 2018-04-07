@@ -135,6 +135,8 @@ static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_rm(struct BMFS *bmfs, int argc, const char **argv);
 
+static int cmd_rmdir(struct BMFS *bmfs, int argc, const char **argv);
+
 static void print_help(const char *argv0, int argc, const char **argv);
 
 static void print_version(void);
@@ -291,6 +293,9 @@ int main(int argc, const char **argv)
 		break;
 	case BMFS_CMD_RM:
 		err = cmd_rm(&bmfs, argc - i, &argv[i]);
+		break;
+	case BMFS_CMD_RMDIR:
+		err = cmd_rmdir(&bmfs, argc - i, &argv[i]);
 		break;
 	default:
 		fprintf(stderr, "Error: Command not supported yet.\n");
@@ -744,6 +749,61 @@ static int cmd_rm(struct BMFS *bmfs, int argc, const char **argv)
 	return EXIT_SUCCESS;
 }
 
+static int cmd_rmdir(struct BMFS *bmfs, int argc, const char **argv)
+{
+	int i = 0;
+
+	int force = 0;
+	int recurse = 0;
+
+	while (i < argc)
+	{
+		if (argv[i][0] != '-')
+		{
+			break;
+		}
+		else if (is_opt(argv[i], 'f', "force"))
+		{
+			force = 1;
+		}
+		else if (is_opt(argv[i], 'r', "recurse"))
+		{
+			recurse = 1;
+		}
+		else
+		{
+			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
+			return EXIT_FAILURE;
+		}
+	}
+
+	while (i < argc)
+	{
+		if (argv[i][0] == '-') {
+			fprintf(stderr, "Error: Options must be specified before directory paths.\n");
+			return EXIT_FAILURE;
+		}
+
+		int err = 0;
+
+		if (recurse)
+			err = bmfs_delete_dir_recursively(bmfs, argv[i]);
+		else
+			err = bmfs_delete_dir(bmfs, argv[i]);
+
+		if ((err != 0) && !force)
+		{
+			fprintf(stderr, "Failed to create '%s'.\n", argv[i]);
+			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
+			return EXIT_FAILURE;
+		}
+
+		i++;
+	}
+
+	return EXIT_SUCCESS;
+}
+
 static void print_usage(const char *argv0)
 {
 	printf("Usage: %s [options] <command>\n", argv0);
@@ -761,6 +821,7 @@ static void print_usage(const char *argv0)
 	printf("\ttouch   : Creates a file if it doesn't exist and updates its modification time.\n");
 	printf("\trm      : Deletes a file if it exists.\n");
 	printf("\tdelete  : Alias for 'rm'.\n");
+	printf("\trmdir   : Deletes a directory, if it exists.\n");
 	printf("\tformat  : Formats an existing file with BMFS.\n");
 	printf("\tmkdir   : Creates a directory, if it doesn't exist.\n");
 	printf("\n");
@@ -807,6 +868,19 @@ static void print_help(const char *argv0, int argc, const char **argv)
 		break;
 	case BMFS_CMD_TOUCH:
 		printf("%s touch PATH\n", argv0);
+		break;
+	case BMFS_CMD_RMDIR:
+		printf("%s rmdir DIR\n", argv0);
+		printf("\n");
+		printf("Options:\n");
+		printf("\t-f, --force   : Ignore errors when deleting directories.\n");
+		printf("\t-r, --recurse : Delete all files and subdirectories as well.\n");
+		break;
+	case BMFS_CMD_RM:
+		printf("%s rm FILE\n", argv0);
+		printf("\n");
+		printf("Options:\n");
+		printf("\t-f, --force : Ignore errors when deleting files.\n");
 		break;
 	default:
 		printf("No help available for '%s'\n", argv[0]);
