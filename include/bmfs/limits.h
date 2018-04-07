@@ -48,5 +48,10 @@
 
 #define BMFS_MINIMUM_DISK_SIZE (BMFS_BLOCK_SIZE * 3ULL)
 
+/** The size of a single entry in the allocation table.
+ * */
+
+#define BMFS_TABLE_ENTRY_SIZE 64ULL
+
 #endif /* BMFS_LIMITS_H */
 
