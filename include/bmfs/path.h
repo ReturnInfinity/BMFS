@@ -42,6 +42,23 @@ struct BMFSPath
 
 void bmfs_path_init(struct BMFSPath *path);
 
+/** Get the base name of the current path.
+ * @param path The path to get the base name of.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup path-api
+ * */
+
+int bmfs_path_basename(struct BMFSPath *path);
+
+/** Copies a path from one location to another.
+ * @param dst This is the path that will contain the new copy.
+ * @param src This is the path that is copied.
+ * @ingroup path-api
+ * */
+
+void bmfs_path_copy(struct BMFSPath *dst,
+                    const struct BMFSPath *src);
+
 /** Inidicates whether or not the path is empty.
  * @param path An initialized path structure.
  * @returns One if the path is empty, zero if
@@ -50,6 +67,17 @@ void bmfs_path_init(struct BMFSPath *path);
  * */
 
 int bmfs_path_empty(const struct BMFSPath *path);
+
+/** Get the parent directory of the path.
+ * @param path The path to get the parent of.
+ * @returns Zero on success.
+ * If the path does not contain a parent
+ * directory and is just a base name or '/',
+ * when @ref BMFS_ENOENT is returned.
+ * @ingroup path-api
+ * */
+
+int bmfs_path_parent(struct BMFSPath *path);
 
 /** Gets the root directory of the path.
  * If the path is already a root directory,
