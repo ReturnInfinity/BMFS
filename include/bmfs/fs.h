@@ -171,7 +171,7 @@ int bmfs_open_dir(struct BMFS *bmfs,
                   const char *path);
 
 /** Deletes a file on the file system.
- * @param bmfs An initialized disk structure.
+ * @param bmfs An initialized file system structure.
  * @param path The path of the file to delete.
  * @returns Zero on success, an error code on failure.
  * @ingroup fs-api
@@ -179,6 +179,17 @@ int bmfs_open_dir(struct BMFS *bmfs,
 
 int bmfs_delete_file(struct BMFS *bmfs,
                      const char *path);
+
+/** Deletes a directory on the file system.
+ * The directory is only deleted if the contents are empty.
+ * @param bmfs An initialized file system structure.
+ * @param path The path to the directory.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup fs-api
+ * */
+
+int bmfs_delete_dir(struct BMFS *bmfs,
+                    const char *path);
 
 #ifdef __cplusplus
 } /* extern "C" { */
