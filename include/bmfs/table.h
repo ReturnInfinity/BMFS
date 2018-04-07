@@ -75,6 +75,23 @@ int bmfs_table_entry_read(struct BMFSTableEntry *entry,
 int bmfs_table_entry_write(const struct BMFSTableEntry *entry,
                            struct BMFSDisk *disk);
 
+/** The disk allocation table.
+ * Used for allocation space on the disk
+ * and ensuring that no two allocations
+ * overlap.
+ * */
+
+struct BMFSTable {
+	/** A pointer to the associated disk. */
+	struct BMFSDisk *Disk;
+	/** A placeholder for the current entry. */
+	struct BMFSTableEntry CurrentEntry;
+	/** The offset of the table on disk. */
+	bmfs_uint64 TableOffset;
+	/** The index of the current table entry. */
+	bmfs_uint64 EntryIndex;
+};
+
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
