@@ -24,6 +24,7 @@ int main(void)
 	test("0B", 0ULL);
 	test("0",  0ULL);
 	test("31G", 31ULL * 1024ULL * 1024ULL * 1024ULL);
+	test("512B", 512);
 	return EXIT_SUCCESS;
 }
 

@@ -25,19 +25,15 @@ int bmfs_size_parse(struct BMFSSize *size, const char *str)
 
 	bmfs_uint64 value = 0;
 
-	bmfs_uint64 base = 1;
-
 	while (*str)
 	{
 		char c = *str;
 		if ((c < '0') || (c > '9'))
 			break;
 
-		value *= base;
+		value *= 10;
 
 		value += (c - '0');
-
-		base *= 10;
 
 		str++;
 	}
