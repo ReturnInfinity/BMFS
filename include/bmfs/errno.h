@@ -83,6 +83,13 @@
 
 #define BMFS_EPERM -10
 
+/** Failed to delete a directory because
+ * it still contains entries.
+ * @ingroup errno
+ * */
+
+#define BMFS_ENOTEMPTY -11
+
 #ifdef __cplusplus
 extern "C"
 {

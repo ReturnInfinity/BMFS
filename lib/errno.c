@@ -33,6 +33,8 @@ const char *bmfs_strerror(int bmfs_errno)
 		return "Input/Output error occured";
 	case BMFS_EPERM:
 		return "Insufficient permissions";
+	case BMFS_ENOTEMPTY:
+		return "Directory not empty";
 	default:
 		return "Unknown error occured";
 	}
