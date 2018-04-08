@@ -142,49 +142,6 @@ int bmfs_disk_write(struct BMFSDisk *disk,
                     bmfs_uint64 len,
                     bmfs_uint64 *write_len);
 
-/** Determines the amount of bytes
- * available in the disk.
- * @param disk An initialized disk.
- * @param bytes A pointer to the
- *  variable that will receive the
- *  number of bytes available on
- *  the disk.
- * @returns Zero on success, a
- *  negative error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_bytes(struct BMFSDisk *disk,
-                    bmfs_uint64 *bytes);
-
-/** Determines the number of mebibytes
- * available on disk.
- * @param disk An initialized disk.
- * @param mebibytes A pointer to the
- *  variable that will receive the
- *  number of mebibytes on the disk.
- * @returns Zero on success, a negative
- *  error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_mebibytes(struct BMFSDisk *disk,
-                        bmfs_uint64 *mebibytes);
-
-/** Determines the number of blocks
- * available on disk.
- * @param disk An initialized disk.
- * @param blocks A pointer to the
- *  variable that will receive the
- *  number of blocks on the disk.
- * @returns Zero on success, a
- *  negative error code on failure.
- * @ingroup disk-api
- */
-
-int bmfs_disk_blocks(struct BMFSDisk *disk,
-                     bmfs_uint64 *blocks);
-
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
