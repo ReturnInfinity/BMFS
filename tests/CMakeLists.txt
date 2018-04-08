@@ -10,6 +10,8 @@ add_bmfs_test("dir-test" "dir-test.c")
 
 add_bmfs_test("disk-test" "disk-test.c")
 
+add_bmfs_test("encoding-test" "encoding-test.c")
+
 add_bmfs_test("fs-test" "fs-test.c")
 
 add_bmfs_test("path-test" "path-test.c")
