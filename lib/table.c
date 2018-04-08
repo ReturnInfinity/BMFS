@@ -8,11 +8,10 @@
 #include <bmfs/table.h>
 
 #include <bmfs/disk.h>
-#include <bmfs/errno.h>
+#include <bmfs/encoding.h>
 #include <bmfs/entry.h>
+#include <bmfs/errno.h>
 #include <bmfs/limits.h>
-
-#include <stdio.h>
 
 static bmfs_uint64 get_block_size(const struct BMFSTable *table)
 {
@@ -62,13 +61,23 @@ int bmfs_table_entry_check(const struct BMFSTableEntry *entry)
 int bmfs_table_entry_read(struct BMFSTableEntry *entry,
                           struct BMFSDisk *disk)
 {
+	unsigned char buf[24];
+
 	bmfs_uint64 read_count = 0;
 
-	int err = bmfs_disk_read(disk, entry, sizeof(*entry), &read_count);
+	int err = bmfs_disk_read(disk, buf, sizeof(buf), &read_count);
 	if (err != 0)
 		return err;
-	else if (read_count != sizeof(*entry))
+	else if (read_count != sizeof(buf))
 		return BMFS_EIO;
+
+	entry->Offset = bmfs_decode_uint64(&buf[0x00]);
+	entry->Reserved = bmfs_decode_uint64(&buf[0x08]);
+	entry->Flags = bmfs_decode_uint32(&buf[0x10]);
+	entry->Checksum = bmfs_decode_uint32(&buf[0x14]);
+
+	if (bmfs_table_entry_checksum(entry) != entry->Checksum)
+		return BMFS_EINVAL;
 
 	return 0;
 }
@@ -76,12 +85,19 @@ int bmfs_table_entry_read(struct BMFSTableEntry *entry,
 int bmfs_table_entry_write(const struct BMFSTableEntry *entry,
                            struct BMFSDisk *disk)
 {
+	unsigned char buf[24];
+
+	bmfs_encode_uint64(entry->Offset, &buf[0x00]);
+	bmfs_encode_uint64(entry->Reserved, &buf[0x08]);
+	bmfs_encode_uint32(entry->Flags, &buf[0x10]);
+	bmfs_encode_uint32(bmfs_table_entry_checksum(entry), &buf[0x14]);
+
 	bmfs_uint64 write_count = 0;
 
-	int err = bmfs_disk_write(disk, entry, sizeof(*entry), &write_count);
+	int err = bmfs_disk_write(disk, buf, sizeof(buf), &write_count);
 	if (err != 0)
 		return err;
-	else if (write_count != sizeof(*entry))
+	else if (write_count != sizeof(buf))
 		return BMFS_EIO;
 
 	return 0;
@@ -386,8 +402,6 @@ int bmfs_table_save_all(struct BMFSTable *table)
 		struct BMFSTableEntry *entry = bmfs_table_next(table);
 		if (entry == BMFS_NULL)
 			break;
-
-		entry->Checksum = bmfs_table_entry_checksum(entry);
 
 		table->EntryIndex--;
 
