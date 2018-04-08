@@ -975,7 +975,11 @@ static int dump_header(struct BMFSHeader *header, FILE *outfile)
 
 	dump_llx(outfile, 4, "table-entry-count", header->TableEntryCount, BMFS_TRUE);
 
-	dump_llx(outfile, 4, "total-size", header->TotalSize, BMFS_FALSE);
+	dump_llx(outfile, 4, "total-size", header->TotalSize, BMFS_TRUE);
+
+	dump_x(outfile, 4, "flags", header->Flags, BMFS_TRUE);
+
+	dump_x(outfile, 4, "checksum", header->Checksum, BMFS_FALSE);
 
 	dump_indent(outfile, 2);
 	fprintf(outfile, "},\n");

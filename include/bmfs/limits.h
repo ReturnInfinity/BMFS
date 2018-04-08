@@ -10,11 +10,17 @@
 #ifndef BMFS_LIMITS_H
 #define BMFS_LIMITS_H
 
+/** This is the size of the header,
+ * not including padding.
+ * */
+
+#define BMFS_HEADER_SIZE_MIN 56ULL
+
 /** This is the size, including padding,
  * of the file system header.
  * */
 
-#define BMFS_HEADER_SIZE 512ULL
+#define BMFS_HEADER_SIZE_FULL 512ULL
 
 /** This is the size of a single entry,
  * in bytes.

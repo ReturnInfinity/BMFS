@@ -52,9 +52,6 @@ struct BMFSHeader
 	/** A checksum of this header. This field is set
 	 * to zero during the calculation of the checksum. */
 	bmfs_uint32 Checksum;
-	/** Padding until the 512-byte marker.
-	 * This space is alos reserved for future use. */
-	bmfs_uint64 Reserved[57];
 };
 
 /** Initializes a file system header.
