@@ -31,10 +31,10 @@ void bmfs_header_init(struct BMFSHeader *header)
 	header->RootOffset += BMFS_TABLE_ENTRY_COUNT_MAX * sizeof(struct BMFSTableEntry);
 
 	header->TableEntryCount = 0;
-
 	header->TotalSize = BMFS_MINIMUM_DISK_SIZE;
-
 	header->BlockSize = 4096;
+	header->Flags = 0;
+	header->Checksum = 0;
 
 	for (bmfs_uint64 i = 0; i < (sizeof(header->Reserved) / sizeof(header->Reserved[0])); i++)
 		header->Reserved[i] = 0;
