@@ -261,6 +261,13 @@ int main(int argc, const char **argv)
 	if (cmd == BMFS_CMD_FORMAT)
 	{
 		int err = cmd_format(&bmfs, argc - i, &argv[i]);
+		if (err != 0)
+		{
+			bmfs_filedisk_done(&filedisk);
+			return EXIT_FAILURE;
+		}
+
+		err = bmfs_export(&bmfs);
 
 		bmfs_filedisk_done(&filedisk);
 
@@ -318,6 +325,15 @@ int main(int argc, const char **argv)
 		break;
 	default:
 		fprintf(stderr, "Error: Command not supported yet.\n");
+		bmfs_filedisk_done(&filedisk);
+		return EXIT_FAILURE;
+	}
+
+	err = bmfs_export(&bmfs);
+	if (err != 0)
+	{
+		fprintf(stderr, "Error: Failed to export file system.\n");
+		fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 		bmfs_filedisk_done(&filedisk);
 		return EXIT_FAILURE;
 	}
@@ -431,7 +447,7 @@ static int cmd_mkdir(struct BMFS *bmfs, int argc, const char **argv)
 		if (err != 0)
 		{
 			fprintf(stderr, "Error: Failed to create '%s'.\n", path);
-			fprintf(stderr, "\t%s\n", bmfs_strerror(err));
+			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
 			return EXIT_FAILURE;
 		}
 
@@ -886,16 +902,65 @@ static int dump_indent(FILE *outfile, unsigned int length)
 	return 0;
 }
 
-static int dump_bmfs(struct BMFS *bmfs, FILE *outfile)
+static int dump_lx(FILE *outfile,
+                   unsigned int indent,
+                   const char *name,
+                   bmfs_uint32 value,
+                   bmfs_bool use_comma)
 {
-	fprintf(outfile, "{\n");
+	dump_indent(outfile, indent);
 
+	if (use_comma)
+		fprintf(outfile, "\"%s\" : \"%lx\",\n", name, value);
+	else
+		fprintf(outfile, "\"%s\" : \"%lx\"\n", name, value);
+
+	return 0;
+}
+
+static int dump_llx(FILE *outfile,
+                    unsigned int indent,
+                    const char *name,
+                    bmfs_uint64 value,
+                    bmfs_bool use_comma)
+{
+	dump_indent(outfile, indent);
+
+	if (use_comma)
+		fprintf(outfile, "\"%s\" : \"%llx\",\n", name, value);
+	else
+		fprintf(outfile, "\"%s\" : \"%llx\"\n", name, value);
+
+	return 0;
+}
+
+static int dump_header(struct BMFSHeader *header, FILE *outfile)
+{
+	dump_indent(outfile, 2);
+	fprintf(outfile, "\"header\" : {\n");
+
+	dump_llx(outfile, 4, "root-offset", header->RootOffset, BMFS_TRUE);
+
+	dump_llx(outfile, 4, "table-offset", header->TableOffset, BMFS_TRUE);
+
+	dump_llx(outfile, 4, "table-entry-count", header->TableEntryCount, BMFS_TRUE);
+
+	dump_llx(outfile, 4, "total-size", header->TotalSize, BMFS_FALSE);
+
+	dump_indent(outfile, 2);
+	fprintf(outfile, "},\n");
+
+	return 0;
+}
+
+static int dump_table(struct BMFSTable *table, FILE *outfile)
+{
 	dump_indent(outfile, 2);
 	fprintf(outfile, "\"table\" : [\n");
 
-	struct BMFSTable *table = &bmfs->Table;
-
 	bmfs_table_begin(table);
+
+	bmfs_table_view_deleted(table);
 
 	for (;;)
 	{
@@ -906,20 +971,13 @@ static int dump_bmfs(struct BMFS *bmfs, FILE *outfile)
 		dump_indent(outfile, 4);
 		fprintf(outfile, "{\n");
 
-		dump_indent(outfile, 6);
-		fprintf(outfile, "\"offset\" : \"%llx\",\n", entry->Offset);
+		dump_llx(outfile, 6, "offset", entry->Offset, BMFS_TRUE);
 
-		dump_indent(outfile, 6);
-		fprintf(outfile, "\"used\" : \"%llx\",\n", entry->Used);
+		dump_llx(outfile, 6, "reserved", entry->Reserved, BMFS_TRUE);
 
-		dump_indent(outfile, 6);
-		fprintf(outfile, "\"reserved\" : \"%llx\",\n", entry->Reserved);
+		dump_lx(outfile, 6, "flags", entry->Flags, BMFS_TRUE);
 
-		dump_indent(outfile, 6);
-		fprintf(outfile, "\"flags\" : \"%lx\",\n", entry->Flags);
-
-		dump_indent(outfile, 6);
-		fprintf(outfile, "\"checksum\" : \"%lx\"\n", entry->Checksum);
+		dump_lx(outfile, 6, "checksum", entry->Checksum, BMFS_FALSE);
 
 		dump_indent(outfile, 4);
 		fprintf(outfile, "},\n");
@@ -934,6 +992,17 @@ static int dump_bmfs(struct BMFS *bmfs, FILE *outfile)
 	fprintf(outfile, "]\n");
 
 	fprintf(outfile, "}\n");
+
+	return 0;
+}
+
+static int dump_bmfs(struct BMFS *bmfs, FILE *outfile)
+{
+	fprintf(outfile, "{\n");
+
+	dump_header(&bmfs->Header, outfile);
+
+	dump_table(&bmfs->Table, outfile);
 
 	return 0;
 }
