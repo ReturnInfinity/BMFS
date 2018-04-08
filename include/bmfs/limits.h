@@ -51,7 +51,7 @@
 /** The size of a single entry in the allocation table.
  * */
 
-#define BMFS_TABLE_ENTRY_SIZE 64ULL
+#define BMFS_TABLE_ENTRY_SIZE 24ULL
 
 #endif /* BMFS_LIMITS_H */
 
