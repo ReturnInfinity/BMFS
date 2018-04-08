@@ -41,7 +41,8 @@ The header is padded 512 bytes. All fields are encoded as little-endian, unsigne
 | 0x10   | 0x0008 | TableOffset     | The offset, in bytes, of the allocation table.       |
 | 0x18   | 0x0008 | TableEntryCount | The number of entries used in the allocation table.  |
 | 0x20   | 0x0008 | TotalSize       | The total size that the file system may grow to.     |
-| 0x28   | 0x01D8 | Reserved        | Used for padding until it's needed for other fields. |
+| 0x28   | 0x0008 | BlockSize       | The number of bytes per block.                       |
+| 0x30   | 0x01D0 | Reserved        | Used for padding until it's needed for other fields. |
 
 #### Allocation Table Entry
 
@@ -51,8 +52,9 @@ Here's the layout of a single entry.
 | Offset | Size | Name     | Description                                              |
 |--------|------|----------|----------------------------------------------------------|
 | 0x00   | 0x08 | Offset   | The offset, in bytes, of the allocation.                 |
-| 0x08   | 0x08 | Used     | The current number of bytes used by the allocation.      |
-| 0x10   | 0x08 | Reserved | The number of bytes reserved for the allocation to grow. |
+| 0x08   | 0x08 | Reserved | The number of bytes reserved for the allocation to grow. |
+| 0x10   | 0x04 | Flags    | Flags that relay information about the allocation.       |
+| 0x14   | 0x04 | Checksum | A checksum to validate the integrity of the entry.       |
 
 #### Directory Entry Structure:
 
