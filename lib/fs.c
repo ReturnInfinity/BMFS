@@ -17,6 +17,16 @@
 #include <bmfs/time.h>
 #include <bmfs/types.h>
 
+#include <stdio.h>
+
+static bmfs_uint64 get_block_size(const struct BMFS *bmfs)
+{
+	if (bmfs->Header.BlockSize == 0)
+		return 1;
+	else
+		return bmfs->Header.BlockSize;
+}
+
 static int is_entry(struct BMFSEntry *entry,
                     const char *name,
                     bmfs_uint64 name_size) {
@@ -35,11 +45,24 @@ static int is_entry(struct BMFSEntry *entry,
 	return 1;
 }
 
+static bmfs_bool can_fit_entry(struct BMFS *fs,
+                               const struct BMFSEntry *root)
+{
+	struct BMFSTableEntry *entry = bmfs_table_find(&fs->Table, root->Offset);
+	if (entry == BMFS_NULL)
+		return BMFS_FALSE;
+
+	if ((root->Size + BMFS_ENTRY_SIZE) > entry->Reserved)
+		return BMFS_FALSE;
+
+	return BMFS_TRUE;
+}
+
 static int add_entry(struct BMFS *fs,
                      struct BMFSEntry *root,
                      const struct BMFSEntry *entry)
 {
-	if ((root->Size + BMFS_ENTRY_SIZE) > BMFS_BLOCK_SIZE)
+	if (!can_fit_entry(fs, root))
 		return BMFS_ENOSPC;
 
 	bmfs_uint64 pos = root->Offset + root->Size;
@@ -550,95 +573,7 @@ void bmfs_set_disk(struct BMFS *fs,
 
 int bmfs_allocate(struct BMFS *fs, bmfs_uint64 size, bmfs_uint64 *offset_ptr)
 {
-	if ((fs == BMFS_NULL)
-	 || (fs->Disk == BMFS_NULL)
-	 || (offset_ptr == BMFS_NULL))
-		return BMFS_EFAULT;
-
-	/* Check to see if the allocation
-	 * table is already full. */
-
-	if (fs->Header.TableEntryCount >= BMFS_TABLE_ENTRY_COUNT_MAX) {
-		return BMFS_ENOSPC;
-	}
-
-	struct BMFSTableEntry entry;
-
-	bmfs_table_entry_init(&entry);
-
-	entry.Offset += sizeof(struct BMFSHeader);
-	entry.Offset += sizeof(struct BMFSTableEntry) * BMFS_TABLE_ENTRY_COUNT_MAX;
-	entry.Offset += sizeof(struct BMFSEntry);
-	entry.Used = size;
-	/* Round to the nearest block size */
-	entry.Reserved = ((size + (BMFS_BLOCK_SIZE - 1)) / BMFS_BLOCK_SIZE) * BMFS_BLOCK_SIZE;
-
-	/* If there is existing allocations, then adjust the
-	 * allocation to fit after the last region. */
-
-	if (fs->Header.TableEntryCount > 0) {
-
-		bmfs_uint64 entry_offset = 0;
-		entry_offset += fs->Header.TableOffset;
-		entry_offset += (fs->Header.TableEntryCount - 1) * sizeof(struct BMFSTableEntry);
-
-		int err = bmfs_disk_seek(fs->Disk, entry_offset, BMFS_SEEK_SET);
-		if (err != 0)
-			return err;
-
-		struct BMFSTableEntry last_entry;
-
-		bmfs_table_entry_init(&last_entry);
-
-		err = bmfs_table_entry_read(&last_entry, fs->Disk);
-		if (err != 0)
-			return err;
-
-		entry.Offset = last_entry.Offset + last_entry.Reserved;
-	}
-
-	/* Check to make sure that the offset can fit into the disk. */
-
-	if ((entry.Offset + entry.Reserved) > fs->Header.TotalSize) {
-		return BMFS_ENOSPC;
-	}
-
-	/* Write the table entry. */
-
-	bmfs_uint64 entry_offset = 0;
-	entry_offset += fs->Header.TableOffset;
-	entry_offset += sizeof(struct BMFSTableEntry) * fs->Header.TableEntryCount;
-
-	int err = bmfs_disk_seek(fs->Disk, entry_offset, BMFS_SEEK_SET);
-	if (err != 0)
-		return err;
-
-	err = bmfs_table_entry_write(&entry, fs->Disk);
-	if (err != 0)
-		return err;
-
-	/* Update the header. */
-
-	fs->Header.TableEntryCount++;
-
-	err = bmfs_disk_seek(fs->Disk, 0, BMFS_SEEK_SET);
-	if (err != 0)
-		return err;
-
-	err = bmfs_header_write(&fs->Header, fs->Disk);
-	if (err != 0)
-		return err;
-
-	/* Assign the offset */
-
-	*offset_ptr = entry.Offset;
-
-	return 0;
-}
-
-int bmfs_allocate_mebibytes(struct BMFS *fs, bmfs_uint64 mebibytes, bmfs_uint64 *offset)
-{
-	return bmfs_allocate(fs, mebibytes * 1024 * 1024, offset);
+	return bmfs_table_alloc(&fs->Table, size, offset_ptr);
 }
 
 int bmfs_check_signature(struct BMFS *fs)
@@ -678,7 +613,7 @@ int bmfs_create_file(struct BMFS *fs, const char *path)
 
 	bmfs_uint64 offset = 0;
 
-	int err = bmfs_allocate_mebibytes(fs, 2, &offset);
+	int err = bmfs_allocate(fs, get_block_size(fs), &offset);
 	if (err != 0)
 		return err;
 
@@ -703,7 +638,7 @@ int bmfs_create_dir(struct BMFS *fs, const char *path)
 
 	bmfs_uint64 offset = 0;
 
-	int err = bmfs_allocate_mebibytes(fs, 2 /* 2MiB */, &offset);
+	int err = bmfs_allocate(fs, get_block_size(fs), &offset);
 	if (err != 0)
 		return err;
 
@@ -900,6 +835,8 @@ int bmfs_import(struct BMFS *fs)
 	if ((fs == BMFS_NULL) || (fs->Disk == BMFS_NULL))
 		return BMFS_EFAULT;
 
+	/* Read the file system header. */
+
 	int err = bmfs_disk_seek(fs->Disk, 0, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
@@ -912,9 +849,39 @@ int bmfs_import(struct BMFS *fs)
 	if (err != 0)
 		return err;
 
+	/* Setup the allocation table */
+
 	bmfs_table_set_offset(&fs->Table, fs->Header.TableOffset);
 
-	err = bmfs_table_import(&fs->Table);
+	bmfs_uint64 min_offset = 0;
+	min_offset += sizeof(struct BMFSHeader);
+	min_offset += sizeof(struct BMFSTableEntry) * BMFS_TABLE_ENTRY_SIZE;
+	min_offset += sizeof(struct BMFSEntry);
+	bmfs_table_set_min_offset(&fs->Table, min_offset);
+
+	bmfs_table_set_max_offset(&fs->Table, fs->Header.TotalSize);
+
+	bmfs_table_set_count(&fs->Table, fs->Header.TableEntryCount);
+
+	return 0;
+}
+
+int bmfs_export(struct BMFS *fs)
+{
+	if ((fs == BMFS_NULL) || (fs->Disk == BMFS_NULL))
+		return BMFS_EFAULT;
+
+	fs->Header.TableEntryCount = fs->Table.EntryCount;
+
+	int err = bmfs_table_save_all(&fs->Table);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_seek(fs->Disk, 0, BMFS_SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_header_write(&fs->Header, fs->Disk);
 	if (err != 0)
 		return err;
 
@@ -923,36 +890,19 @@ int bmfs_import(struct BMFS *fs)
 
 int bmfs_format(struct BMFS *fs, bmfs_uint64 size)
 {
-	/* Write the file system header. */
+	/* Setup the allocation table. */
 
-	int err = bmfs_disk_seek(fs->Disk, 0UL, BMFS_SEEK_SET);
-	if (err != 0)
-		return err;
+	bmfs_table_set_offset(&fs->Table, fs->Header.TableOffset);
 
-	fs->Header.TotalSize = size;
+	bmfs_uint64 min_offset = 0;
+	min_offset += sizeof(struct BMFSHeader);
+	min_offset += sizeof(struct BMFSTableEntry) * BMFS_TABLE_ENTRY_SIZE;
+	min_offset += sizeof(struct BMFSEntry);
+	bmfs_table_set_min_offset(&fs->Table, min_offset);
 
-	err = bmfs_header_write(&fs->Header, fs->Disk);
-	if (err != 0)
-		return err;
+	bmfs_table_set_max_offset(&fs->Table, size);
 
-	/* Write the allocation table. */
-
-	err = bmfs_disk_seek(fs->Disk, fs->Header.TableOffset, BMFS_SEEK_SET);
-	if (err != 0)
-		return err;
-
-	for (bmfs_uint64 i = 0; i < BMFS_TABLE_ENTRY_COUNT_MAX; i++) {
-
-		struct BMFSTableEntry table_entry;
-
-		bmfs_table_entry_init(&table_entry);
-
-		err = bmfs_table_entry_write(&table_entry, fs->Disk);
-		if (err != 0)
-			return err;
-	}
-
-	/* Write the root directory. */
+	/* Create and write the root directory. */
 
 	struct BMFSEntry root;
 
@@ -960,7 +910,7 @@ int bmfs_format(struct BMFS *fs, bmfs_uint64 size)
 
 	bmfs_entry_set_type(&root, BMFS_TYPE_DIRECTORY);
 
-	err = bmfs_allocate(fs, BMFS_BLOCK_SIZE, &root.Offset);
+	int err = bmfs_allocate(fs, BMFS_BLOCK_SIZE, &root.Offset);
 	if (err != 0)
 		return err;
 
@@ -972,5 +922,36 @@ int bmfs_format(struct BMFS *fs, bmfs_uint64 size)
 	if (err != 0)
 		return err;
 
+	/* Write the allocation table. */
+
+	err = bmfs_table_save_all(&fs->Table);
+	if (err != 0)
+		return err;
+
+	/* Write the file system header. */
+
+	fs->Header.TableEntryCount = fs->Table.EntryCount;
+
+	fs->Header.TotalSize = size;
+
+	err = bmfs_disk_seek(fs->Disk, 0UL, BMFS_SEEK_SET);
+	if (err != 0)
+		return err;
+
+	err = bmfs_header_write(&fs->Header, fs->Disk);
+	if (err != 0)
+		return err;
+
 	return 0;
+}
+
+void bmfs_set_block_size(struct BMFS *bmfs,
+                         bmfs_uint64 block_size)
+{
+	if (block_size > 0)
+	{
+		bmfs_table_set_block_size(&bmfs->Table, block_size);
+
+		bmfs->Header.BlockSize = block_size;
+	}
 }
