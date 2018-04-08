@@ -13,6 +13,7 @@
 #include <bmfs/errno.h>
 #include <bmfs/file.h>
 #include <bmfs/path.h>
+#include <bmfs/status.h>
 #include <bmfs/table.h>
 #include <bmfs/time.h>
 #include <bmfs/types.h>
@@ -568,6 +569,27 @@ void bmfs_set_disk(struct BMFS *fs,
 	if ((fs != BMFS_NULL) && (disk != BMFS_NULL)) {
 		fs->Disk = disk;
 		bmfs_table_set_disk(&fs->Table, disk);
+	}
+}
+
+void bmfs_get_status(struct BMFS *fs,
+                     struct BMFSStatus *status)
+{
+	status->TotalSize = fs->Header.TotalSize;
+
+	struct BMFSTable *table = &fs->Table;
+
+	bmfs_table_begin(table);
+
+	bmfs_table_hide_deleted(table);
+
+	for (;;)
+	{
+		const struct BMFSTableEntry *entry = bmfs_table_next(table);
+		if (entry == BMFS_NULL)
+			break;
+
+		status->Reserved += entry->Reserved;
 	}
 }
 

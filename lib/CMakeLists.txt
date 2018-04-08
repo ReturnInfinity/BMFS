@@ -10,6 +10,7 @@ add_library("bmfs-library"
 	"fs.c"
 	"header.c"
 	"path.c"
+	"status.c"
 	"table.c")
 
 # Tell cmake that we want 'libbmfs.so' and not 'libbmfs-library.so'

@@ -25,6 +25,7 @@ libfiles += errno.o
 libfiles += file.o
 libfiles += fs.o
 libfiles += path.o
+libfiles += status.o
 libfiles += table.o
 
 stdlibfiles += filedisk.o
@@ -52,7 +53,7 @@ encoding.o: encoding.c encoding.h types.h
 
 file.o: file.c file.h entry.h disk.h types.h
 
-fs.o: fs.c fs.h disk.h entry.h dir.h types.h
+fs.o: fs.c fs.h disk.h entry.h dir.h status.h types.h
 
 header.o: header.c header.h types.h
 
@@ -61,6 +62,8 @@ path.o: path.c path.h types.h
 ramdisk.o: ramdisk.c ramdisk.h disk.h dir.h entry.h limits.h
 
 size.o: size.c size.h types.h
+
+status.o: status.c status.h types.h
 
 table.o: table.c table.h disk.h encoding.h types.h
 

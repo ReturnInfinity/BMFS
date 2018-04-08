@@ -48,6 +48,8 @@ enum bmfs_command {
 	BMFS_CMD_RMDIR,
 	/** Print file system structures */
 	BMFS_CMD_DUMP,
+	/** Print usage statistics */
+	BMFS_CMD_STATUS,
 	/** Print version */
 	BMFS_CMD_VERSION,
 	/** Print help contents of a command. */
@@ -84,6 +86,8 @@ static enum bmfs_command command_parse(const char *cmd)
 		return BMFS_CMD_RMDIR;
 	else if (strcmp(cmd, "dump") == 0)
 		return BMFS_CMD_DUMP;
+	else if( strcmp(cmd, "status") == 0)
+		return BMFS_CMD_STATUS;
 	else if (strcmp(cmd, "version") == 0)
 		return BMFS_CMD_VERSION;
 	else if (strcmp(cmd, "help") == 0)
@@ -141,6 +145,8 @@ static int cmd_cat(struct BMFS *bmfs, int argc, const char **argv);
 static int cmd_cp(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_ls(struct BMFS *bmfs, int argc, const char **argv);
+
+static int cmd_status(struct BMFS *bmfs, int argc, const char **argv);
 
 static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv);
 
@@ -319,6 +325,9 @@ int main(int argc, const char **argv)
 		break;
 	case BMFS_CMD_RMDIR:
 		err = cmd_rmdir(&bmfs, argc - i, &argv[i]);
+		break;
+	case BMFS_CMD_STATUS:
+		err = cmd_status(&bmfs, argc - i, &argv[i]);
 		break;
 	case BMFS_CMD_DUMP:
 		err = cmd_dump(&bmfs, argc - i, &argv[i]);
@@ -894,6 +903,27 @@ static int cmd_rmdir(struct BMFS *bmfs, int argc, const char **argv)
 	return EXIT_SUCCESS;
 }
 
+static int cmd_status(struct BMFS *bmfs, int argc, const char **argv)
+{
+	(void) argc;
+	(void) argv;
+
+	struct BMFSStatus status;
+
+	bmfs_status_init(&status);
+
+	bmfs_get_status(bmfs, &status);
+
+	double percent_used = ((double) status.Reserved) / ((double) status.TotalSize);
+	percent_used *= 100;
+
+	printf("Total Size:   %llu\n", status.TotalSize);
+	printf("Reserved:     %llu\n", status.Reserved);
+	printf("Percent Used: %.2lf%%\n", percent_used);
+
+	return EXIT_SUCCESS;
+}
+
 static int dump_indent(FILE *outfile, unsigned int length)
 {
 	for (unsigned int i = 0; i < length; i++)
@@ -1063,6 +1093,8 @@ static void print_usage(const char *argv0)
 	printf("\tmkdir   : Creates a directory, if it doesn't exist.\n");
 	printf("\tmv      : Move a file or directory.\n");
 	printf("\tmove    : Alias for 'mv'.\n");
+	printf("\tstatus  : Print usage statistics of the file system.\n");
+	printf("\tdump    : Dump file system structures to a file.\n");
 	printf("\n");
 	printf("File: may be used in a read, write, create or delete operation\n");
 }
@@ -1123,6 +1155,12 @@ static void print_help(const char *argv0, int argc, const char **argv)
 		printf("\n");
 		printf("Options:\n");
 		printf("\t-f, --force : Ignore errors when deleting files.\n");
+		break;
+	case BMFS_CMD_DUMP:
+		printf("%s dump\n", argv0);
+		break;
+	case BMFS_CMD_STATUS:
+		printf("%s status\n", argv0);
 		break;
 	default:
 		printf("No help available for '%s'\n", argv[0]);

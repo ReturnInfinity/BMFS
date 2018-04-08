@@ -25,6 +25,7 @@ extern "C" {
 struct BMFSDir;
 struct BMFSDisk;
 struct BMFSFile;
+struct BMFSStatus;
 
 /** Represents the file system as a whole.
  * @ingroup fs-api
@@ -63,6 +64,15 @@ void bmfs_init(struct BMFS *bmfs);
 
 void bmfs_set_disk(struct BMFS *bmfs,
                    struct BMFSDisk *disk);
+
+/** Calculates the usage status of the file system.
+ * @param bmfs An initalized file system.
+ * @param status The status structure to put information into.
+ * @ingroup fs-api
+ * */
+
+void bmfs_get_status(struct BMFS *bmfs,
+                     struct BMFSStatus *status);
 
 /** Locates a region that can
  * fit a certain number of bytes.
