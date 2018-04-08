@@ -57,8 +57,6 @@ struct BMFSTableEntry
 {
 	/** The offset, in bytes, of the region. */
 	bmfs_uint64 Offset;
-	/** The number of bytes used by the region. */
-	bmfs_uint64 Used;
 	/** The number of bytes reserved for the region. */
 	bmfs_uint64 Reserved;
 	/** Flags associated with the allocation. */
@@ -73,6 +71,16 @@ struct BMFSTableEntry
  * */
 
 void bmfs_table_entry_init(struct BMFSTableEntry *entry);
+
+/** Checks the table entry for data integrity.
+ * @param entry The entry to check.
+ * @returns Zero on success, an error code on failure.
+ * If the table entry has been determined to be invalid,
+ * then @ref BMFS_EINVAL is returned.
+ * @ingroup table-api
+ * */
+
+int bmfs_table_entry_check(const struct BMFSTableEntry *entry);
 
 /** Reads a table entry from the current position on the disk.
  * @param entry The structure to put the entry data into.
@@ -126,15 +134,23 @@ struct BMFSTable
 	struct BMFSTableEntry CurrentEntry;
 	/** The offset of the table on disk. */
 	bmfs_uint64 TableOffset;
+	/** The number of entries in the table. */
+	bmfs_uint64 EntryCount;
 	/** The index of the current table entry. */
 	bmfs_uint64 EntryIndex;
+	/** The maximum offset that an allocation can reach. */
+	bmfs_uint64 MaxOffset;
+	/** The mininum offset of an allocation. */
+	bmfs_uint64 MinOffset;
+	/** The block size to use when creating allocations. */
+	bmfs_uint64 BlockSize;
 	/** If true, ignore entries that are deleted. */
 	bmfs_bool IgnoreDeleted;
 };
 
 /** Initializes an allocation table.
- * Call @ref bmfs_table_set_disk and @ref bmfs_table_set_offset
- * before using any other functions.
+ * Call @ref bmfs_table_set_disk, @ref bmfs_table_set_offset,
+ * and @ref bmfs_table_set_count before calling any other functions.
  * @param table The allocation table to initialize.
  * @ingroup table-api
  * */
@@ -157,6 +173,20 @@ void bmfs_table_view_deleted(struct BMFSTable *table);
  * */
 
 void bmfs_table_hide_deleted(struct BMFSTable *table);
+
+/** Locate a table entry by the offset.
+ * This is useful for finding out how
+ * much space is reserved for an entry.
+ * @param table An initialized table structure.
+ * @param offset The offset of the table entry.
+ * @returns On success, the table entry containing
+ * the same offset. On failure, @ref BMFS_NULL
+ * is returned.
+ * @ingroup table-api
+ * */
+
+struct BMFSTableEntry *bmfs_table_find(struct BMFSTable *table,
+                                       bmfs_uint64 offset);
 
 /** Allocates space on the disk, adding an
  * entry to the allocation table.
@@ -249,6 +279,26 @@ struct BMFSTableEntry *bmfs_table_next(struct BMFSTable *table);
 
 int bmfs_table_save(struct BMFSTable *table);
 
+/** Saves all entries in the allocation table.
+ * This function also performs the checksums for
+ * each of the entries.
+ * @param table An initialized table structure.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup table-api
+ * */
+
+int bmfs_table_save_all(struct BMFSTable *table);
+
+/** Add an entry to the end of the allocation table.
+ * @param table An initialized allocation table.
+ * @param entry The entry to add to the table.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup table-api
+ * */
+
+int bmfs_table_push(struct BMFSTable *table,
+                    struct BMFSTableEntry *entry);
+
 /** Sets the disk that the table is located on.
  * @param table An initialized table structure.
  * @param disk The disk to read the table from.
@@ -268,6 +318,50 @@ void bmfs_table_set_disk(struct BMFSTable *table,
 
 void bmfs_table_set_offset(struct BMFSTable *table,
                            bmfs_uint64 offset);
+
+/** Sets the number of entries in the allocation table.
+ * This is required to be called by the owner of the table.
+ * @param table An initialized table structure
+ * @param count The number of entries in the table.
+ * @ingroup table-api
+ * */
+
+void bmfs_table_set_count(struct BMFSTable *table,
+                          bmfs_uint64 count);
+
+/** Set the maximum offset that an allocation may
+ * reach. This is effectively the disk size.
+ * @param table An initialized table structure.
+ * @param max_offset The maximum offset, in bytes,
+ * that an allocation may reach.
+ * @ingroup table-api
+ * */
+
+void bmfs_table_set_max_offset(struct BMFSTable *table,
+                               bmfs_uint64 max_offset);
+
+/** Set the minimum offset allocation. This is
+ * useful for protecting the data at the beginning of
+ * the disk layout.
+ * @param table An initialized table structure.
+ * @param min_offset The minimum offset, in bytes, that
+ * an allocation can have.
+ * @ingroup table-api
+ * */
+
+void bmfs_table_set_min_offset(struct BMFSTable *table,
+                               bmfs_uint64 min_offset);
+
+/** Set the number of bytes per block.
+ * The block size is used when creating an allocation.
+ * Every allocation is a product of the block size.
+ * @param table An initialized table structure.
+ * @param block_size The number of bytes in one block.
+ * @ingroup table-api
+ * */
+
+void bmfs_table_set_block_size(struct BMFSTable *table,
+                               bmfs_uint64 block_size);
 
 #ifdef __cplusplus
 } /* extern "C" { */
