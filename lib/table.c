@@ -13,6 +13,8 @@
 #include <bmfs/errno.h>
 #include <bmfs/limits.h>
 
+#include "crc32.h"
+
 static bmfs_uint64 get_block_size(const struct BMFSTable *table)
 {
 	if (table->BlockSize == 0)
@@ -23,12 +25,14 @@ static bmfs_uint64 get_block_size(const struct BMFSTable *table)
 
 static bmfs_uint32 bmfs_table_entry_checksum(const struct BMFSTableEntry *entry)
 {
-	bmfs_uint32 checksum = 0;
-	checksum += (0x0f0f0f0f ^ entry->Offset);
-	checksum += (0x0f00f00f ^ entry->Reserved);
-	checksum ^= entry->Flags;
+	char buf[24];
 
-	return checksum;
+	bmfs_encode_uint64(entry->Offset, &buf[0x00]);
+	bmfs_encode_uint64(entry->Reserved, &buf[0x08]);
+	bmfs_encode_uint32(entry->Flags, &buf[0x10]);
+	bmfs_encode_uint32(0x00, &buf[0x14]);
+
+	return bmfs_crc32(0, buf, 24);
 }
 
 #define BMFS_TABLE_FLAG_DELETED 0x01
