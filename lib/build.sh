@@ -11,6 +11,7 @@ ARFLAGS=rcs
 
 $CC $CFLAGS -c dir.c
 $CC $CFLAGS -c disk.c
+$CC $CFLAGS -c encoding.c
 $CC $CFLAGS -c entry.c
 $CC $CFLAGS -c errno.c
 $CC $CFLAGS -c file.c
@@ -19,7 +20,7 @@ $CC $CFLAGS -c header.c
 $CC $CFLAGS -c path.c
 $CC $CFLAGS -c table.c
 
-$AR $ARFLAGS libbmfs.a dir.o disk.o entry.o file.o fs.o header.o path.o table.o
+$AR $ARFLAGS libbmfs.a dir.o disk.o encoding.o entry.o errno.o file.o fs.o header.o path.o table.o
 
 $CC $CFLAGS -c filedisk.c
 $CC $CFLAGS -c ramdisk.c
