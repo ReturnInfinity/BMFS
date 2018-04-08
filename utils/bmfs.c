@@ -932,18 +932,18 @@ static int dump_indent(FILE *outfile, unsigned int length)
 	return 0;
 }
 
-static int dump_lx(FILE *outfile,
-                   unsigned int indent,
-                   const char *name,
-                   bmfs_uint32 value,
-                   bmfs_bool use_comma)
+static int dump_x(FILE *outfile,
+                  unsigned int indent,
+                  const char *name,
+                  bmfs_uint32 value,
+                  bmfs_bool use_comma)
 {
 	dump_indent(outfile, indent);
 
 	if (use_comma)
-		fprintf(outfile, "\"%s\" : \"%lx\",\n", name, value);
+		fprintf(outfile, "\"%s\" : \"%x\",\n", name, value);
 	else
-		fprintf(outfile, "\"%s\" : \"%lx\"\n", name, value);
+		fprintf(outfile, "\"%s\" : \"%x\"\n", name, value);
 
 	return 0;
 }
@@ -1005,9 +1005,9 @@ static int dump_table(struct BMFSTable *table, FILE *outfile)
 
 		dump_llx(outfile, 6, "reserved", entry->Reserved, BMFS_TRUE);
 
-		dump_lx(outfile, 6, "flags", entry->Flags, BMFS_TRUE);
+		dump_x(outfile, 6, "flags", entry->Flags, BMFS_TRUE);
 
-		dump_lx(outfile, 6, "checksum", entry->Checksum, BMFS_FALSE);
+		dump_x(outfile, 6, "checksum", entry->Checksum, BMFS_FALSE);
 
 		dump_indent(outfile, 4);
 		fprintf(outfile, "},\n");
