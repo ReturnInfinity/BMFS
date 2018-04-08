@@ -1,4 +1,4 @@
-#include <bmfs/fs.h>
+#include <bmfs/table.h>
 #include <bmfs/ramdisk.h>
 #include <bmfs/limits.h>
 
@@ -25,30 +25,35 @@ void test_alloc(void)
 
 	bmfs_ramdisk_set_buf(&ramdisk, mem, mem_size);
 
-	/* Setup the file system */
+	/* Setup the table */
 
-	struct BMFS bmfs;
+	struct BMFSTable table;
 
-	bmfs_init(&bmfs);
+	bmfs_table_init(&table);
 
-	bmfs_set_disk(&bmfs, &ramdisk.base);
+	bmfs_table_set_disk(&table, &ramdisk.base);
 
-	int err = bmfs_format(&bmfs, mem_size);
-	bmfs_assert(err == 0);
+	bmfs_table_set_offset(&table, 0x00);
+
+	bmfs_table_set_count(&table, 0x00);
+
+	bmfs_table_set_min_offset(&table, 0x00);
+
+	bmfs_table_set_max_offset(&table, mem_size);
 
 	bmfs_uint64 offset1 = 0;
 
-	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE / 2, &offset1);
+	int err = bmfs_table_alloc(&table, BMFS_BLOCK_SIZE / 2, &offset1);
 	bmfs_assert(err == 0);
 
 	bmfs_uint64 offset2 = 0;
 
-	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE * 2, &offset2);
+	err = bmfs_table_alloc(&table, BMFS_BLOCK_SIZE * 2, &offset2);
 	bmfs_assert(err == 0);
 
 	bmfs_uint64 offset3 = 0;
 
-	err = bmfs_allocate(&bmfs, BMFS_BLOCK_SIZE / 2, &offset3);
+	err = bmfs_table_alloc(&table, BMFS_BLOCK_SIZE / 2, &offset3);
 	bmfs_assert(err == 0);
 
 	bmfs_assert(offset2 == (offset1 + BMFS_BLOCK_SIZE));
