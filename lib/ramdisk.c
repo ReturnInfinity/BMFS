@@ -115,9 +115,7 @@ void bmfs_ramdisk_done(struct BMFSRamdisk *ramdisk)
 int bmfs_ramdisk_set_buf(struct BMFSRamdisk *ramdisk,
                          void *buf, bmfs_uint64 buf_size)
 {
-	if (buf_size < BMFS_MINIMUM_DISK_SIZE)
-		return BMFS_ENOSPC;
-	else if (buf == BMFS_NULL)
+	if (buf == BMFS_NULL)
 		return BMFS_EFAULT;
 
 	ramdisk->buf = (unsigned char *) buf;
