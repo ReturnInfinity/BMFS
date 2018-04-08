@@ -9,6 +9,7 @@ CFLAGS="${CFLAGS} -I../include"
 AR=ar
 ARFLAGS=rcs
 
+$CC $CFLAGS -c crc32.c
 $CC $CFLAGS -c dir.c
 $CC $CFLAGS -c disk.c
 $CC $CFLAGS -c encoding.c
@@ -21,7 +22,7 @@ $CC $CFLAGS -c path.c
 $CC $CFLAGS -c status.c
 $CC $CFLAGS -c table.c
 
-$AR $ARFLAGS libbmfs.a dir.o disk.o encoding.o entry.o errno.o file.o fs.o header.o path.o status.o table.o
+$AR $ARFLAGS libbmfs.a crc32.o dir.o disk.o encoding.o entry.o errno.o file.o fs.o header.o path.o status.o table.o
 
 $CC $CFLAGS -c filedisk.c
 $CC $CFLAGS -c ramdisk.c

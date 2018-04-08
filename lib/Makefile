@@ -16,6 +16,7 @@ endif
 CFLAGS += -fPIC
 CFLAGS += -I$(TOP)/include
 
+libfiles += crc32.o
 libfiles += header.o
 libfiles += dir.o
 libfiles += disk.o
@@ -41,6 +42,8 @@ endif
 .PHONY: all
 all: $(libs)
 
+crc32.o: crc32.c crc32.h types.h
+
 entry.o: entry.c entry.h limits.h types.h
 
 errno.o: errno.c errno.h
@@ -55,7 +58,7 @@ file.o: file.c file.h entry.h disk.h types.h
 
 fs.o: fs.c fs.h disk.h entry.h dir.h status.h types.h
 
-header.o: header.c header.h types.h
+header.o: header.c header.h types.h crc32.h
 
 path.o: path.c path.h types.h
 
@@ -65,7 +68,7 @@ size.o: size.c size.h types.h
 
 status.o: status.c status.h types.h
 
-table.o: table.c table.h disk.h encoding.h types.h
+table.o: table.c table.h disk.h encoding.h types.h crc32.h
 
 stdlib.o: stdlib.c stdlib.h
 
