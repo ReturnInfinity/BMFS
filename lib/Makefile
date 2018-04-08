@@ -19,6 +19,7 @@ CFLAGS += -I$(TOP)/include
 libfiles += header.o
 libfiles += dir.o
 libfiles += disk.o
+libfiles += encoding.o
 libfiles += entry.o
 libfiles += errno.o
 libfiles += file.o
@@ -39,27 +40,29 @@ endif
 .PHONY: all
 all: $(libs)
 
-entry.o: entry.c entry.h limits.h
+entry.o: entry.c entry.h limits.h types.h
 
 errno.o: errno.c errno.h
 
-dir.o: dir.c dir.h entry.h
+dir.o: dir.c dir.h entry.h types.h
 
-disk.o: disk.c disk.h dir.h entry.h limits.h
+disk.o: disk.c disk.h dir.h entry.h limits.h types.h
 
-file.o: file.c file.h entry.h disk.h
+encoding.o: encoding.c encoding.h types.h
 
-fs.o: fs.c fs.h disk.h entry.h dir.h
+file.o: file.c file.h entry.h disk.h types.h
 
-header.o: header.c header.h
+fs.o: fs.c fs.h disk.h entry.h dir.h types.h
 
-path.o: path.c path.h
+header.o: header.c header.h types.h
+
+path.o: path.c path.h types.h
 
 ramdisk.o: ramdisk.c ramdisk.h disk.h dir.h entry.h limits.h
 
-size.o: size.c size.h
+size.o: size.c size.h types.h
 
-table.o: table.c table.h disk.h
+table.o: table.c table.h disk.h encoding.h types.h
 
 stdlib.o: stdlib.c stdlib.h
 
