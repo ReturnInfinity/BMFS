@@ -146,11 +146,6 @@ void bmfs_entry_set_file_name(struct BMFSEntry *entry, const char *filename)
 		entry->Name[i] = 0;
 }
 
-void bmfs_entry_set_starting_block(struct BMFSEntry *entry, bmfs_uint64 starting_block)
-{
-	entry->Offset = starting_block * BMFS_BLOCK_SIZE;
-}
-
 void bmfs_entry_set_type(struct BMFSEntry *entry, enum BMFSEntryType type)
 {
 	entry->Flags &= ~BMFS_MASK_TYPE;

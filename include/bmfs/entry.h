@@ -174,17 +174,6 @@ void bmfs_entry_set_file_name(struct BMFSEntry *entry,
 void bmfs_entry_set_file_size(struct BMFSEntry *entry,
                               bmfs_uint64 file_size);
 
-/** Sets the starting block of the entry.
- * @param entry An initialized or
- *  uninitialized entry.
- * @param starting_block The new starting
- *  block of the entry.
- * @ingroup entry-api
- */
-
-void bmfs_entry_set_starting_block(struct BMFSEntry *entry,
-                                   bmfs_uint64 starting_block);
-
 /** Sets the type of entry.
  * @param entry An initialized entry.
  * @param entry_type The type of entry.
