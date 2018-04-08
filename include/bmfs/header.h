@@ -45,9 +45,11 @@ struct BMFSHeader
 	bmfs_uint64 TableEntryCount;
 	/** The total size allowed for the file system to grow. */
 	bmfs_uint64 TotalSize;
+	/** The number of blocks per byte. */
+	bmfs_uint64 BlockSize;
 	/** Padding until the 512-byte marker.
 	 * This space is alos reserved for future use. */
-	bmfs_uint64 Reserved[59];
+	bmfs_uint64 Reserved[58];
 };
 
 /** Initializes a file system header.
