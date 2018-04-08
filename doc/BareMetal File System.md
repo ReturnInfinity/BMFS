@@ -34,15 +34,17 @@ The root directory is like all other directories, except its name is an empty st
 
 The header is padded 512 bytes. All fields are encoded as little-endian, unsigned integers.
 
-| Offset | Size   | Name            | Description                                          |
-|--------|--------|-----------------|------------------------------------------------------|
-| 0x00   | 0x0008 | Signature       | Used to indicate the presence of the header.         |
-| 0x08   | 0x0008 | RootOffset      | The offset, in bytes, of the root directory.         |
-| 0x10   | 0x0008 | TableOffset     | The offset, in bytes, of the allocation table.       |
-| 0x18   | 0x0008 | TableEntryCount | The number of entries used in the allocation table.  |
-| 0x20   | 0x0008 | TotalSize       | The total size that the file system may grow to.     |
-| 0x28   | 0x0008 | BlockSize       | The number of bytes per block.                       |
-| 0x30   | 0x01D0 | Reserved        | Used for padding until it's needed for other fields. |
+| Offset | Size   | Name            | Description                                           |
+|--------|--------|-----------------|-------------------------------------------------------|
+| 0x00   | 0x0008 | Signature       | Used to indicate the presence of the header.          |
+| 0x08   | 0x0008 | RootOffset      | The offset, in bytes, of the root directory.          |
+| 0x10   | 0x0008 | TableOffset     | The offset, in bytes, of the allocation table.        |
+| 0x18   | 0x0008 | TableEntryCount | The number of entries used in the allocation table.   |
+| 0x20   | 0x0008 | TotalSize       | The total size that the file system may grow to.      |
+| 0x28   | 0x0008 | BlockSize       | The number of bytes per block.                        |
+| 0x30   | 0x0004 | Flags           | Flags that help describe file system characteristics. |
+| 0x34   | 0x0004 | Checksum        | A CRC32 checksum to verify data integrity.            |
+| 0x30   | 0x01D0 | Reserved        | Used for padding until it's needed for other fields.  |
 
 #### Allocation Table Entry
 
@@ -54,7 +56,7 @@ Here's the layout of a single entry.
 | 0x00   | 0x08 | Offset   | The offset, in bytes, of the allocation.                 |
 | 0x08   | 0x08 | Reserved | The number of bytes reserved for the allocation to grow. |
 | 0x10   | 0x04 | Flags    | Flags that relay information about the allocation.       |
-| 0x14   | 0x04 | Checksum | A checksum to validate the integrity of the entry.       |
+| 0x14   | 0x04 | Checksum | A CRC32 checksum to validate the integrity of the entry. |
 
 #### Directory Entry Structure:
 
