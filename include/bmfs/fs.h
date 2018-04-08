@@ -119,6 +119,15 @@ int bmfs_format(struct BMFS *bmfs, bmfs_uint64 size);
 
 int bmfs_import(struct BMFS *bmfs);
 
+/** Ensures that all structures on the file system
+ * are synchronized with the disk.
+ * @param bmfs An initialized file system.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup fs-api
+ * */
+
+int bmfs_export(struct BMFS *bmfs);
+
 /** Creates a file on the file system.
  * @param bmfs An initialized file system structure.
  * @param path The path of the file to create. The
@@ -219,6 +228,16 @@ int bmfs_delete_dir_recursively(struct BMFS *bmfs,
 int bmfs_rename(struct BMFS *bmfs,
                 const char *old_path,
                 const char *new_path);
+
+/** Set the block size of the file system.
+ * New allocations will be allocated on factors of this size.
+ * @param bmfs An initialized file system structure.
+ * @param block_size The number of bytes per block.
+ * @ingroup fs-api
+ * */
+
+void bmfs_set_block_size(struct BMFS *bmfs,
+                         bmfs_uint64 block_size);
 
 #ifdef __cplusplus
 } /* extern "C" { */
