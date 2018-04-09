@@ -10,6 +10,7 @@ add_library("bmfs-library"
 	"file.c"
 	"fs.c"
 	"header.c"
+	"memcpy.c"
 	"path.c"
 	"status.c"
 	"table.c")

@@ -61,7 +61,7 @@ static bmfs_bool can_fit_entry(struct BMFS *fs,
 
 static int add_entry(struct BMFS *fs,
                      struct BMFSEntry *root,
-                     const struct BMFSEntry *entry)
+                     struct BMFSEntry *entry)
 {
 	if (!can_fit_entry(fs, root))
 		return BMFS_ENOSPC;

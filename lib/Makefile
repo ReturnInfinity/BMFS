@@ -25,6 +25,7 @@ libfiles += entry.o
 libfiles += errno.o
 libfiles += file.o
 libfiles += fs.o
+libfiles += memcpy.o
 libfiles += path.o
 libfiles += status.o
 libfiles += table.o
@@ -44,7 +45,7 @@ all: $(libs)
 
 crc32.o: crc32.c crc32.h types.h
 
-entry.o: entry.c entry.h limits.h types.h
+entry.o: entry.c entry.h limits.h memcpy.h crc32.h types.h
 
 errno.o: errno.c errno.h
 
@@ -59,6 +60,8 @@ file.o: file.c file.h entry.h disk.h types.h
 fs.o: fs.c fs.h disk.h entry.h dir.h status.h types.h
 
 header.o: header.c header.h types.h crc32.h
+
+memcpy.o: memcpy.c memcpy.h types.h
 
 path.o: path.c path.h types.h
 
