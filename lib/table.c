@@ -35,6 +35,19 @@ static bmfs_uint32 bmfs_table_entry_checksum(const struct BMFSTableEntry *entry)
 	return bmfs_crc32(0, buf, 24);
 }
 
+static int copy_over_data(struct BMFSTable *table,
+                          bmfs_uint64 old_offset,
+                          bmfs_uint64 new_offset,
+                          bmfs_uint64 size)
+{
+	/* TODO */
+	(void) table;
+	(void) old_offset;
+	(void) new_offset;
+	(void) size;
+	return 0;
+}
+
 #define BMFS_TABLE_FLAG_DELETED 0x01
 
 void bmfs_table_entry_init(struct BMFSTableEntry *entry)
@@ -209,6 +222,64 @@ int bmfs_table_alloc(struct BMFSTable *table,
 	/* Assign the offset */
 
 	*offset = entry.Offset;
+
+	return 0;
+}
+
+int bmfs_table_realloc(struct BMFSTable *table,
+                       bmfs_uint64 size,
+                       bmfs_uint64 *offset)
+{
+	if (offset == BMFS_NULL)
+		return BMFS_EFAULT;
+
+	/* Find the old entry, so that the data
+	 * can be copied over. */
+
+	struct BMFSTableEntry *old_entry = bmfs_table_find(table, *offset);
+	if (old_entry == BMFS_NULL)
+		return BMFS_ENOENT;
+
+	/* Check if it already fits, then we can
+	 * bail out early. */
+
+	if (old_entry->Reserved >= size)
+		return 0;
+
+	/* Save the offset and the size,
+	 * so we can copy the data over */
+
+	bmfs_uint64 old_offset = old_entry->Offset;
+	bmfs_uint64 old_size = old_entry->Reserved;
+
+	bmfs_table_end(table);
+
+	bmfs_table_hide_deleted(table);
+
+	struct BMFSTableEntry *last_entry = bmfs_table_previous(table);
+	if (last_entry == BMFS_NULL)
+		return BMFS_ENOSPC;
+
+	bmfs_uint64 block_size = get_block_size(table);
+
+	struct BMFSTableEntry new_entry;
+	bmfs_table_entry_init(&new_entry);
+	new_entry.Offset = last_entry->Offset + last_entry->Reserved;
+	new_entry.Reserved = ((size + (block_size - 1)) / block_size) * block_size;
+
+	int err = copy_over_data(table, new_entry.Offset, old_offset, old_size);
+	if (err != 0)
+		return err;
+
+	err = bmfs_table_push(table, &new_entry);
+	if (err != 0)
+		return err;
+
+	err = bmfs_table_free(table, old_offset);
+	if (err != 0)
+		return err;
+
+	*offset = new_entry.Offset;
 
 	return 0;
 }
