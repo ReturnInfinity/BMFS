@@ -19,12 +19,6 @@ static void bmfs_memcpy(void *dst, const void *src, bmfs_uint64 size)
 		dst8[i] = src8[i];
 }
 
-static void ramdisk_done(void *ramdisk_ptr)
-{
-	/* nothing to do here */
-	(void) ramdisk_ptr;
-}
-
 static int ramdisk_seek(void *disk_ptr, bmfs_uint64 offset, int whence)
 {
 	struct BMFSRamdisk *disk = (struct BMFSRamdisk *)(disk_ptr);
@@ -96,8 +90,7 @@ static int ramdisk_write(void *disk_ptr, const void *buf, bmfs_uint64 len, bmfs_
 void bmfs_ramdisk_init(struct BMFSRamdisk *ramdisk)
 {
 	bmfs_disk_init(&ramdisk->base);
-	ramdisk->base.disk = ramdisk;
-	ramdisk->base.done = ramdisk_done;
+	ramdisk->base.DiskPtr = ramdisk;
 	ramdisk->base.seek = ramdisk_seek;
 	ramdisk->base.tell = ramdisk_tell;
 	ramdisk->base.read = ramdisk_read;
@@ -109,7 +102,7 @@ void bmfs_ramdisk_init(struct BMFSRamdisk *ramdisk)
 
 void bmfs_ramdisk_done(struct BMFSRamdisk *ramdisk)
 {
-	bmfs_disk_done(&ramdisk->base);
+	(void) ramdisk;
 }
 
 int bmfs_ramdisk_set_buf(struct BMFSRamdisk *ramdisk,

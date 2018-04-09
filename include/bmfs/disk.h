@@ -47,18 +47,15 @@ struct BMFSDisk
 {
 	/** A pointer used by the disk implementation to
 	 * pass to the seek, tell, read and write methods. */
-	void *disk;
-	/** Called when the disk is no longer going to be
-	 * used. */
-	void (*done)(void *disk);
+	void *DiskPtr;
 	/** Points the disk to a particular location. */
-	int (*seek)(void *disk, bmfs_uint64 offset, int whence);
+	int (*seek)(void *disk_ptr, bmfs_uint64 offset, int whence);
 	/** Retrieves the current location of the disk. */
-	int (*tell)(void *disk, bmfs_uint64 *offset);
+	int (*tell)(void *disk_ptr, bmfs_uint64 *offset);
 	/** Reads data from the disk. */
-	int (*read)(void *disk, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len);
+	int (*read)(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len);
 	/** Writes data to the disk. */
-	int (*write)(void *disk, const void *buf, bmfs_uint64 len, bmfs_uint64 *write_len);
+	int (*write)(void *disk_ptr, const void *buf, bmfs_uint64 len, bmfs_uint64 *write_len);
 };
 
 /** Initializes the members of the disk structure

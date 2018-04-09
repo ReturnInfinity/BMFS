@@ -159,7 +159,7 @@ void bmfs_filedisk_init(struct BMFSFileDisk *filedisk)
 {
 	filedisk->file = BMFS_NULL;
 	bmfs_disk_init(&filedisk->base);
-	filedisk->base.disk = filedisk;
+	filedisk->base.DiskPtr = filedisk;
 	filedisk->base.seek = bmfs_filedisk_seek;
 	filedisk->base.tell = bmfs_filedisk_tell;
 	filedisk->base.read = bmfs_filedisk_read;
