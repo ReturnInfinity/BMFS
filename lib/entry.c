@@ -61,21 +61,50 @@ bmfs_bool bmfs_entry_is_deleted(const struct BMFSEntry *entry)
 int bmfs_entry_read(struct BMFSEntry *entry,
                     struct BMFSDisk *disk)
 {
-	bmfs_uint64 disk_pos = 0;
+	unsigned char buf[BMFS_ENTRY_SIZE];
 
-	int err = bmfs_disk_tell(disk, &disk_pos);
+	bmfs_uint64 entry_offset = 0;
+
+	int err = bmfs_disk_tell(disk, &entry_offset);
 	if (err != 0)
 		return err;
 
 	bmfs_uint64 read_size = 0;
 
-	err = bmfs_disk_read(disk, entry, sizeof(struct BMFSEntry), &read_size);
+	err = bmfs_disk_read(disk, buf, sizeof(buf), &read_size);
 	if (err != 0)
 		return err;
 	else if (read_size != BMFS_ENTRY_SIZE)
 		return BMFS_EIO;
 
-	entry->EntryOffset = (bmfs_uint64) disk_pos;
+	/* Decode the entry */
+
+	bmfs_memcpy(entry->Name, buf, sizeof(entry->Name));
+
+	entry->Offset           = bmfs_decode_uint64(&buf[BMFS_FILE_NAME_MAX]);
+	entry->Size             = bmfs_decode_uint64(&buf[BMFS_FILE_NAME_MAX + 8]);
+	entry->CreationTime     = bmfs_decode_uint64(&buf[BMFS_FILE_NAME_MAX + 16]);
+	entry->ModificationTime = bmfs_decode_uint64(&buf[BMFS_FILE_NAME_MAX + 24]);
+	entry->Flags            = bmfs_decode_uint32(&buf[BMFS_FILE_NAME_MAX + 32]);
+	entry->Checksum         = bmfs_decode_uint32(&buf[BMFS_FILE_NAME_MAX + 36]);
+	entry->UserID           = bmfs_decode_uint64(&buf[BMFS_FILE_NAME_MAX + 40]);
+	entry->GroupID          = bmfs_decode_uint64(&buf[BMFS_FILE_NAME_MAX + 48]);
+	/* entry->              = bmfs_decode_uint64(&buf[BMFS_FILE_NAME_MAX + 56]); */
+
+	/* Set the checksum bits to zero,
+	 * since that's what it was during
+	 * the calculation. */
+
+	bmfs_encode_uint32(0, &buf[BMFS_FILE_NAME_MAX + 36]);
+
+	/* Calculate and verify the checksum. */
+
+	bmfs_uint32 checksum = bmfs_crc32(0, buf, sizeof(buf));
+
+	if (entry->Checksum != checksum)
+		return BMFS_EINVAL;
+
+	entry->EntryOffset = (bmfs_uint64) entry_offset;
 
 	return 0;
 }

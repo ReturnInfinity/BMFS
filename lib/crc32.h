@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-bmfs_uint32 bmfs_crc32();
+bmfs_uint32 bmfs_crc32(bmfs_uint32 crc, const void *buf, bmfs_uint64 buf_size);
 
 #ifdef __cplusplus
 } /* extern "C" { */
