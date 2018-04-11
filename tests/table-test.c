@@ -1,6 +1,7 @@
 #include <bmfs/table.h>
-#include <bmfs/ramdisk.h>
 #include <bmfs/limits.h>
+#include <bmfs/ramdisk.h>
+#include <bmfs/stdhost.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -92,6 +93,8 @@ static void test_realloc(void)
 	struct BMFSTable table;
 
 	bmfs_table_init(&table);
+
+	bmfs_table_set_host(&table, &bmfs_stdhost);
 
 	bmfs_table_set_block_size(&table, block_size);
 

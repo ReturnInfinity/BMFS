@@ -90,6 +90,12 @@
 
 #define BMFS_ENOTEMPTY -11
 
+/** Memory allocation failed.
+ * @ingroup errno
+ * */
+
+#define BMFS_ENOMEM -12
+
 #ifdef __cplusplus
 extern "C"
 {

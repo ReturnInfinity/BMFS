@@ -16,6 +16,39 @@
 
 #include "crc32.h"
 
+static int table_host_init(struct BMFSTable *table)
+{
+	if (table->Host == BMFS_NULL)
+		return BMFS_EFAULT;
+
+	if (table->HostData == BMFS_NULL)
+	{
+		table->HostData = bmfs_host_init(table->Host);
+		if (table->HostData == BMFS_NULL)
+			return BMFS_ENOMEM;
+	}
+
+	return 0;
+}
+
+static void *table_malloc(struct BMFSTable *table, bmfs_uint64 size)
+{
+	int err = table_host_init(table);
+	if (err != 0)
+		return BMFS_NULL;
+
+	return bmfs_host_malloc(table->Host, table->HostData, size);
+}
+
+static void table_free(struct BMFSTable *table, void *addr)
+{
+	int err = table_host_init(table);
+	if (err != 0)
+		return;
+
+	bmfs_host_free(table->Host, table->HostData, addr);
+}
+
 static bmfs_uint64 get_block_size(const struct BMFSTable *table)
 {
 	if (table->BlockSize == 0)
@@ -37,15 +70,73 @@ static bmfs_uint32 bmfs_table_entry_checksum(const struct BMFSTableEntry *entry)
 }
 
 static int copy_over_data(struct BMFSTable *table,
-                          bmfs_uint64 old_offset,
                           bmfs_uint64 new_offset,
+                          bmfs_uint64 old_offset,
                           bmfs_uint64 size)
 {
-	/* TODO */
-	(void) table;
-	(void) old_offset;
-	(void) new_offset;
-	(void) size;
+	bmfs_uint64 block_size = 4096;
+
+	if (block_size > size)
+		block_size = size;
+
+	void *block = table_malloc(table, block_size);
+	if (block == BMFS_NULL)
+		return BMFS_ENOMEM;
+
+	bmfs_uint64 size_copied = 0;
+
+	while (size_copied < size)
+	{
+		if ((size_copied + block_size) > size)
+			block_size = size - size_copied;
+
+		bmfs_uint64 read_count = 0;
+
+		int err = bmfs_disk_seek(table->Disk, old_offset + size_copied, BMFS_SEEK_SET);
+		if (err != 0)
+		{
+			table_free(table, block);
+			return err;
+		}
+
+		err = bmfs_disk_read(table->Disk, block, block_size, &read_count);
+		if (err != 0)
+		{
+			table_free(table, block);
+			return err;
+		}
+		else if (read_count != block_size)
+		{
+			table_free(table, block);
+			return BMFS_EIO;
+		}
+
+		err = bmfs_disk_seek(table->Disk, new_offset + size_copied, BMFS_SEEK_SET);
+		if (err != 0)
+		{
+			table_free(table, block);
+			return err;
+		}
+
+		bmfs_uint64 write_count = 0;
+
+		err = bmfs_disk_write(table->Disk, block, block_size, &write_count);
+		if (err != 0)
+		{
+			table_free(table, block);
+			return err;
+		}
+		else if (write_count != block_size)
+		{
+			table_free(table, block);
+			return BMFS_EIO;
+		}
+
+		size_copied += block_size;
+	}
+
+	table_free(table, block);
+
 	return 0;
 }
 
