@@ -25,6 +25,8 @@ extern "C" {
 struct BMFSDir;
 struct BMFSDisk;
 struct BMFSFile;
+struct BMFSHost;
+struct BMFSHostData;
 struct BMFSStatus;
 
 /** Represents the file system as a whole.
@@ -33,6 +35,10 @@ struct BMFSStatus;
 
 struct BMFS
 {
+	/** The host implementation functions. */
+	const struct BMFSHost *Host;
+	/** The host implementation data. */
+	struct BMFSHostData *HostData;
 	/** The disk used for read and
 	 * write operations. This must
 	 * be set by the caller. */
@@ -51,6 +57,17 @@ struct BMFS
  * */
 
 void bmfs_init(struct BMFS *bmfs);
+
+/** Assigns a host implementation to the file system.
+ * This allows the file system to do things like allocate
+ * memory and lock the file system.
+ * @param bmfs An initialized file system structure.
+ * @param host An initialized host structure.
+ * @ingroup fs-api
+ * */
+
+void bmfs_set_host(struct BMFS *bmfs,
+                   const struct BMFSHost *host);
 
 /** Assigns the disk to use with a
  * BMFS file system structure. After

@@ -11,6 +11,7 @@
 #include <bmfs/encoding.h>
 #include <bmfs/entry.h>
 #include <bmfs/errno.h>
+#include <bmfs/host.h>
 #include <bmfs/limits.h>
 
 #include "crc32.h"
@@ -135,6 +136,8 @@ bmfs_bool bmfs_table_entry_is_deleted(const struct BMFSTableEntry *entry)
 
 void bmfs_table_init(struct BMFSTable *table)
 {
+	table->Host = BMFS_NULL;
+	table->HostData = BMFS_NULL;
 	table->Disk = BMFS_NULL;
 	table->TableOffset = 0;
 	table->EntryCount = 0;
@@ -143,6 +146,27 @@ void bmfs_table_init(struct BMFSTable *table)
 	table->BlockSize = 4096;
 	table->IgnoreDeleted = BMFS_TRUE;
 	bmfs_table_entry_init(&table->CurrentEntry);
+}
+
+void bmfs_table_done(struct BMFSTable *table)
+{
+	if (table->Host != BMFS_NULL)
+	{
+		bmfs_host_done(table->Host, table->HostData);
+		table->Host = BMFS_NULL;
+		table->HostData = BMFS_NULL;
+	}
+}
+
+void bmfs_table_set_host(struct BMFSTable *table,
+                         const struct BMFSHost *host)
+{
+	if (table->Host != BMFS_NULL)
+		bmfs_host_done(table->Host, table->HostData);
+
+	table->Host = host;
+
+	table->HostData = BMFS_NULL;
 }
 
 void bmfs_table_view_deleted(struct BMFSTable *table)

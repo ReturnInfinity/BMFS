@@ -12,6 +12,7 @@
 #include <bmfs/entry.h>
 #include <bmfs/errno.h>
 #include <bmfs/file.h>
+#include <bmfs/host.h>
 #include <bmfs/path.h>
 #include <bmfs/status.h>
 #include <bmfs/table.h>
@@ -550,17 +551,43 @@ static int delete_entry(struct BMFS *fs,
 
 void bmfs_init(struct BMFS *fs)
 {
+	fs->Host = BMFS_NULL;
+	fs->HostData = BMFS_NULL;
+	fs->Disk = BMFS_NULL;
 	bmfs_header_init(&fs->Header);
 	bmfs_table_init(&fs->Table);
-	fs->Disk = BMFS_NULL;
 }
 
 void bmfs_done(struct BMFS *fs)
 {
-	if (fs->Disk != BMFS_NULL) {
+	if (fs->Disk != BMFS_NULL)
+	{
 		bmfs_disk_done(fs->Disk);
 		fs->Disk = BMFS_NULL;
 	}
+
+	if (fs->Host != BMFS_NULL)
+	{
+		bmfs_host_done(fs->Host, fs->HostData);
+		fs->Host = BMFS_NULL;
+		fs->HostData = BMFS_NULL;
+	}
+
+	bmfs_table_done(&fs->Table);
+}
+
+void bmfs_set_host(struct BMFS *fs,
+                   const struct BMFSHost *host)
+{
+	if (fs->Host != BMFS_NULL)
+		bmfs_host_done(fs->Host, fs->HostData);
+
+	fs->Host = host;
+
+	/* allocate implementation data when needed. */
+	fs->HostData = BMFS_NULL;
+
+	bmfs_table_set_host(&fs->Table, host);
 }
 
 void bmfs_set_disk(struct BMFS *fs,
