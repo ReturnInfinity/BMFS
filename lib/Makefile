@@ -17,7 +17,6 @@ CFLAGS += -fPIC
 CFLAGS += -I$(TOP)/include
 
 libfiles += crc32.o
-libfiles += header.o
 libfiles += dir.o
 libfiles += disk.o
 libfiles += encoding.o
@@ -25,6 +24,8 @@ libfiles += entry.o
 libfiles += errno.o
 libfiles += file.o
 libfiles += fs.o
+libfiles += header.o
+libfiles += host.o
 libfiles += memcpy.o
 libfiles += path.o
 libfiles += status.o
@@ -60,6 +61,8 @@ file.o: file.c file.h entry.h disk.h types.h
 fs.o: fs.c fs.h disk.h entry.h dir.h status.h types.h
 
 header.o: header.c header.h types.h crc32.h
+
+host.o: host.c host.h errno.h types.h
 
 memcpy.o: memcpy.c memcpy.h types.h
 
