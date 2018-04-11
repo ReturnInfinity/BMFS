@@ -35,6 +35,7 @@ stdlibfiles += filedisk.o
 stdlibfiles += ramdisk.o
 stdlibfiles += time.o
 stdlibfiles += size.o
+stdlibfiles += stdhost.o
 
 libs += libbmfs.a
 ifndef NO_STDLIB
@@ -72,11 +73,11 @@ ramdisk.o: ramdisk.c ramdisk.h disk.h dir.h entry.h limits.h
 
 size.o: size.c size.h types.h
 
+stdhost.o: stdhost.c stdhost.h host.h types.h
+
 status.o: status.c status.h types.h
 
 table.o: table.c table.h disk.h encoding.h types.h crc32.h
-
-stdlib.o: stdlib.c stdlib.h
 
 time.o: time.c time.h
 

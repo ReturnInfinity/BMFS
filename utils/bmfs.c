@@ -6,8 +6,11 @@
  */
 
 #include <bmfs/bmfs.h>
-#include <bmfs/size.h>
+
 #include <bmfs/filedisk.h>
+#include <bmfs/size.h>
+#include <bmfs/stdhost.h>
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -261,6 +264,8 @@ int main(int argc, const char **argv)
 	struct BMFS bmfs;
 
 	bmfs_init(&bmfs);
+
+	bmfs_set_host(&bmfs, &bmfs_stdhost);
 
 	bmfs_set_disk(&bmfs, &filedisk.base);
 

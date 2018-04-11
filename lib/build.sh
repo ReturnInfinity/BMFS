@@ -29,6 +29,7 @@ $AR $ARFLAGS libbmfs.a crc32.o dir.o disk.o encoding.o entry.o errno.o file.o fs
 $CC $CFLAGS -c filedisk.c
 $CC $CFLAGS -c ramdisk.c
 $CC $CFLAGS -c size.c
+$CC $CFLAGS -c stdhost.c
 $CC $CFLAGS -c time.c
 
-$AR $ARFLAGS libbmfs-stdlib.a filedisk.o ramdisk.o size.o time.o
+$AR $ARFLAGS libbmfs-stdlib.a filedisk.o ramdisk.o size.o stdhost.o time.o

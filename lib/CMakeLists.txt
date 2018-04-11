@@ -23,6 +23,7 @@ add_library("bmfs-stdlib-library"
 	"filedisk.c"
 	"ramdisk.c"
 	"size.c"
+	"stdhost.c"
 	"time.c")
 
 # Tell CMake that we want 'libbmfs-stdlib.so' and not 'libbmfs-stdlib-library.so'
