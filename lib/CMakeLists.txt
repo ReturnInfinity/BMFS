@@ -37,5 +37,6 @@ add_library("bmfs-stdlib-library"
 set_target_properties("bmfs-stdlib-library" PROPERTIES OUTPUT_NAME "bmfs-stdlib")
 
 install(TARGETS "bmfs-library" "bmfs-stdlib-library"
+		EXPORT "bmfs-exports"
 		ARCHIVE DESTINATION "lib"
 		LIBRARY DESTINATION "lib")

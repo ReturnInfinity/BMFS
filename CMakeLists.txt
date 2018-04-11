@@ -31,6 +31,9 @@ install(DIRECTORY "include/bmfs"
         DESTINATION "include"
         FILES_MATCHING PATTERN "*.h")
 
+install(EXPORT "bmfs-exports"
+	DESTINATION "lib/bmfs")
+
 enable_testing()
 
 set(CPACK_PACKAGE_NAME "BMFS")
