@@ -47,6 +47,10 @@ struct BMFS
 	struct BMFSHeader Header;
 	/** The allocation table. */
 	struct BMFSTable Table;
+	/** An array of currently open files. */
+	struct BMFSFile *OpenFiles;
+	/** The number of currently open files. */
+	bmfs_size OpenFileCount;
 };
 
 /** Initializes the file system.

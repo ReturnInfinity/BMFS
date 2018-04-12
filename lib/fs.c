@@ -554,12 +554,25 @@ void bmfs_init(struct BMFS *fs)
 	fs->Host = BMFS_NULL;
 	fs->HostData = BMFS_NULL;
 	fs->Disk = BMFS_NULL;
+	fs->OpenFiles = BMFS_NULL;
+	fs->OpenFileCount = 0;
 	bmfs_header_init(&fs->Header);
 	bmfs_table_init(&fs->Table);
 }
 
 void bmfs_done(struct BMFS *fs)
 {
+	for (bmfs_size i = 0; i < fs->OpenFileCount; i++)
+	{
+		bmfs_file_close(&fs->OpenFiles[i]);
+	}
+
+	if (fs->OpenFiles != BMFS_NULL)
+	{
+		bmfs_host_free(fs->Host, fs->HostData, fs->OpenFiles);
+		fs->OpenFiles = BMFS_NULL;
+	}
+
 	if (fs->Disk != BMFS_NULL)
 	{
 		bmfs_disk_done(fs->Disk);

@@ -16,6 +16,12 @@ extern "C" {
  * Used for writing common types.
  * */
 
+/** The largest unsigned type on the system.
+ * @ingroup types
+ * */
+
+typedef unsigned long long int bmfs_size;
+
 /** An unsigned integer, at least 64-bits in size.
  * @ingroup types
  * */
