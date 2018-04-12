@@ -29,7 +29,7 @@
 /** The entry does not exist.
  * This could either be a file
  * or a directory.
- * @group errno
+ * @ingroup errno
  * */
 
 #define BMFS_ENOENT -3
@@ -37,7 +37,7 @@
 /** A file was requested to be
  * opened, but the path given points
  * to a directory.
- * @group errno
+ * @ingroup errno
  * */
 
 #define BMFS_EISDIR -4
@@ -45,14 +45,14 @@
 /** A file or directory was requested
  * to be created at a path that already
  * contains an entry.
- * @group errno
+ * @ingroup errno
  * */
 
 #define BMFS_EEXIST -5
 
 /** A directory was requested to be opened,
  * but the path pointed to a file instead.
- * @group errno
+ * @ingroup errno
  * */
 
 #define BMFS_ENOTDIR -6
@@ -100,6 +100,15 @@
 extern "C"
 {
 #endif
+
+/** Gets a human-readable description
+ * of an error code.
+ * @param bmfs_errno An error code that was
+ * returned by a library function.
+ * @returns A null-terminated string
+ * that describes the error code.
+ * @ingroup errno
+ * */
 
 const char *bmfs_strerror(int bmfs_errno);
 
