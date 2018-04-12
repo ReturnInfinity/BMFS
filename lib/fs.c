@@ -795,6 +795,11 @@ int bmfs_delete_dir_recursively(struct BMFS *fs, const char *path)
 	if (err != 0)
 		return err;
 
+	/* TODO : This isn't fully recursive.
+	 * It does not handle the case that there
+	 * are more directories contained within
+	 * this one. */
+
 	for (;;)
 	{
 		struct BMFSEntry *entry = bmfs_dir_next(&dir);
