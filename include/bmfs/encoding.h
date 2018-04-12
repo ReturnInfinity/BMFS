@@ -21,7 +21,7 @@ extern "C" {
  * binary values in a consistent manner.
  * */
 
-/*** Encode a 64-bit unsigned integer.
+/** Encode a 64-bit unsigned integer.
  * @param n The number to encode.
  * @param buf The buffer to put the value into.
  * This buffer shuold contain at least eight bytes.
@@ -30,7 +30,7 @@ extern "C" {
 
 void bmfs_encode_uint64(bmfs_uint64 n, void *buf);
 
-/*** Encode a 32-bit unsigned integer.
+/** Encode a 32-bit unsigned integer.
  * @param n The number to encode.
  * @param buf The buffer to put the value into.
  * This buffer should contain at least four bytes.
