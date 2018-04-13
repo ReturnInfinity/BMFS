@@ -134,7 +134,10 @@ static int file_exists(const char *path)
 	if (f == NULL)
 		return 0;
 	else
+	{
+		fclose(f);
 		return 1;
+	}
 }
 
 static int cmd_format(struct BMFS *bmfs, int argc, const char **argv);
@@ -663,7 +666,7 @@ static int cmd_cp(struct BMFS *bmfs, int argc, const char **argv)
 		if ((err != 0) || (write_result != read_result))
 		{
 			if (err == 0)
-				err = -EIO;
+				err = EIO;
 
 			fprintf(stderr, "Error: Failed to write to '%s'.\n", dst_path);
 			fprintf(stderr, "Reason: %s\n", bmfs_strerror(err));
