@@ -754,6 +754,8 @@ int bmfs_delete_file(struct BMFS *fs, const char *path)
 
 	bmfs_file_init(&file);
 
+	file.Table = &fs->Table;
+
 	int err = bmfs_open_file(fs, &file, path);
 	if (err != 0)
 		return err;
@@ -839,6 +841,8 @@ int bmfs_rename(struct BMFS *fs,
 	 * can get a hold of the entry structure. */
 
 	struct BMFSFile old_file;
+
+	old_file.Table = &fs->Table;
 
 	bmfs_file_init(&old_file);
 
