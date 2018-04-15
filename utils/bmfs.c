@@ -772,6 +772,7 @@ static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv)
 			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
 			return EXIT_FAILURE;
 		}
+		i++;
 	}
 
 	while (i < argc)
@@ -816,6 +817,7 @@ static int cmd_rm(struct BMFS *bmfs, int argc, const char **argv)
 			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
 			return EXIT_FAILURE;
 		}
+		i++;
 	}
 
 	while (i < argc)
@@ -865,6 +867,7 @@ static int cmd_rmdir(struct BMFS *bmfs, int argc, const char **argv)
 			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
 			return EXIT_FAILURE;
 		}
+		i++;
 	}
 
 	while (i < argc)
