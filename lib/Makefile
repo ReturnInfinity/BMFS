@@ -19,6 +19,7 @@ CFLAGS += -I$(TOP)/include
 libfiles += header.o
 libfiles += dir.o
 libfiles += disk.o
+libfiles += encoding.o
 libfiles += entry.o
 libfiles += errno.o
 libfiles += file.o
@@ -39,13 +40,15 @@ endif
 .PHONY: all
 all: $(libs)
 
-entry.o: entry.c entry.h limits.h
-
-errno.o: errno.c errno.h
-
 dir.o: dir.c dir.h entry.h
 
 disk.o: disk.c disk.h dir.h entry.h limits.h
+
+encoding.o: encoding.c encoding.h types.h
+
+entry.o: entry.c entry.h limits.h
+
+errno.o: errno.c errno.h
 
 file.o: file.c file.h entry.h disk.h
 
