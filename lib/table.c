@@ -168,15 +168,12 @@ int bmfs_table_alloc(struct BMFSTable *table,
 		return BMFS_ENOSPC;
 	}
 
-	struct BMFSTableEntry entry;
-
-	bmfs_table_entry_init(&entry);
-
-	entry.Offset = table->MinOffset;
-
 	bmfs_uint64 block_size = get_block_size(table);
 
+	struct BMFSTableEntry entry;
+	bmfs_table_entry_init(&entry);
 	/* Round to the nearest block size */
+	entry.Offset = ((table->MinOffset + (block_size - 1)) / block_size) * block_size;
 	entry.Reserved = ((size + (block_size - 1)) / block_size) * block_size;
 
 	/* If there is existing allocations, then adjust the
