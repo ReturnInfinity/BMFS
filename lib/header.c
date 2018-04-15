@@ -8,6 +8,7 @@
 #include <bmfs/header.h>
 
 #include <bmfs/disk.h>
+#include <bmfs/entry.h>
 #include <bmfs/errno.h>
 #include <bmfs/limits.h>
 #include <bmfs/table.h>
@@ -23,12 +24,12 @@ void bmfs_header_init(struct BMFSHeader *header)
 	header->Signature[6] = 0;
 	header->Signature[7] = 0;
 
-	header->TableOffset = 0;
-	header->TableOffset += sizeof(struct BMFSHeader);
-
 	header->RootOffset = 0;
-	header->RootOffset += header->TableOffset;
-	header->RootOffset += BMFS_TABLE_ENTRY_COUNT_MAX * sizeof(struct BMFSTableEntry);
+	header->RootOffset += sizeof(struct BMFSHeader);
+
+	header->TableOffset = 0;
+	header->TableOffset += sizeof(struct BMFSEntry);
+	header->TableOffset += sizeof(struct BMFSHeader);
 
 	header->TableEntryCount = 0;
 
