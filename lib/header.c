@@ -35,7 +35,7 @@ void bmfs_header_init(struct BMFSHeader *header)
 
 	header->TotalSize = BMFS_MINIMUM_DISK_SIZE;
 
-	header->BlockSize = 4096;
+	header->BlockSize = 128 * 1024;
 
 	for (bmfs_uint64 i = 0; i < (sizeof(header->Reserved) / sizeof(header->Reserved[0])); i++)
 		header->Reserved[i] = 0;
