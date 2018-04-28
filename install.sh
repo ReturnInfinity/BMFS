@@ -3,9 +3,9 @@
 set -e
 set -u
 
-mkdir -p $PREFIX/bin
-mkdir -p $PREFIX/lib
-mkdir -p $PREFIX/include
+mkdir -p "${PREFIX}/bin"
+mkdir -p "${PREFIX}/lib"
+mkdir -p "${PREFIX}/include/bmfs"
 
 function update_file {
 	echo "Updating $2"
