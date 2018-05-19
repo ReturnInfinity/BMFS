@@ -44,11 +44,11 @@ void bmfs_header_init(struct BMFSHeader *header)
 	header->Signature[7] = 0;
 
 	header->RootOffset = 0;
-	header->RootOffset += sizeof(struct BMFSHeader);
+	header->RootOffset += BMFS_HEADER_SIZE_FULL;
 
 	header->TableOffset = 0;
-	header->TableOffset += sizeof(struct BMFSEntry);
-	header->TableOffset += sizeof(struct BMFSHeader);
+	header->TableOffset += BMFS_HEADER_SIZE_FULL;
+	header->TableOffset += BMFS_ENTRY_SIZE;
 
 	header->TableEntryCount = 0;
 	header->TotalSize = BMFS_MINIMUM_DISK_SIZE;
