@@ -11,8 +11,6 @@
 #include <bmfs/errno.h>
 #include <bmfs/table.h>
 
-#include <stdio.h>
-
 static int file_resize(struct BMFSFile *file,
                        bmfs_uint64 size)
 {
@@ -27,9 +25,6 @@ static int file_resize(struct BMFSFile *file,
 
 	file->Entry.Offset = offset;
 	file->Entry.Size = size;
-
-	printf("New Offset : %llu\n", offset);
-	printf("New Size   : %llu\n", size);
 
 	return 0;
 }
