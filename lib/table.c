@@ -57,6 +57,14 @@ static bmfs_uint64 get_block_size(const struct BMFSTable *table)
 		return table->BlockSize;
 }
 
+static bmfs_uint64 to_block_size(const struct BMFSTable *table,
+                                 bmfs_uint64 size)
+{
+	bmfs_uint64 block_size = get_block_size(table);
+	size = ((size + (block_size - 1)) / block_size) * block_size;
+	return size;
+}
+
 static bmfs_uint32 bmfs_table_entry_checksum(const struct BMFSTableEntry *entry)
 {
 	char buf[24];
@@ -234,7 +242,7 @@ void bmfs_table_init(struct BMFSTable *table)
 	table->EntryCount = 0;
 	table->EntryIndex = 0;
 	table->MaxOffset = 0;
-	table->BlockSize = 4096;
+	table->BlockSize = 128 * 1024;
 	table->IgnoreDeleted = BMFS_TRUE;
 	bmfs_table_entry_init(&table->CurrentEntry);
 }
@@ -301,15 +309,9 @@ int bmfs_table_alloc(struct BMFSTable *table,
 	}
 
 	struct BMFSTableEntry entry;
-
 	bmfs_table_entry_init(&entry);
-
-	entry.Offset = table->MinOffset;
-
-	bmfs_uint64 block_size = get_block_size(table);
-
-	/* Round to the nearest block size */
-	entry.Reserved = ((size + (block_size - 1)) / block_size) * block_size;
+	entry.Offset = to_block_size(table, table->MinOffset);
+	entry.Reserved = to_block_size(table, size);
 
 	/* If there is existing allocations, then adjust the
 	 * allocation to fit after the last region. */

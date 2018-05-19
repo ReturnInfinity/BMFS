@@ -47,15 +47,15 @@ all: $(libs)
 
 crc32.o: crc32.c crc32.h types.h
 
-entry.o: entry.c entry.h limits.h memcpy.h crc32.h types.h
-
-errno.o: errno.c errno.h
-
 dir.o: dir.c dir.h entry.h types.h
 
 disk.o: disk.c disk.h dir.h entry.h limits.h types.h
 
 encoding.o: encoding.c encoding.h types.h
+
+entry.o: entry.c entry.h limits.h memcpy.h crc32.h types.h
+
+errno.o: errno.c errno.h
 
 file.o: file.c file.h entry.h disk.h types.h
 

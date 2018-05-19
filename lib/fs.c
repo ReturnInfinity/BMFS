@@ -31,18 +31,26 @@ static bmfs_uint64 get_block_size(const struct BMFS *bmfs)
 
 static int is_entry(struct BMFSEntry *entry,
                     const char *name,
-                    bmfs_uint64 name_size) {
-
+                    bmfs_uint64 name_size)
+{
 	if (bmfs_entry_is_deleted(entry))
 		return 0;
 
 	if ((name_size == 0) || (name_size >= BMFS_FILE_NAME_MAX))
 		return 0;
 
-	for (bmfs_uint64 i = 0; i < name_size; i++) {
+	bmfs_uint64 i = 0;
+
+	while (i < name_size)
+	{
 		if (name[i] != entry->Name[i])
 			return 0;
+
+		i++;
 	}
+
+	if ((i < name_size) || (entry->Name[i] != 0))
+		return 0;
 
 	return 1;
 }
@@ -521,6 +529,8 @@ static int open_file(struct BMFS *fs,
 	err = find_file(fs, &root, file, name, name_size);
 	if (err != 0)
 		return err;
+
+	file->Table = &fs->Table;
 
 	return 0;
 }

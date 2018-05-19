@@ -1,9 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
-cd lib
-./clean.sh
-cd ..
+function clean_dir {
+	cd "$1"
+	./clean.sh
+	cd ".."
+}
 
-cd utils
-./clean.sh
-cd ..
+clean_dir "lib"
+clean_dir "utils"

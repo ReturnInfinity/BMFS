@@ -8,6 +8,7 @@
 #include <bmfs/header.h>
 
 #include <bmfs/disk.h>
+#include <bmfs/entry.h>
 #include <bmfs/encoding.h>
 #include <bmfs/errno.h>
 #include <bmfs/limits.h>
@@ -42,15 +43,16 @@ void bmfs_header_init(struct BMFSHeader *header)
 	header->Signature[6] = 0;
 	header->Signature[7] = 0;
 
-	header->TableOffset = 0;
-	header->TableOffset += sizeof(struct BMFSHeader);
-
 	header->RootOffset = 0;
-	header->RootOffset += header->TableOffset;
-	header->RootOffset += BMFS_TABLE_ENTRY_COUNT_MAX * sizeof(struct BMFSTableEntry);
+	header->RootOffset += BMFS_HEADER_SIZE_FULL;
+
+	header->TableOffset = 0;
+	header->TableOffset += BMFS_HEADER_SIZE_FULL;
+	header->TableOffset += BMFS_ENTRY_SIZE;
 
 	header->TableEntryCount = 0;
 	header->TotalSize = BMFS_MINIMUM_DISK_SIZE;
+
 	header->BlockSize = 4096;
 	header->Flags = 0;
 	header->Checksum = 0;

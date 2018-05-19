@@ -370,10 +370,17 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 	unsigned int force_flag = 0;
 
 	struct BMFSSize disk_size;
+	struct BMFSSize block_size;
 
 	if (bmfs_size_parse(&disk_size, "64MiB") != 0)
 	{
 		fprintf(stderr, "Failed to parse default disk size.\n");
+		return EXIT_FAILURE;
+	}
+
+	if (bmfs_size_parse(&block_size, "128KiB") != 0)
+	{
+		fprintf(stderr, "Failed to parse default block size.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -382,6 +389,20 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 		if (argv[i][0] != '-')
 		{
 			fprintf(stderr, "Error: Trailing argument: %s\n", argv[i]);
+		}
+		else if (is_opt(argv[i], 'b', "block-size"))
+		{
+			if ((i + 1) >= argc)
+			{
+				fprintf(stderr, "Error: Block size not specified.\n");
+				return EXIT_FAILURE;
+			}
+			if (bmfs_size_parse(&block_size, argv[i + 1]))
+			{
+				fprintf(stderr, "Error: Failed to parse block size '%s'.\n", argv[i]);
+				return EXIT_FAILURE;
+			}
+			i++;
 		}
 		else if (is_opt(argv[i], 's', "size"))
 		{
@@ -424,6 +445,26 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 		return EXIT_FAILURE;
 	}
 
+	bmfs_uint64 bytes_per_block = 0;
+
+	if (bmfs_size_bytes(&block_size, &bytes_per_block) != 0)
+	{
+		fprintf(stderr, "Error: Block size too large.\n");
+		return EXIT_FAILURE;
+	}
+
+	if (bytes_per_block == 0)
+	{
+		fprintf(stderr, "Error: Block size should be greater than zero.\n");
+		return EXIT_FAILURE;
+	}
+
+	if ((bytes_per_block % 512) != 0)
+	{
+		fprintf(stderr, "Error: Block size should be a multiple of 512.\n");
+		return EXIT_FAILURE;
+	}
+
 	int err = bmfs_check_signature(bmfs);
 	if ((err == 0) && !force_flag)
 	{
@@ -439,6 +480,8 @@ static int cmd_format(struct BMFS *bmfs, int argc, const char **argv)
 	err = bmfs_disk_write(bmfs->Disk, "\x00", 1, NULL);
 	if (err != 0)
 		return err;
+
+	bmfs_set_block_size(bmfs, bytes_per_block);
 
 	err = bmfs_format(bmfs, (uint64_t) disk_byte_count);
 	if (err != 0)
@@ -789,6 +832,7 @@ static int cmd_touch(struct BMFS *bmfs, int argc, const char **argv)
 			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
 			return EXIT_FAILURE;
 		}
+		i++;
 	}
 
 	while (i < argc)
@@ -833,6 +877,7 @@ static int cmd_rm(struct BMFS *bmfs, int argc, const char **argv)
 			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
 			return EXIT_FAILURE;
 		}
+		i++;
 	}
 
 	while (i < argc)
@@ -882,6 +927,7 @@ static int cmd_rmdir(struct BMFS *bmfs, int argc, const char **argv)
 			fprintf(stderr, "Error: Unrecognized option '%s'.\n", argv[i]);
 			return EXIT_FAILURE;
 		}
+		i++;
 	}
 
 	while (i < argc)

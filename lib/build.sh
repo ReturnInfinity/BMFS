@@ -1,35 +1,53 @@
-#!/bin/sh
+#!/bin/bash
+
+source ../bash/common.sh
 
 set -e
 
-CC=gcc
-CFLAGS="${CFLAGS} -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g"
-CFLAGS="${CFLAGS} -I../include"
+CFLAGS="${CFLAGS} -fno-stack-protector"
+CFLAGS="${CFLAGS} -fomit-frame-pointer"
+CFLAGS="${CFLAGS} -mno-red-zone"
 
-AR=ar
-ARFLAGS=rcs
+compile_file "crc32.c"
+compile_file "dir.c"
+compile_file "disk.c"
+compile_file "encoding.c"
+compile_file "entry.c"
+compile_file "errno.c"
+compile_file "file.c"
+compile_file "fs.c"
+compile_file "header.c"
+compile_file "host.c"
+compile_file "memcpy.c"
+compile_file "path.c"
+compile_file "status.c"
+compile_file "table.c"
 
-$CC $CFLAGS -c crc32.c
-$CC $CFLAGS -c dir.c
-$CC $CFLAGS -c disk.c
-$CC $CFLAGS -c encoding.c
-$CC $CFLAGS -c entry.c
-$CC $CFLAGS -c errno.c
-$CC $CFLAGS -c file.c
-$CC $CFLAGS -c fs.c
-$CC $CFLAGS -c header.c
-$CC $CFLAGS -c host.c
-$CC $CFLAGS -c memcpy.c
-$CC $CFLAGS -c path.c
-$CC $CFLAGS -c status.c
-$CC $CFLAGS -c table.c
+link_static "libbmfs.a" \
+	"crc32.o"     \
+	"dir.o "      \
+	"disk.o "     \
+	"encoding.o " \
+	"entry.o "    \
+	"errno.o "    \
+	"file.o "     \
+	"fs.o "       \
+	"header.o "   \
+	"host.o"      \
+	"memcpy.o"    \
+	"path.o "     \
+	"status.o"    \
+	"table.o"
 
-$AR $ARFLAGS libbmfs.a crc32.o dir.o disk.o encoding.o entry.o errno.o file.o fs.o header.o host.o memcpy.o path.o status.o table.o
+compile_file "filedisk.c"
+compile_file "ramdisk.c"
+compile_file "size.c"
+compile_file "stdhost.c"
+compile_file "time.c"
 
-$CC $CFLAGS -c filedisk.c
-$CC $CFLAGS -c ramdisk.c
-$CC $CFLAGS -c size.c
-$CC $CFLAGS -c stdhost.c
-$CC $CFLAGS -c time.c
-
-$AR $ARFLAGS libbmfs-stdlib.a filedisk.o ramdisk.o size.o stdhost.o time.o
+link_static "libbmfs-stdlib.a" \
+	"filedisk.o" \
+	"ramdisk.o"  \
+	"size.o"     \
+	"stdhost.o"  \
+	"time.o"
