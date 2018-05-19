@@ -530,6 +530,8 @@ static int open_file(struct BMFS *fs,
 	if (err != 0)
 		return err;
 
+	file->Table = &fs->Table;
+
 	return 0;
 }
 
