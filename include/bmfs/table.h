@@ -44,6 +44,8 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct BMFSDisk;
+struct BMFSHost;
+struct BMFSHostData;
 
 /** A header in the allocation table,
  * describing an occupied region on
@@ -128,6 +130,10 @@ void bmfs_table_entry_set_deleted(struct BMFSTableEntry *entry);
 
 struct BMFSTable
 {
+	/** The host implementation callbacks. */
+	const struct BMFSHost *Host;
+	/** The host implementation data. */
+	struct BMFSHostData *HostData;
 	/** A pointer to the associated disk. */
 	struct BMFSDisk *Disk;
 	/** A placeholder for the current entry. */
@@ -156,6 +162,22 @@ struct BMFSTable
  * */
 
 void bmfs_table_init(struct BMFSTable *table);
+
+/** Releases memory allocated by the table structure.
+ * @param table An initialized table structure.
+ * @ingroup table-api
+ * */
+
+void bmfs_table_done(struct BMFSTable *table);
+
+/** Set the host implementation callbacks.
+ * @param table An initialized table structure.
+ * @param host The host implementation callbacks.
+ * @ingroup table-api
+ * */
+
+void bmfs_table_set_host(struct BMFSTable *table,
+                         const struct BMFSHost *host);
 
 /** When iterating the table, allow for the
  * deleted entries to be returned.

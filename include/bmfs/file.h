@@ -46,6 +46,8 @@ struct BMFSFile
 {
 	/** The disk that the file resides on. */
 	struct BMFSDisk *Disk;
+	/** A pointer to file the file allocation table. */
+	struct BMFSTable *Table;
 	/** The file's directory entry. This is
 	 * used to update modification time and
 	 * to stay within boundaries of the file

@@ -5,19 +5,19 @@
  * ===============================================================
  */
 
-#ifndef BMFS_H
-#define BMFS_H
+#ifndef BMFS_CRC32_H
+#define BMFS_CRC32_H
 
-#include "dir.h"
-#include "disk.h"
-#include "entry.h"
-#include "errno.h"
-#include "file.h"
-#include "fs.h"
-#include "limits.h"
-#include "status.h"
-#include "table.h"
-#include "version.h"
+#include <bmfs/types.h>
 
-#endif /* BMFS_H */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+bmfs_uint32 bmfs_crc32(bmfs_uint32 crc, const void *buf, bmfs_uint64 buf_size);
+
+#ifdef __cplusplus
+} /* extern "C" { */
+#endif
+
+#endif /* BMFS_CRC32_H */

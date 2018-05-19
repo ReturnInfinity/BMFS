@@ -47,9 +47,11 @@ struct BMFSHeader
 	bmfs_uint64 TotalSize;
 	/** The number of blocks per byte. */
 	bmfs_uint64 BlockSize;
-	/** Padding until the 512-byte marker.
-	 * This space is alos reserved for future use. */
-	bmfs_uint64 Reserved[58];
+	/** Flags that help describe the file system. */
+	bmfs_uint32 Flags;
+	/** A checksum of this header. This field is set
+	 * to zero during the calculation of the checksum. */
+	bmfs_uint32 Checksum;
 };
 
 /** Initializes a file system header.

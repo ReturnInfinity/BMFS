@@ -25,6 +25,9 @@ extern "C" {
 struct BMFSDir;
 struct BMFSDisk;
 struct BMFSFile;
+struct BMFSHost;
+struct BMFSHostData;
+struct BMFSStatus;
 
 /** Represents the file system as a whole.
  * @ingroup fs-api
@@ -32,6 +35,10 @@ struct BMFSFile;
 
 struct BMFS
 {
+	/** The host implementation functions. */
+	const struct BMFSHost *Host;
+	/** The host implementation data. */
+	struct BMFSHostData *HostData;
 	/** The disk used for read and
 	 * write operations. This must
 	 * be set by the caller. */
@@ -40,6 +47,10 @@ struct BMFS
 	struct BMFSHeader Header;
 	/** The allocation table. */
 	struct BMFSTable Table;
+	/** An array of currently open files. */
+	struct BMFSFile *OpenFiles;
+	/** The number of currently open files. */
+	bmfs_size OpenFileCount;
 };
 
 /** Initializes the file system.
@@ -50,6 +61,17 @@ struct BMFS
  * */
 
 void bmfs_init(struct BMFS *bmfs);
+
+/** Assigns a host implementation to the file system.
+ * This allows the file system to do things like allocate
+ * memory and lock the file system.
+ * @param bmfs An initialized file system structure.
+ * @param host An initialized host structure.
+ * @ingroup fs-api
+ * */
+
+void bmfs_set_host(struct BMFS *bmfs,
+                   const struct BMFSHost *host);
 
 /** Assigns the disk to use with a
  * BMFS file system structure. After
@@ -63,6 +85,15 @@ void bmfs_init(struct BMFS *bmfs);
 
 void bmfs_set_disk(struct BMFS *bmfs,
                    struct BMFSDisk *disk);
+
+/** Calculates the usage status of the file system.
+ * @param bmfs An initalized file system.
+ * @param status The status structure to put information into.
+ * @ingroup fs-api
+ * */
+
+void bmfs_get_status(struct BMFS *bmfs,
+                     struct BMFSStatus *status);
 
 /** Locates a region that can
  * fit a certain number of bytes.

@@ -9,6 +9,30 @@
 
 #include <bmfs/disk.h>
 #include <bmfs/errno.h>
+#include <bmfs/table.h>
+
+#include <stdio.h>
+
+static int file_resize(struct BMFSFile *file,
+                       bmfs_uint64 size)
+{
+	if (file->Table == BMFS_NULL)
+		return BMFS_EFAULT;
+
+	bmfs_uint64 offset = file->Entry.Offset;
+
+	int err = bmfs_table_realloc(file->Table, size, &offset);
+	if (err != 0)
+		return err;
+
+	file->Entry.Offset = offset;
+	file->Entry.Size = size;
+
+	printf("New Offset : %llu\n", offset);
+	printf("New Size   : %llu\n", size);
+
+	return 0;
+}
 
 static bmfs_bool file_can_write(const struct BMFSFile *file)
 {
@@ -27,6 +51,7 @@ void bmfs_file_init(struct BMFSFile *file)
 	file->Disk = BMFS_NULL;
 	file->CurrentPosition = 0;
 	file->ReservedSize = 0;
+	file->Table = BMFS_NULL;
 	file->Mode = BMFS_FILE_MODE_READ;
 }
 
@@ -93,9 +118,6 @@ int bmfs_file_read(struct BMFSFile *file,
 	 && (file->Mode != BMFS_FILE_MODE_RW))
 		return BMFS_EINVAL;
 
-	if (file->CurrentPosition > file->Entry.Size)
-		file->CurrentPosition = file->Entry.Size;
-
 	int err = bmfs_file_seek(file, file->CurrentPosition, BMFS_SEEK_SET);
 	if (err != 0)
 		return err;
@@ -122,11 +144,18 @@ int bmfs_file_write(struct BMFSFile *file,
                     bmfs_uint64 buf_size,
                     bmfs_uint64 *write_result_ptr)
 {
-	/* TODO : check how much space is reserved for the file. */
-
 	if ((file->Mode != BMFS_FILE_MODE_WRITE)
 	 && (file->Mode != BMFS_FILE_MODE_RW))
 		return BMFS_EINVAL;
+
+	bmfs_uint64 new_size = file->CurrentPosition + buf_size;
+
+	if (new_size > file->Entry.Size)
+	{
+		int err = file_resize(file, new_size);
+		if (err != 0)
+			return err;
+	}
 
 	int err = bmfs_file_seek(file, file->CurrentPosition, BMFS_SEEK_SET);
 	if (err != 0)

@@ -5,19 +5,13 @@
  * ===============================================================
  */
 
-#ifndef BMFS_H
-#define BMFS_H
+#include "memcpy.h"
 
-#include "dir.h"
-#include "disk.h"
-#include "entry.h"
-#include "errno.h"
-#include "file.h"
-#include "fs.h"
-#include "limits.h"
-#include "status.h"
-#include "table.h"
-#include "version.h"
+void bmfs_memcpy(void *dst, const void *src, bmfs_uint64 size)
+{
+	unsigned char *dst8 = (unsigned char *) dst;
+	const unsigned char *src8 = (const unsigned char *) src;
 
-#endif /* BMFS_H */
-
+	for (bmfs_uint64 i = 0; i < size; i++)
+		dst8[i] = src8[i];
+}

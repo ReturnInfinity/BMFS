@@ -41,7 +41,16 @@ void test_entry(void) {
 	bmfs_assert(memcmp(&buf[192 + 24], "\x04", 1) == 0);
 }
 
+void test_types(void)
+{
+	bmfs_assert(sizeof(bmfs_uint64) == 8);
+	bmfs_assert(sizeof(bmfs_uint32) == 4);
+	bmfs_assert(sizeof(bmfs_uint16) == 2);
+	bmfs_assert(sizeof(bmfs_uint8) == 1);
+}
+
 int main(void) {
+	test_types();
 	test_entry();
 	return 0;
 }

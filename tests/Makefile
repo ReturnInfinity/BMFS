@@ -19,6 +19,7 @@ CFLAGS += -I$(TOP)/include
 ifndef NO_TESTS
 tests += dir-test
 tests += disk-test
+tests += encoding-test
 tests += fs-test
 tests += path-test
 tests += sizeof-test
@@ -42,6 +43,10 @@ dir-test: dir-test.o $(libs)
 disk-test.o: disk-test.c
 
 disk-test: disk-test.o $(libs)
+
+encoding-test: encoding-test.o $(libs)
+
+encoding-test.o: encoding-test.c encoding.h types.h
 
 fs-test.o: fs-test.c
 
@@ -69,6 +74,7 @@ clean:
 test:
 	$(VALGRIND) ./dir-test
 	$(VALGRIND) ./disk-test
+	$(VALGRIND) ./encoding-test
 	$(VALGRIND) ./fs-test
 	$(VALGRIND) ./path-test
 	$(VALGRIND) ./size-test

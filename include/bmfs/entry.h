@@ -58,7 +58,9 @@ struct BMFSEntry
 	bmfs_uint64 ModificationTime;
 	/** Stores information on entry type,
 	 * permissions, and state. */
-	bmfs_uint64 Flags;
+	bmfs_uint32 Flags;
+	/** Checksum of the entry structure. */
+	bmfs_uint32 Checksum;
 	/** The owner user ID */
 	bmfs_uint64 UserID;
 	/** The group ID */
@@ -128,7 +130,7 @@ int bmfs_entry_save(struct BMFSEntry *entry,
  * @ingroup entry-api
  * */
 
-int bmfs_entry_write(const struct BMFSEntry *entry,
+int bmfs_entry_write(struct BMFSEntry *entry,
                      struct BMFSDisk *disk);
 
 /** Gets the absolute byte offset of the

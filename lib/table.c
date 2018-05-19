@@ -11,7 +11,43 @@
 #include <bmfs/encoding.h>
 #include <bmfs/entry.h>
 #include <bmfs/errno.h>
+#include <bmfs/host.h>
 #include <bmfs/limits.h>
+
+#include "crc32.h"
+
+static int table_host_init(struct BMFSTable *table)
+{
+	if (table->Host == BMFS_NULL)
+		return BMFS_EFAULT;
+
+	if (table->HostData == BMFS_NULL)
+	{
+		table->HostData = bmfs_host_init(table->Host);
+		if (table->HostData == BMFS_NULL)
+			return BMFS_ENOMEM;
+	}
+
+	return 0;
+}
+
+static void *table_malloc(struct BMFSTable *table, bmfs_uint64 size)
+{
+	int err = table_host_init(table);
+	if (err != 0)
+		return BMFS_NULL;
+
+	return bmfs_host_malloc(table->Host, table->HostData, size);
+}
+
+static void table_free(struct BMFSTable *table, void *addr)
+{
+	int err = table_host_init(table);
+	if (err != 0)
+		return;
+
+	bmfs_host_free(table->Host, table->HostData, addr);
+}
 
 static bmfs_uint64 get_block_size(const struct BMFSTable *table)
 {
@@ -31,12 +67,85 @@ static bmfs_uint64 to_block_size(const struct BMFSTable *table,
 
 static bmfs_uint32 bmfs_table_entry_checksum(const struct BMFSTableEntry *entry)
 {
-	bmfs_uint32 checksum = 0;
-	checksum += (0x0f0f0f0f ^ entry->Offset);
-	checksum += (0x0f00f00f ^ entry->Reserved);
-	checksum ^= entry->Flags;
+	char buf[24];
 
-	return checksum;
+	bmfs_encode_uint64(entry->Offset, &buf[0x00]);
+	bmfs_encode_uint64(entry->Reserved, &buf[0x08]);
+	bmfs_encode_uint32(entry->Flags, &buf[0x10]);
+	bmfs_encode_uint32(0x00, &buf[0x14]);
+
+	return bmfs_crc32(0, buf, 24);
+}
+
+static int copy_over_data(struct BMFSTable *table,
+                          bmfs_uint64 new_offset,
+                          bmfs_uint64 old_offset,
+                          bmfs_uint64 size)
+{
+	bmfs_uint64 block_size = 4096;
+
+	if (block_size > size)
+		block_size = size;
+
+	void *block = table_malloc(table, block_size);
+	if (block == BMFS_NULL)
+		return BMFS_ENOMEM;
+
+	bmfs_uint64 size_copied = 0;
+
+	while (size_copied < size)
+	{
+		if ((size_copied + block_size) > size)
+			block_size = size - size_copied;
+
+		bmfs_uint64 read_count = 0;
+
+		int err = bmfs_disk_seek(table->Disk, old_offset + size_copied, BMFS_SEEK_SET);
+		if (err != 0)
+		{
+			table_free(table, block);
+			return err;
+		}
+
+		err = bmfs_disk_read(table->Disk, block, block_size, &read_count);
+		if (err != 0)
+		{
+			table_free(table, block);
+			return err;
+		}
+		else if (read_count != block_size)
+		{
+			table_free(table, block);
+			return BMFS_EIO;
+		}
+
+		err = bmfs_disk_seek(table->Disk, new_offset + size_copied, BMFS_SEEK_SET);
+		if (err != 0)
+		{
+			table_free(table, block);
+			return err;
+		}
+
+		bmfs_uint64 write_count = 0;
+
+		err = bmfs_disk_write(table->Disk, block, block_size, &write_count);
+		if (err != 0)
+		{
+			table_free(table, block);
+			return err;
+		}
+		else if (write_count != block_size)
+		{
+			table_free(table, block);
+			return BMFS_EIO;
+		}
+
+		size_copied += block_size;
+	}
+
+	table_free(table, block);
+
+	return 0;
 }
 
 #define BMFS_TABLE_FLAG_DELETED 0x01
@@ -126,6 +235,8 @@ bmfs_bool bmfs_table_entry_is_deleted(const struct BMFSTableEntry *entry)
 
 void bmfs_table_init(struct BMFSTable *table)
 {
+	table->Host = BMFS_NULL;
+	table->HostData = BMFS_NULL;
 	table->Disk = BMFS_NULL;
 	table->TableOffset = 0;
 	table->EntryCount = 0;
@@ -134,6 +245,27 @@ void bmfs_table_init(struct BMFSTable *table)
 	table->BlockSize = 4096;
 	table->IgnoreDeleted = BMFS_TRUE;
 	bmfs_table_entry_init(&table->CurrentEntry);
+}
+
+void bmfs_table_done(struct BMFSTable *table)
+{
+	if (table->Host != BMFS_NULL)
+	{
+		bmfs_host_done(table->Host, table->HostData);
+		table->Host = BMFS_NULL;
+		table->HostData = BMFS_NULL;
+	}
+}
+
+void bmfs_table_set_host(struct BMFSTable *table,
+                         const struct BMFSHost *host)
+{
+	if (table->Host != BMFS_NULL)
+		bmfs_host_done(table->Host, table->HostData);
+
+	table->Host = host;
+
+	table->HostData = BMFS_NULL;
 }
 
 void bmfs_table_view_deleted(struct BMFSTable *table)
@@ -207,6 +339,64 @@ int bmfs_table_alloc(struct BMFSTable *table,
 	/* Assign the offset */
 
 	*offset = entry.Offset;
+
+	return 0;
+}
+
+int bmfs_table_realloc(struct BMFSTable *table,
+                       bmfs_uint64 size,
+                       bmfs_uint64 *offset)
+{
+	if (offset == BMFS_NULL)
+		return BMFS_EFAULT;
+
+	/* Find the old entry, so that the data
+	 * can be copied over. */
+
+	struct BMFSTableEntry *old_entry = bmfs_table_find(table, *offset);
+	if (old_entry == BMFS_NULL)
+		return BMFS_ENOENT;
+
+	/* Check if it already fits, then we can
+	 * bail out early. */
+
+	if (old_entry->Reserved >= size)
+		return 0;
+
+	/* Save the offset and the size,
+	 * so we can copy the data over */
+
+	bmfs_uint64 old_offset = old_entry->Offset;
+	bmfs_uint64 old_size = old_entry->Reserved;
+
+	bmfs_table_end(table);
+
+	bmfs_table_hide_deleted(table);
+
+	struct BMFSTableEntry *last_entry = bmfs_table_previous(table);
+	if (last_entry == BMFS_NULL)
+		return BMFS_ENOSPC;
+
+	bmfs_uint64 block_size = get_block_size(table);
+
+	struct BMFSTableEntry new_entry;
+	bmfs_table_entry_init(&new_entry);
+	new_entry.Offset = last_entry->Offset + last_entry->Reserved;
+	new_entry.Reserved = ((size + (block_size - 1)) / block_size) * block_size;
+
+	int err = copy_over_data(table, new_entry.Offset, old_offset, old_size);
+	if (err != 0)
+		return err;
+
+	err = bmfs_table_push(table, &new_entry);
+	if (err != 0)
+		return err;
+
+	err = bmfs_table_free(table, old_offset);
+	if (err != 0)
+		return err;
+
+	*offset = new_entry.Offset;
 
 	return 0;
 }

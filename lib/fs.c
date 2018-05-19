@@ -12,7 +12,9 @@
 #include <bmfs/entry.h>
 #include <bmfs/errno.h>
 #include <bmfs/file.h>
+#include <bmfs/host.h>
 #include <bmfs/path.h>
+#include <bmfs/status.h>
 #include <bmfs/table.h>
 #include <bmfs/time.h>
 #include <bmfs/types.h>
@@ -60,7 +62,7 @@ static bmfs_bool can_fit_entry(struct BMFS *fs,
 
 static int add_entry(struct BMFS *fs,
                      struct BMFSEntry *root,
-                     const struct BMFSEntry *entry)
+                     struct BMFSEntry *entry)
 {
 	if (!can_fit_entry(fs, root))
 		return BMFS_ENOSPC;
@@ -549,17 +551,56 @@ static int delete_entry(struct BMFS *fs,
 
 void bmfs_init(struct BMFS *fs)
 {
+	fs->Host = BMFS_NULL;
+	fs->HostData = BMFS_NULL;
+	fs->Disk = BMFS_NULL;
+	fs->OpenFiles = BMFS_NULL;
+	fs->OpenFileCount = 0;
 	bmfs_header_init(&fs->Header);
 	bmfs_table_init(&fs->Table);
-	fs->Disk = BMFS_NULL;
 }
 
 void bmfs_done(struct BMFS *fs)
 {
-	if (fs->Disk != BMFS_NULL) {
+	for (bmfs_size i = 0; i < fs->OpenFileCount; i++)
+	{
+		bmfs_file_close(&fs->OpenFiles[i]);
+	}
+
+	if (fs->OpenFiles != BMFS_NULL)
+	{
+		bmfs_host_free(fs->Host, fs->HostData, fs->OpenFiles);
+		fs->OpenFiles = BMFS_NULL;
+	}
+
+	if (fs->Disk != BMFS_NULL)
+	{
 		bmfs_disk_done(fs->Disk);
 		fs->Disk = BMFS_NULL;
 	}
+
+	if (fs->Host != BMFS_NULL)
+	{
+		bmfs_host_done(fs->Host, fs->HostData);
+		fs->Host = BMFS_NULL;
+		fs->HostData = BMFS_NULL;
+	}
+
+	bmfs_table_done(&fs->Table);
+}
+
+void bmfs_set_host(struct BMFS *fs,
+                   const struct BMFSHost *host)
+{
+	if (fs->Host != BMFS_NULL)
+		bmfs_host_done(fs->Host, fs->HostData);
+
+	fs->Host = host;
+
+	/* allocate implementation data when needed. */
+	fs->HostData = BMFS_NULL;
+
+	bmfs_table_set_host(&fs->Table, host);
 }
 
 void bmfs_set_disk(struct BMFS *fs,
@@ -568,6 +609,27 @@ void bmfs_set_disk(struct BMFS *fs,
 	if ((fs != BMFS_NULL) && (disk != BMFS_NULL)) {
 		fs->Disk = disk;
 		bmfs_table_set_disk(&fs->Table, disk);
+	}
+}
+
+void bmfs_get_status(struct BMFS *fs,
+                     struct BMFSStatus *status)
+{
+	status->TotalSize = fs->Header.TotalSize;
+
+	struct BMFSTable *table = &fs->Table;
+
+	bmfs_table_begin(table);
+
+	bmfs_table_hide_deleted(table);
+
+	for (;;)
+	{
+		const struct BMFSTableEntry *entry = bmfs_table_next(table);
+		if (entry == BMFS_NULL)
+			break;
+
+		status->Reserved += entry->Reserved;
 	}
 }
 
@@ -692,6 +754,8 @@ int bmfs_delete_file(struct BMFS *fs, const char *path)
 
 	bmfs_file_init(&file);
 
+	file.Table = &fs->Table;
+
 	int err = bmfs_open_file(fs, &file, path);
 	if (err != 0)
 		return err;
@@ -733,6 +797,11 @@ int bmfs_delete_dir_recursively(struct BMFS *fs, const char *path)
 	if (err != 0)
 		return err;
 
+	/* TODO : This isn't fully recursive.
+	 * It does not handle the case that there
+	 * are more directories contained within
+	 * this one. */
+
 	for (;;)
 	{
 		struct BMFSEntry *entry = bmfs_dir_next(&dir);
@@ -772,6 +841,8 @@ int bmfs_rename(struct BMFS *fs,
 	 * can get a hold of the entry structure. */
 
 	struct BMFSFile old_file;
+
+	old_file.Table = &fs->Table;
 
 	bmfs_file_init(&old_file);
 

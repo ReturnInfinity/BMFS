@@ -5,19 +5,14 @@
  * ===============================================================
  */
 
-#ifndef BMFS_H
-#define BMFS_H
+#include <bmfs/status.h>
 
-#include "dir.h"
-#include "disk.h"
-#include "entry.h"
-#include "errno.h"
-#include "file.h"
-#include "fs.h"
-#include "limits.h"
-#include "status.h"
-#include "table.h"
-#include "version.h"
-
-#endif /* BMFS_H */
-
+void bmfs_status_init(struct BMFSStatus *status)
+{
+	status->TotalSize = 0;
+	status->Reserved = 0;
+	status->Used = 0;
+	status->Wasted = 0;
+	status->FileCount = 0;
+	status->DirCount = 0;
+}

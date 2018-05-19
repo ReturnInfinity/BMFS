@@ -26,6 +26,7 @@ bmfs.img
 /utils/bmfs-fuse
 /tests/disk-test
 /tests/dir-test
+/tests/encoding-test
 /tests/fs-test
 /tests/path-test
 /tests/size-test
