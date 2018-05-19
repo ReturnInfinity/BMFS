@@ -52,6 +52,7 @@ void bmfs_header_init(struct BMFSHeader *header)
 
 	header->TableEntryCount = 0;
 	header->TotalSize = BMFS_MINIMUM_DISK_SIZE;
+
 	header->BlockSize = 4096;
 	header->Flags = 0;
 	header->Checksum = 0;

@@ -242,7 +242,7 @@ void bmfs_table_init(struct BMFSTable *table)
 	table->EntryCount = 0;
 	table->EntryIndex = 0;
 	table->MaxOffset = 0;
-	table->BlockSize = 4096;
+	table->BlockSize = 128 * 1024;
 	table->IgnoreDeleted = BMFS_TRUE;
 	bmfs_table_entry_init(&table->CurrentEntry);
 }

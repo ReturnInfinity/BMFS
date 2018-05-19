@@ -1,17 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
-CC=gcc
-CFLAGS="${CFLAGS} -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g"
-CFLAGS="${CFLAGS} -I../include"
+source "../bash/common.sh"
 
-AR=ar
-ARFLAGS=rcs
+compile_file "bmfs.c"
 
-LD=gcc
-LDFLAGS=-lc
+LDFLAGS="${LDFLAGS} -L ../lib"
+LDLIBS="${LDLIBS} -lbmfs"
+LDLIBS="${LDLIBS} -lbmfs-stdlib"
 
-$CC $CFLAGS -c bmfs.c
-
-$LD $LDFLAGS bmfs.o ../lib/libbmfs.a ../lib/libbmfs-stdlib.a -o bmfs
+link_executable "bmfs" "bmfs.o"

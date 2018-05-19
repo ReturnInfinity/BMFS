@@ -137,6 +137,11 @@ int main(void)
 	entry = bmfs_dir_next(&dir);
 	bmfs_assert(entry == NULL);
 
+	/* Test to ensure that the entire file name is checked. */
+
+	err = bmfs_open_dir(&fs, &dir, "/us");
+	bmfs_assert(err == BMFS_ENOENT);
+
 	/* Test that the empty directories don't contain anything. */
 
 	err = bmfs_open_dir(&fs, &dir, "/home");
