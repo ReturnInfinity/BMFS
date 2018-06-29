@@ -963,17 +963,49 @@ static int cmd_status(struct BMFS *bmfs, int argc, const char **argv)
 	(void) argc;
 	(void) argv;
 
+	char size_string[64];
+
+	/* Get the file system status. */
+
 	struct BMFSStatus status;
 
 	bmfs_status_init(&status);
 
 	bmfs_get_status(bmfs, &status);
 
+	/* Get the total size as a human readable string. */
+
+	struct BMFSSize total_size;
+
+	bmfs_size_set_bytes(&total_size, status.TotalSize);
+
+	if (bmfs_size_to_string(&total_size, size_string, sizeof(size_string)) != 0)
+	{
+		fprintf(stderr, "Error: Failed to convert total size to string.\n");
+		return EXIT_FAILURE;
+	}
+
+	printf("Total Size:   %s\n", size_string);
+
+	/* Get the reserved size as a human readable string. */
+
+	struct BMFSSize reserved;
+
+	bmfs_size_set_bytes(&reserved, status.Reserved);
+
+	if (bmfs_size_to_string(&reserved, size_string, sizeof(size_string)) != 0)
+	{
+		fprintf(stderr, "Error: Failed to convert reserved size to string.\n");
+		return EXIT_FAILURE;
+	}
+
+	printf("Reserved:     %s\n", size_string);
+
+	/* Get the percent used. */
+
 	double percent_used = ((double) status.Reserved) / ((double) status.TotalSize);
 	percent_used *= 100;
 
-	printf("Total Size:   %llu\n", status.TotalSize);
-	printf("Reserved:     %llu\n", status.Reserved);
 	printf("Percent Used: %.2lf%%\n", percent_used);
 
 	return EXIT_SUCCESS;
