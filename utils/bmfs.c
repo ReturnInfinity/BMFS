@@ -210,14 +210,15 @@ int main(int argc, const char **argv)
 
 	if (bmfs_size_parse(&offset, offset_string) != 0)
 	{
-		fprintf(stderr, "Failed to parse offset '%s'.\n", offset_string);
+		fprintf(stderr, "Error: Failed to parse offset '%s'.\n", offset_string);
 		return EXIT_FAILURE;
 	}
 
 	bmfs_uint64 offset_bytes = 0;
 
-	if (bmfs_size_bytes(&offset, &offset_bytes) != 0) {
-		fprintf(stderr, "Error: Offset not representable by 64-bit integer.\n");
+	if (bmfs_size_bytes(&offset, &offset_bytes) != 0)
+	{
+		fprintf(stderr, "Error: Offset not representable by a 64-bit integer.\n");
 		return EXIT_FAILURE;
 	}
 
