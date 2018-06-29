@@ -1135,7 +1135,8 @@ static void print_usage(const char *argv0)
 	printf("Usage: %s [options] <command>\n", argv0);
 	printf("\n");
 	printf("Options:\n");
-	printf("\t-d, --disk PATH : Specify the path to the BMFS disk.\n");
+	printf("\t-d, --disk   PATH : Specify the path to the BMFS disk.\n");
+	printf("\t-o, --offset SIZE : Specify the offset of the file system on disk.\n");
 	printf("\n");
 	printf("Commands:\n");
 	printf("\thelp    : Get help with a command.\n");
@@ -1183,8 +1184,9 @@ static void print_help(const char *argv0, int argc, const char **argv)
 		printf("%s format [options]\n", argv0);
 		printf("\n");
 		printf("Options\n");
-		printf("\t-f, --force     : Format an existing file system.\n");
-		printf("\t-s, --size SIZE : Specify the size of the file system.\n");
+		printf("\t-b, --block-size SIZE : Specify the block size of the file system.\n");
+		printf("\t-f, --force           : Format an existing file system.\n");
+		printf("\t-s, --size SIZE       : Specify the size of the file system.\n");
 		break;
 	case BMFS_CMD_MKDIR:
 		printf("%s mkdir PATH\n", argv0);
