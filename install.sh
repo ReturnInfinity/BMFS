@@ -9,7 +9,7 @@ mkdir -p "${PREFIX}/include/bmfs"
 
 function update_file {
 	echo "Updating $2"
-	cp --update "$1" "$2"
+	cp "$1" "$2"
 }
 
 update_file "utils/bmfs" "${PREFIX}/bin/bmfs"
