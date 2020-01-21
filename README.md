@@ -1,7 +1,5 @@
 # BMFS
 
-[![Build Status](https://travis-ci.org/ReturnInfinity/BMFS.svg?branch=master)](https://travis-ci.org/ReturnInfinity/BMFS)
-
 Utility for accessing a disk or disk image formatted with BareMetal File System (BMFS).
 
 
@@ -13,10 +11,6 @@ In Ubuntu this can be completed with the following command:
 
 	sudo apt-get install gcc
 
-Optionally, you can also install the Filesystem in Userspace (FUSE) headers. 
-
-	sudo apt-get install libfuse-dev
-
 
 ## Building BMFS
 
@@ -25,72 +19,66 @@ Optionally, you can also install the Filesystem in Userspace (FUSE) headers.
 *You can copy the bmfs binary to a location in the system path for ease of use*
 
 
-## Formatting a New Disk
+## Creating a new, formatted disk image
 
-    bmfs --disk disk.image format 128M
+    bmfs disk.image initialize 128M
 
-You can also just use the default disk name, `bmfs.img`, and make the command simpler.
 
-    bmfs format 128M
+## Creating a new disk image that boots BareMetal OS
+
+    bmfs disk.image initialize 128M path/to/bmfs_mbr.sys path/to/pure64.sys path/to/kernel64.sys
+
+or if the Pure64 boot loader and BareMetal-OS kernel are combined into one file:
+
+    bmfs disk.image initialize 128M path/to/bmfs_mbr.sys path/to/software.sys
+
+
+## Formatting a disk image
+
+	bmfs disk.image format
 
 In Linux/Unix/Mac OS X you can also format a physical drive by passing the correct path.
 
 	sudo bmfs /dev/sdc format
 
 
-## Display BMFS Disk Contents
+## Display BMFS disk contents
 
-To list dist contents, use the `ls` command.
-
-	bmfs ls -l
-
-Or specify a path.
-
-	bmfs ls /home -l
+	bmfs disk.image list
 
 Sample output:
 
-	bmfs ls -l
-	       0 Mar 24 23:08:13 usr
-	       0 Mar 24 23:08:14 home
-	       0 Mar 24 23:08:16 lib
-	       0 Mar 24 23:08:24 boot
-
-If the command is being run by a script, you can omit the color by using the `--color` option, like this:
-
-	bmfs ls --color never
-
-Aliases for the `ls` command are `dir` and `list`.
+	C:\baremetal>utils\bmfs BMFS-256-flat.vmdk list
+	Disk Size: 256 MiB
+	Name                            |            Size (B)|      Reserved (MiB)
+	==========================================================================
+	test.app                                           31                    2
+	AnotherFile.app                                     1                    2
+	helloc.app                                        800                    2
 
 
-## Create a New File
+## Create a new file and reserve space for it
 
-To create a new file without any content on it, you can just use the `touch` command.
+	bmfs disk.image create FileName.Ext
 
-	bmfs touch /etc/bashrc
+You will be prompted for the size to reserve.
 
-You can also create a new file by copying one from the host file system.
+Alternately, you can specify the reserved size after the file name. The reserved size is given in Megabytes and will automatically round up to an even number.
 
-	bmfs cp ./some-script.sh /bin/some-script.sh
-
-An alias for the `cp` command is `copy`.
+	bmfs disk.image create FileName.Ext 4
 
 
-## Reading File Contents from BMFS
+## Read from BMFS to a local file
 
-To read a file from BMFS, you can use the `cat` command.
+	bmfs disk.image read FileName.Ext
 
-	bmfs cat /home/john/.bashrc
 
-Redirect the output to save it to a file.
+## Write a local file to BMFS
 
-	bmfs cat /home/john/.bashrc >.bashrc
+	bmfs disk.image write FileName.Ext
 
 
 ## Delete a file on BMFS
 
-To delete a file, use the `rm` command.
+	bmfs disk.image delete FileName.Ext
 
-	bmfs rm /var/log/unused-file.txt
-
-An alias for the `rm` command is `delete`.

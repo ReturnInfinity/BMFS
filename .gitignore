@@ -1,40 +1,13 @@
-# CMake build directory
-build
 # Object files
 *.o
-# Linux libraries
-*.a
-*.so
-# Windows libraries
-*.lib
-*.dll
-# Default image path
-disk.image
-bmfs.img
+
 # Executables
 *.exe
 *.out
 *.app
+
 # UNIX/Linux/Mac Executable
-/utils/bmfs
-/utils/bmfs-cat
-/utils/bmfs-cp
-/utils/bmfs-create
-/utils/bmfs-init
-/utils/bmfs-ls
-/utils/bmfs-rm
-/utils/bmfs-fuse
-/tests/disk-test
-/tests/dir-test
-/tests/encoding-test
-/tests/fs-test
-/tests/path-test
-/tests/size-test
-/tests/sizeof-test
-/tests/table-test
+bmfs
+
 # Mac crap
 .DS_Store
-# Doxygen crap
-/doc/html
-/doc/man
-/doc/latex

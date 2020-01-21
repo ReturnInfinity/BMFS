@@ -1,24 +1,8 @@
-#!/bin/make -f
+all: bmfs
 
-# Used by other makefiles to
-# find the top directory of the
-# project.
-TOP=$(CURDIR)
+bmfs: src/bmfs.c
+	$(CC) -o bmfs src/bmfs.c -Wall -W -pedantic -std=c99
 
-# Indicates which configuration that
-# the project is being built with.
-CONFIG ?=full
+clean:
+	rm -f bmfs
 
-# Export these variables, they are
-# needed in the other makefiles.
-export TOP
-export CONFIG
-
-.PHONY: all clean test install
-all clean test install:
-	$(MAKE) -C include/bmfs $@
-	$(MAKE) -C lib $@
-	$(MAKE) -C tests $@
-	$(MAKE) -C utils $@
-
-$(V).SILENT:
