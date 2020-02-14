@@ -5,16 +5,18 @@ Utility for accessing a disk or disk image formatted with BareMetal File System 
 
 ## Prerequisites
 
-GCC (C compiler) is required for building the BMFS disk utility.
+The scripts in this repo depend on a Debian-based Linux system like [Ubuntu](https://www.ubuntu.com/download/desktop) or [Elementary](https://elementary.io). macOS is also supported.
 
-In Ubuntu this can be completed with the following command:
+- [GCC](https://gcc.gnu.org) - C compiler for building C/C++ applications.
 
-	sudo apt-get install gcc
+In Linux this can be completed with the following command:
+
+	sudo apt install gcc
 
 
 ## Building BMFS
 
-    make
+    ./build.sh
 
 *You can copy the bmfs binary to a location in the system path for ease of use*
 
@@ -82,3 +84,5 @@ Alternately, you can specify the reserved size after the file name. The reserved
 
 	bmfs disk.image delete FileName.Ext
 
+
+// EOF
