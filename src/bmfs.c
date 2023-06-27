@@ -55,8 +55,8 @@ char DiskInfo[512];
 
 /* Built-in functions */
 int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
-void list();
-void format();
+void list(void);
+void format(void);
 int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
 void create(char *filename, unsigned long long maxsize);
 void read(char *filename);
@@ -249,7 +249,7 @@ int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 }
 
 
-void list()
+void list(void)
 {
 	int tint;
 
@@ -275,7 +275,7 @@ void list()
 }
 
 
-void format()
+void format(void)
 {
 	memset(DiskInfo, 0, 512);
 	memset(Directory, 0, 4096);
