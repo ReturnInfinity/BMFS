@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_version, argv[1]) == 0)
 			{
-				printf("BareMetal File System Utility v1.2.3 (2017 04 07)\n");
+				printf("BareMetal File System Utility v1.2.4 (2023 06 23)\n");
 				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
 			}
 		}
