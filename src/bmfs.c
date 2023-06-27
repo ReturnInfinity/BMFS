@@ -1,6 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.2.3 (2017 04 07) */
+/* v1.2.4 (2023 06 26) */
 
 /* Global includes */
 #include <stdio.h>
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-			  		printf("Error: Invalid file size.\n");
+					printf("Error: Invalid file size.\n");
 				}
 			}
 			else
@@ -231,7 +231,7 @@ int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 		{
 			tint = 64;
 		}
-		else if (entry.FileName[0] == 0x01)			// Emtpy entry
+		else if (entry.FileName[0] == 0x01)			// Empty entry
 		{
 			// Ignore
 		}
@@ -263,7 +263,7 @@ void list(void)
 		{
 			tint = 64;
 		}
-		else if (entry.FileName[0] == 0x01)			// Emtpy entry
+		else if (entry.FileName[0] == 0x01)			// Empty entry
 		{
 			// Ignore
 		}
@@ -279,11 +279,11 @@ void format(void)
 {
 	memset(DiskInfo, 0, 512);
 	memset(Directory, 0, 4096);
-	memcpy(DiskInfo, fs_tag, 4);                    // Add the 'BMFS' tag
-	fseek(disk, 1024, SEEK_SET);                    // Seek 1KiB in for disk information
-	fwrite(DiskInfo, 512, 1, disk);                 // Write 512 bytes for the DiskInfo
-	fseek(disk, 4096, SEEK_SET);                    // Seek 4KiB in for directory
-	fwrite(Directory, 4096, 1, disk);               // Write 4096 bytes for the Directory
+	memcpy(DiskInfo, fs_tag, 4);					// Add the 'BMFS' tag
+	fseek(disk, 1024, SEEK_SET);					// Seek 1KiB in for disk information
+	fwrite(DiskInfo, 512, 1, disk);					// Write 512 bytes for the DiskInfo
+	fseek(disk, 4096, SEEK_SET);					// Seek 4KiB in for directory
+	fwrite(Directory, 4096, 1, disk);				// Write 4096 bytes for the Directory
 }
 
 
