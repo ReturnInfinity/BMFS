@@ -96,9 +96,9 @@ int main(int argc, char *argv[])
 		if (argc >= 4)
 		{
 			char *size = argv[3];				// Required
-			char *mbr = (argc > 4 ? argv[4] : NULL);    	// Opt.
-			char *boot = (argc > 5 ? argv[5] : NULL);   	// Opt.
-			char *kernel = (argc > 6 ? argv[6] : NULL); 	// Opt.
+			char *mbr = (argc > 4 ? argv[4] : NULL);	// Opt.
+			char *boot = (argc > 5 ? argv[5] : NULL);	// Opt.
+			char *kernel = (argc > 6 ? argv[6] : NULL);	// Opt.
 			int ret = initialize(diskname, size, mbr, boot, kernel);
 			exit(ret);
 		}
