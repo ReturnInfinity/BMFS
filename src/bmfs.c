@@ -1,6 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.3 (2023 10 29) */
+/* v1.3 (2023 10 30) */
 
 /* Global includes */
 #include <stdio.h>
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	/* Parse arguments */
 	if (argc == 1) // No arguments provided
 	{
-		printf("BareMetal File System Utility v1.3 (2023 10 29)\n");
+		printf("BareMetal File System Utility v1.3 (2023 10 30)\n");
 		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n\n");
 		printf("Usage: bmfs disk function file\n\n");
 		printf("Disk:     the name of the disk file\n");
@@ -866,8 +866,8 @@ void bmfs_write(char *filename)
 			// Update directory
 			tempfilesize = ftell(tfile);
 			memcpy(Directory+(slot*64)+48, &tempfilesize, 8);
-			fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-			fwrite(Directory, 4096, 1, disk);			// Write new directory to disk
+			fseek(disk, 4096, SEEK_SET);			// Seek 4KiB in for directory
+			fwrite(Directory, 4096, 1, disk);		// Write new directory to disk
 		}
 		fclose(tfile);
 	}
