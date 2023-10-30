@@ -1,6 +1,6 @@
 /* BareMetal File System Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.2.4 (2023 06 26) */
+/* v1.3 (2023 10 30) */
 
 /* Global includes */
 #include <stdio.h>
@@ -45,7 +45,6 @@ char s_create[] = "create";
 char s_read[] = "read";
 char s_write[] = "write";
 char s_delete[] = "delete";
-char s_version[] = "version";
 struct BMFSEntry entry;
 void *pentry = &entry;
 char *BlockMap;
@@ -54,67 +53,61 @@ char Directory[4096];
 char DiskInfo[512];
 
 /* Built-in functions */
-int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
-void list(void);
-void format(void);
-int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
-void create(char *filename, unsigned long long maxsize);
-void read(char *filename);
-void write(char *filename);
-void delete(char *filename);
+int bmfs_find(char *filename, struct BMFSEntry *fileentry, int *entrynumber);
+void bmfs_list(void);
+void bmfs_format(void);
+int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel);
+void bmfs_create(char *filename, unsigned long long maxsize);
+void bmfs_read(char *filename);
+void bmfs_write(char *filename);
+void bmfs_delete(char *filename);
 
 /* Program code */
 int main(int argc, char *argv[])
 {
 	/* Parse arguments */
-	if (argc < 3)
+	if (argc == 1) // No arguments provided
 	{
-		if (argc > 1)
-		{
-			if (strcasecmp(s_version, argv[1]) == 0)
-			{
-				printf("BareMetal File System Utility v1.2.4 (2023 06 23)\n");
-				printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n");
-			}
-		}
-		else
-		{
-			printf("Usage: %s disk function file\n", argv[0]);
-			printf("\tDisk: the name of the disk file\n");
-			printf("\tFunction: list, read, write, create, delete, format, initialize\n");
-			printf("\tFile: (if applicable)\n");
-		}
-		exit(0);
+		printf("BareMetal File System Utility v1.3 (2023 10 30)\n");
+		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n\n");
+		printf("Usage: bmfs disk function file\n\n");
+		printf("Disk:     the name of the disk file\n");
+		printf("Function: list, read, write, create, delete, format, initialize\n");
+		printf("File:     (if applicable)\n");
+		exit(EXIT_SUCCESS);
 	}
 
-	diskname = argv[1];
-	command = argv[2];
-	filename = argv[3];
+	if (argc >= 2)
+	{
+		diskname = (argc > 1 ? argv[1] : NULL);
+		command = (argc > 2 ? argv[2] : NULL);
+		filename = (argc > 3 ? argv[3] : NULL);
+	}
 
-	if (strcasecmp(s_initialize, command) == 0)
+	if (argc > 2 && strcasecmp(s_initialize, command) == 0)
 	{
 		if (argc >= 4)
 		{
-			char *size = argv[3];				// Required
+			char *size = (argc > 3 ? argv[3] : NULL);	// Required
 			char *mbr = (argc > 4 ? argv[4] : NULL);	// Opt.
 			char *boot = (argc > 5 ? argv[5] : NULL);	// Opt.
 			char *kernel = (argc > 6 ? argv[6] : NULL);	// Opt.
-			int ret = initialize(diskname, size, mbr, boot, kernel);
+			int ret = bmfs_initialize(diskname, size, mbr, boot, kernel);
 			exit(ret);
 		}
 		else
 		{
-			printf("Usage: %s disk %s ", argv[0], command);
+			printf("Usage: bmfs disk %s ", command);
 			printf("size [mbr_file] ");
 			printf("[bootloader_file] [kernel_file]\n");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 	}
 
 	if ((disk = fopen(diskname, "r+b")) == NULL)			// Open for read/write in binary mode
 	{
-		printf("Error: Unable to open disk '%s'\n", diskname);
-		exit(0);
+		printf("bmfs error: Unable to open disk '%s'\n", diskname);
+		exit(EXIT_FAILURE);
 	}
 	else								// Opened ok, is it a valid BMFS disk?
 	{
@@ -130,11 +123,11 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(s_format, command) == 0)
 			{
-				format();
+				bmfs_format();
 			}
 			else
 			{
-				printf("Error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
+				printf("bmfs error: Not a valid BMFS drive (Disk is not BMFS formatted).\n");
 			}
 			fclose(disk);
 			return 0;
@@ -143,7 +136,7 @@ int main(int argc, char *argv[])
 
 	if (strcasecmp(s_list, command) == 0)
 	{
-		list();
+		bmfs_list();
 	}
 	else if (strcasecmp(s_format, command) == 0)
 	{
@@ -151,7 +144,7 @@ int main(int argc, char *argv[])
 		{
 			if (strcasecmp(argv[3], "/FORCE") == 0)
 			{
-				format();
+				bmfs_format();
 			}
 			else
 			{
@@ -167,7 +160,7 @@ int main(int argc, char *argv[])
 	{
 		if (filename == NULL)
 		{
-			printf("Error: File name not specified.\n");
+			printf("bmfs error: File name not specified.\n");
 		}
 		else
 		{
@@ -176,11 +169,11 @@ int main(int argc, char *argv[])
 				int filesize = atoi(argv[4]);
 				if (filesize >= 1)
 				{
-					create(filename, filesize);
+					bmfs_create(filename, filesize);
 				}
 				else
 				{
-					printf("Error: Invalid file size.\n");
+					printf("bmfs error: Invalid file size.\n");
 				}
 			}
 			else
@@ -189,38 +182,40 @@ int main(int argc, char *argv[])
 				if (fgets(tempstring, 32, stdin) != NULL)	// Get up to 32 chars from the keyboard
 					filesize = atoi(tempstring);
 				if (filesize >= 1)
-					create(filename, filesize);
+					bmfs_create(filename, filesize);
 				else
-					printf("Error: Invalid file size.\n");
+					printf("bmfs error: Invalid file size.\n");
 			}
 		}
 	}
 	else if (strcasecmp(s_read, command) == 0)
 	{
-		read(filename);
+		bmfs_read(filename);
 	}
 	else if (strcasecmp(s_write, command) == 0)
 	{
-		write(filename);
+		bmfs_write(filename);
 	}
 	else if (strcasecmp(s_delete, command) == 0)
 	{
-		delete(filename);
+		bmfs_delete(filename);
 	}
 	else
 	{
-		printf("Error: Unknown command\n");
+		printf("bmfs error: Unknown command\n");
 	}
+
 	if (disk != NULL)
 	{
 		fclose( disk );
 		disk = NULL;
 	}
+
 	return 0;
 }
 
 
-int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
+int bmfs_find(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 {
 	int tint;
 
@@ -249,7 +244,7 @@ int findfile(char *filename, struct BMFSEntry *fileentry, int *entrynumber)
 }
 
 
-void list(void)
+void bmfs_list(void)
 {
 	int tint;
 
@@ -275,7 +270,7 @@ void list(void)
 }
 
 
-void format(void)
+void bmfs_format(void)
 {
 	memset(DiskInfo, 0, 512);
 	memset(Directory, 0, 4096);
@@ -287,7 +282,7 @@ void format(void)
 }
 
 
-int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
+int bmfs_initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 {
 	unsigned long long diskSize = 0;
 	unsigned long long writeSize = 0;
@@ -333,45 +328,45 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 			}
 			else
 			{
-				printf("Error: Disk size is too large\n");
+				printf("bmfs error: Disk size is too large\n");
 				ret = 1;
 			}
 		}
 		else if (i == 0) // No digits specified
 		{
-			printf("Error: A numeric disk size must be specified\n");
+			printf("bmfs error: A numeric disk size must be specified\n");
 			ret = 1;
 		}
 		else
 		{
 			switch (toupper(ch))
 			{
-					case 'K':
-						diskSizeFactor = 1;
-						break;
-					case 'M':
-						diskSizeFactor = 2;
-						break;
-					case 'G':
-						diskSizeFactor = 3;
-						break;
-					case 'T':
-						diskSizeFactor = 4;
-						break;
-					case 'P':
-						diskSizeFactor = 5;
-						break;
-					default:
-						printf("Error: Invalid disk size string: '%s'\n", size);
-						ret = 1;
-						break;
+				case 'K':
+					diskSizeFactor = 1;
+					break;
+				case 'M':
+					diskSizeFactor = 2;
+					break;
+				case 'G':
+					diskSizeFactor = 3;
+					break;
+				case 'T':
+					diskSizeFactor = 4;
+					break;
+				case 'P':
+					diskSizeFactor = 5;
+					break;
+				default:
+					printf("bmfs error: Invalid disk size string: '%s'\n", size);
+					ret = 1;
+					break;
 			}
 
 			// If this character is a valid unit indicator, but is not at the
 			// end of the string, then the string is invalid.
 			if (ret == 0 && size[i+1] != '\0')
 			{
-				printf("Error: Invalid disk size string: '%s'\n", size);
+				printf("bmfs error: Invalid disk size string: '%s'\n", size);
 				ret = 1;
 			}
 		}
@@ -389,7 +384,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 			}
 			else
 			{
-				printf("Error: Disk size is too large\n");
+				printf("bmfs error: Disk size is too large\n");
 				ret = 1;
 			}
 		}
@@ -400,7 +395,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 	{
 		if (diskSize < minimumDiskSize)
 		{
-			printf( "Error: Disk size must be at least %d bytes (%dMiB)\n", minimumDiskSize, minimumDiskSize / (1024*1024));
+			printf("bmfs error: Disk size must be at least %d bytes (%dMiB)\n", minimumDiskSize, minimumDiskSize / (1024*1024));
 			ret = 1;
 		}
 	}
@@ -411,7 +406,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 		mbrFile = fopen(mbr, "rb");
 		if (mbrFile == NULL )
 		{
-			printf("Error: Unable to open MBR file '%s'\n", mbr);
+			printf("bmfs error: Unable to open MBR file '%s'\n", mbr);
 			ret = 1;
 		}
 	}
@@ -422,7 +417,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 		bootFile = fopen(boot, "rb");
 		if (bootFile == NULL )
 		{
-			printf("Error: Unable to open %s file '%s'\n", bootFileType, boot);
+			printf("bmfs error: Unable to open %s file '%s'\n", bootFileType, boot);
 			ret = 1;
 		}
 	}
@@ -433,7 +428,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 		kernelFile = fopen(kernel, "rb");
 		if (kernelFile == NULL )
 		{
-			printf("Error: Unable to open kernel file '%s'\n", kernel);
+			printf("bmfs error: Unable to open kernel file '%s'\n", kernel);
 			ret = 1;
 		}
 	}
@@ -444,7 +439,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 		buffer = (char *) malloc(bufferSize);
 		if (buffer == NULL)
 		{
-			printf("Error: Failed to allocate buffer\n");
+			printf("bmfs error: Failed to allocate buffer\n");
 			ret = 1;
 		}
 	}
@@ -457,7 +452,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 		disk = fopen(diskname, "wb");
 		if (disk == NULL)
 		{
-			printf("Error: Unable to open disk '%s'\n", diskname);
+			printf("bmfs error: Unable to open disk '%s'\n", diskname);
 			ret = 1;
 		}
 	}
@@ -481,7 +476,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 			}
 			if (fwrite(buffer, chunkSize, 1, disk) != 1)
 			{
-				printf("Error: Failed to write disk '%s'\n", diskname);
+				printf("bmfs error: Failed to write disk '%s'\n", diskname);
 				ret = 1;
 				break;
 			}
@@ -497,7 +492,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 	if (ret == 0)
 	{
 		rewind(disk);
-		format();
+		bmfs_format();
 	}
 
 	// Write the master boot record if it was specified by the caller.
@@ -508,13 +503,13 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 		{
 			if (fwrite(buffer, 512, 1, disk) != 1)
 			{
-				printf("Error: Failed to write disk '%s'\n", diskname);
+				printf("bmfs error: Failed to write disk '%s'\n", diskname);
 				ret = 1;
 			}
 		}
 		else
 		{
-			printf("Error: Failed to read file '%s'\n", mbr);
+			printf("bmfs error: Failed to read file '%s'\n", mbr);
 			ret = 1;
 		}
 	}
@@ -530,7 +525,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 			{
 				if (fwrite(buffer, chunkSize, 1, disk) != 1)
 				{
-					printf("Error: Failed to write disk '%s'\n", diskname);
+					printf("bmfs error: Failed to write disk '%s'\n", diskname);
 					ret = 1;
 				}
 			}
@@ -538,7 +533,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 			{
 				if (ferror(disk))
 				{
-					printf("Error: Failed to read file '%s'\n", boot);
+					printf("bmfs error: Failed to read file '%s'\n", boot);
 					ret = 1;
 				}
 				break;
@@ -557,7 +552,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 			{
 				if (fwrite(buffer, chunkSize, 1, disk) != 1)
 				{
-					printf("Error: Failed to write disk '%s'\n", diskname);
+					printf("bmfs error: Failed to write disk '%s'\n", diskname);
 					ret = 1;
 				}
 			}
@@ -565,7 +560,7 @@ int initialize(char *diskname, char *size, char *mbr, char *boot, char *kernel)
 			{
 				if (ferror(disk))
 				{
-					printf("Error: Failed to read file '%s'\n", kernel);
+					printf("bmfs error: Failed to read file '%s'\n", kernel);
 					ret = 1;
 				}
 				break;
@@ -621,7 +616,7 @@ static int StartingBlockCmp(const void *pa, const void *pb)
 	return (ea->StartingBlock - eb->StartingBlock);
 }
 
-void create(char *filename, unsigned long long maxsize)
+void bmfs_create(char *filename, unsigned long long maxsize)
 {
 	struct BMFSEntry tempentry;
 	int slot;
@@ -629,7 +624,7 @@ void create(char *filename, unsigned long long maxsize)
 	if (maxsize % 2 != 0)
 		maxsize++;
 
-	if (findfile(filename, &tempentry, &slot) == 0)
+	if (bmfs_find(filename, &tempentry, &slot) == 0)
 	{
 		unsigned long long blocks_requested = maxsize / 2; // how many blocks to allocate
 		unsigned long long num_blocks = disksize / 2; // number of blocks in the disk
@@ -664,7 +659,7 @@ void create(char *filename, unsigned long long maxsize)
 
 		if (first_free_entry == -1)
 		{
-			printf("Error: Cannot create file. No free directory entries.\n");
+			printf("bmfs error: Cannot create file. No free directory entries.\n");
 			return;
 		}
 
@@ -698,7 +693,7 @@ void create(char *filename, unsigned long long maxsize)
 
 		if (new_file_start == 0)
 		{
-			printf("Error: Cannot create file of size %lld MiB.\n", maxsize);
+			printf("bmfs error: Cannot create file of size %lld MiB.\n", maxsize);
 			return;
 		}
 
@@ -725,12 +720,12 @@ void create(char *filename, unsigned long long maxsize)
 	}
 	else
 	{
-		printf("Error: File already exists.\n");
+		printf("bmfs error: File already exists.\n");
 	}
 }
 
 // Read a file from a BMFS volume
-void read(char *filename)
+void bmfs_read(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
@@ -738,15 +733,15 @@ void read(char *filename)
 	unsigned long long bytestoread;
 	char *buffer;
 
-	if (0 == findfile(filename, &tempentry, &slot))
+	if (0 == bmfs_find(filename, &tempentry, &slot))
 	{
-		printf("Error: File not found in BMFS.\n");
+		printf("bmfs error: File not found in BMFS.\n");
 	}
 	else
 	{
 		if ((tfile = fopen(tempentry.FileName, "wb")) == NULL)
 		{
-			printf("Error: Could not open local file '%s'\n", tempentry.FileName);
+			printf("bmfs error: Could not open local file '%s'\n", tempentry.FileName);
 		}
 		else
 		{
@@ -755,7 +750,7 @@ void read(char *filename)
 			buffer = malloc(blockSize);
 			if (buffer == NULL)
 			{
-				printf("Error: Unable to allocate enough memory for buffer.\n");
+				printf("bmfs error: Unable to allocate enough memory for buffer.\n");
 			}
 			else
 			{
@@ -771,7 +766,7 @@ void read(char *filename)
 						}
 						else
 						{
-							printf("Error: Unexpected read length detected.\n");
+							printf("bmfs error: Unexpected read length detected.\n");
 							bytestoread = 0;
 						}
 					}
@@ -785,7 +780,7 @@ void read(char *filename)
 						}
 						else
 						{
-							printf("Error: Unexpected read length detected.\n");
+							printf("bmfs error: Unexpected read length detected.\n");
 							bytestoread = 0;
 						}
 					}
@@ -798,7 +793,7 @@ void read(char *filename)
 
 
 // Write a file to a BMFS volume
-void write(char *filename)
+void bmfs_write(char *filename)
 {
 	struct BMFSEntry tempentry;
 	FILE *tfile;
@@ -806,90 +801,88 @@ void write(char *filename)
 	unsigned long long tempfilesize;
 	char *buffer;
 
-	if (0 == findfile(filename, &tempentry, &slot))
+	if ((tfile = fopen(filename, "rb")) == NULL)
 	{
-		printf("Error: File not found in BMFS. A file entry must first be created.\n");
+		printf("bmfs error: Could not open local file '%s'\n", tempentry.FileName);
 	}
 	else
 	{
-		if ((tfile = fopen(filename, "rb")) == NULL)
+		// Is there enough room in BMFS?
+		fseek(tfile, 0, SEEK_END);
+		tempfilesize = ftell(tfile);
+		rewind(tfile);
+		if (0 == bmfs_find(filename, &tempentry, &slot))
 		{
-			printf("Error: Could not open local file '%s'\n", tempentry.FileName);
+			bmfs_create(filename, (tempfilesize+blockSize)/blockSize);
+			bmfs_find(filename, &tempentry, &slot);
+		}
+		if ((tempentry.ReservedBlocks*blockSize) < tempfilesize)
+		{
+			printf("bmfs error: Not enough reserved space in BMFS.\n");
 		}
 		else
 		{
-			// Is there enough room in BMFS?
-			fseek(tfile, 0, SEEK_END);
-			tempfilesize = ftell(tfile);
-			rewind(tfile);
-			if ((tempentry.ReservedBlocks*blockSize) < tempfilesize)
+			fseek(disk, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
+			buffer = malloc(blockSize);
+			if (buffer == NULL)
 			{
-				printf("Error: Not enough reserved space in BMFS.\n");
+				printf("bmfs error: Unable to allocate enough memory for buffer.\n");
 			}
 			else
 			{
-				fseek(disk, tempentry.StartingBlock*blockSize, SEEK_SET); // Skip to the starting block in the disk
-				buffer = malloc(blockSize);
-				if (buffer == NULL)
+				while (tempfilesize != 0)
 				{
-					printf("Error: Unable to allocate enough memory for buffer.\n");
-				}
-				else
-				{
-					while (tempfilesize != 0)
+					if (tempfilesize >= blockSize)
 					{
-						if (tempfilesize >= blockSize)
+						retval = fread(buffer, blockSize, 1, tfile);
+						if (retval == 1)
 						{
-							retval = fread(buffer, blockSize, 1, tfile);
-							if (retval == 1)
-							{
-								fwrite(buffer, blockSize, 1, disk);
-								tempfilesize -= blockSize;
-							}
-							else
-							{
-								printf("Error: Unexpected read length detected.\n");
-								tempfilesize = 0;
-							}
+							fwrite(buffer, blockSize, 1, disk);
+							tempfilesize -= blockSize;
 						}
 						else
 						{
-							retval = fread(buffer, tempfilesize, 1, tfile);
-							if (retval == 1)
-							{
-								memset(buffer+(tempfilesize), 0, (blockSize-tempfilesize)); // 0 the rest of the buffer
-								fwrite(buffer, blockSize, 1, disk);
-								tempfilesize = 0;
-							}
-							else
-							{
-								printf("Error: Unexpected read length detected.\n");
-								tempfilesize = 0;
-							}
+							printf("bmfs error: Unexpected read length detected.\n");
+							tempfilesize = 0;
+						}
+					}
+					else
+					{
+						retval = fread(buffer, tempfilesize, 1, tfile);
+						if (retval == 1)
+						{
+							memset(buffer+(tempfilesize), 0, (blockSize-tempfilesize)); // 0 the rest of the buffer
+							fwrite(buffer, blockSize, 1, disk);
+							tempfilesize = 0;
+						}
+						else
+						{
+							printf("bmfs error: Unexpected read length detected.\n");
+							tempfilesize = 0;
 						}
 					}
 				}
-				// Update directory
-				tempfilesize = ftell(tfile);
-				memcpy(Directory+(slot*64)+48, &tempfilesize, 8);
-				fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-				fwrite(Directory, 4096, 1, disk);			// Write new directory to disk
 			}
-			fclose(tfile);
+			// Update directory
+			tempfilesize = ftell(tfile);
+			memcpy(Directory+(slot*64)+48, &tempfilesize, 8);
+			fseek(disk, 4096, SEEK_SET);			// Seek 4KiB in for directory
+			fwrite(Directory, 4096, 1, disk);		// Write new directory to disk
 		}
+		fclose(tfile);
 	}
 }
 
 
-void delete(char *filename)
+void bmfs_delete(char *filename)
 {
 	struct BMFSEntry tempentry;
 	char delmarker = 0x01;
 	int slot;
 
-	if (0 == findfile(filename, &tempentry, &slot))
+	if (0 == bmfs_find(filename, &tempentry, &slot))
 	{
-		printf("Error: File not found in BMFS.\n");
+		printf("bmfs error: File not found in BMFS.\n");
 	}
 	else
 	{
