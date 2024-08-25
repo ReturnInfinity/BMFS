@@ -803,7 +803,7 @@ void bmfs_write(char *filename)
 
 	if ((tfile = fopen(filename, "rb")) == NULL)
 	{
-		printf("bmfs error: Could not open local file '%s'\n", tempentry.FileName);
+		printf("bmfs error: Could not open local file '%s'\n", filename);
 	}
 	else
 	{
