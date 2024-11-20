@@ -1,4 +1,3 @@
-
 # BareMetal File System Lite (BMFS-Lite) - Version 1
 
 BMFS-Lite is a new in-memory file system ([RAM Drive](https://en.wikipedia.org/wiki/RAM_drive)) used by BareMetal-OS. Based on BMFS, the design is extremely simplified compared to conventional file systems. The system is also geared more toward a small number of files (utilities, demos).

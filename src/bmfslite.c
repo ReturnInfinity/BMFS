@@ -231,8 +231,8 @@ void bmfs_list(void)
 	int tint;
 
 	printf("BMFS-Lite Drive Size: %d bytes\n", disksize);
-	printf("Name                            |            Size (B)|        Reserved (B)\n");
-	printf("==========================================================================\n");
+	printf("Name                            |    Size | Reserved | Block\n");
+	printf("============================================================\n");
 	for (tint = 0; tint < 64; tint++)				// Max 64 entries
 	{
 		memcpy(pentry, Directory+(tint*64), 64);
@@ -246,7 +246,7 @@ void bmfs_list(void)
 		}
 		else							// Valid entry
 		{
-			printf("%-32s %20lld %20lld\n", entry.FileName, (long long int)entry.FileSize, (long long int)(entry.ReservedBlocks*2));
+			printf("%-32s %8lld %10lld %7lld\n", entry.FileName, (long long int)entry.FileSize, (long long int)(entry.ReservedBlocks*blockSize), entry.StartingBlock);
 		}
 	}
 }
@@ -254,13 +254,7 @@ void bmfs_list(void)
 
 void bmfs_format(void)
 {
-//	memset(DiskInfo, 0, 512);
-//	memset(Directory, 0, 4096);
-//	memcpy(DiskInfo, fs_tag, 4);					// Add the 'BMFS' tag
-//	fseek(disk, 1024, SEEK_SET);					// Seek 1KiB in for disk information
-//	fwrite(DiskInfo, 512, 1, disk);					// Write 512 bytes for the DiskInfo
-//	fseek(disk, 4096, SEEK_SET);					// Seek 4KiB in for directory
-//	fwrite(Directory, 4096, 1, disk);				// Write 4096 bytes for the Directory
+// Todo - overwrite entire file with zeros
 }
 
 
@@ -477,6 +471,12 @@ void bmfs_create(char *filename, unsigned long long maxsize)
 		unsigned long long new_file_start = 0;
 		unsigned long long prev_file_end = 1;
 
+		if(strlen(filename) > 31)
+		{
+			printf("bmfs error: Filename too long.\n");
+			return;
+		}
+
 		// Make a copy of Directory to play with
 		memcpy(dir_copy, Directory, 4096);
 
@@ -654,7 +654,7 @@ void bmfs_write(char *filename)
 		rewind(tfile);
 		if (0 == bmfs_find(filename, &tempentry, &slot))
 		{
-			bmfs_create(filename, (tempfilesize+blockSize)/blockSize);
+			bmfs_create(filename, (tempfilesize+blockSize)/blockSize*2);
 			bmfs_find(filename, &tempentry, &slot);
 		}
 		if ((tempentry.ReservedBlocks*blockSize) < tempfilesize)
@@ -707,7 +707,7 @@ void bmfs_write(char *filename)
 			// Update directory
 			tempfilesize = ftell(tfile);
 			memcpy(Directory+(slot*64)+48, &tempfilesize, 8);
-			fseek(disk, 0, SEEK_SET);			// Seek 4KiB in for directory
+			fseek(disk, 0, SEEK_SET);			// Seek to directory
 			fwrite(Directory, 4096, 1, disk);		// Write new directory to disk
 		}
 		fclose(tfile);
