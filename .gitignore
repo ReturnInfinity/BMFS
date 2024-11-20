@@ -8,6 +8,7 @@
 
 # UNIX/Linux/Mac Executable
 bmfs
+bmfslite
 
 # Mac crap
 .DS_Store
