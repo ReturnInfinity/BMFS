@@ -118,7 +118,6 @@ int main(int argc, char *argv[])
 	{
 		bmfs_list();
 	}
-/*
 	else if (strcasecmp(s_format, command) == 0)
 	{
 		if (argc > 3)
@@ -137,7 +136,6 @@ int main(int argc, char *argv[])
 			printf("Format aborted!\n");
 		}
 	}
-*/
 	else if (strcasecmp(s_create, command) == 0)
 	{
 		if (filename == NULL)
@@ -378,15 +376,15 @@ int bmfs_initialize(char *diskname, char *size)
 	// Fill the disk image with zeros.
 	if (ret == 0)
 	{
-		double percent;
+		// double percent;
 		memset(buffer, 0, bufferSize);
 		writeSize = 0;
 		while (writeSize < diskSize)
 		{
-			percent = writeSize;
-			percent /= diskSize;
-			percent *= 100;
-			printf("Formatting disk: %llu of %llu bytes (%.0f%%)...\r", writeSize, diskSize, percent);
+			// percent = writeSize;
+			// percent /= diskSize;
+			// percent *= 100;
+			// printf("Formatting disk: %llu of %llu bytes (%.0f%%)...\r", writeSize, diskSize, percent);
 			chunkSize = bufferSize;
 			if (chunkSize > diskSize - writeSize)
 			{
@@ -402,7 +400,7 @@ int bmfs_initialize(char *diskname, char *size)
 		}
 		if (ret == 0)
 		{
-			printf("Formatting disk: %llu of %llu bytes (100%%)%9s\n", writeSize, diskSize, "");
+			// printf("Formatting disk: %llu of %llu bytes (100%%)%9s\n", writeSize, diskSize, "");
 		}
 	}
 
@@ -427,7 +425,7 @@ int bmfs_initialize(char *diskname, char *size)
 
 	if (ret == 0)
 	{
-		printf("Disk initialization complete.\n");
+		// printf("Disk initialization complete.\n");
 	}
 
 	return ret;
