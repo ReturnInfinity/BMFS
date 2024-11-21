@@ -1,6 +1,6 @@
 /* BareMetal File System Lite Utility */
 /* Written by Ian Seyler of Return Infinity */
-/* v1.0 (2024 11 19) */
+/* v1.0 (2024 11 21) */
 
 /* Global includes */
 #include <stdio.h>
@@ -45,7 +45,6 @@ char s_initialize[] = "initialize";
 char s_create[] = "create";
 char s_read[] = "read";
 char s_write[] = "write";
-char s_delete[] = "delete";
 struct BMFSEntry entry;
 void *pentry = &entry;
 char *BlockMap;
@@ -60,7 +59,6 @@ int bmfs_initialize(char *diskname, char *size);
 void bmfs_create(char *filename, unsigned long long maxsize);
 void bmfs_read(char *filename);
 void bmfs_write(char *filename);
-void bmfs_delete(char *filename);
 
 /* Program code */
 int main(int argc, char *argv[])
@@ -72,7 +70,7 @@ int main(int argc, char *argv[])
 		printf("Written by Ian Seyler @ Return Infinity (ian.seyler@returninfinity.com)\n\n");
 		printf("Usage: bmfs disk function file\n\n");
 		printf("Disk:     the name of the disk file\n");
-		printf("Function: list, read, write, create, delete, format, initialize\n");
+		printf("Function: list, read, write, create, format, initialize\n");
 		printf("File:     (if applicable)\n");
 		exit(EXIT_SUCCESS);
 	}
@@ -111,7 +109,7 @@ int main(int argc, char *argv[])
 	{
 		fseek(disk, 0, SEEK_END);
 		disksize = ftell(disk);					// Disk size in Bytes
-		fseek(disk, 0, SEEK_SET);				// Seek 4KiB in for directory
+		fseek(disk, 0, SEEK_SET);				// Seek to start for directory
 		retval = fread(Directory, 4096, 1, disk);		// Read 4096 bytes to the Directory buffer
 		rewind(disk);
 	}
@@ -120,6 +118,7 @@ int main(int argc, char *argv[])
 	{
 		bmfs_list();
 	}
+/*
 	else if (strcasecmp(s_format, command) == 0)
 	{
 		if (argc > 3)
@@ -138,6 +137,7 @@ int main(int argc, char *argv[])
 			printf("Format aborted!\n");
 		}
 	}
+*/
 	else if (strcasecmp(s_create, command) == 0)
 	{
 		if (filename == NULL)
@@ -177,10 +177,6 @@ int main(int argc, char *argv[])
 	else if (strcasecmp(s_write, command) == 0)
 	{
 		bmfs_write(filename);
-	}
-	else if (strcasecmp(s_delete, command) == 0)
-	{
-		bmfs_delete(filename);
 	}
 	else
 	{
@@ -456,20 +452,15 @@ void bmfs_create(char *filename, unsigned long long maxsize)
 	struct BMFSEntry tempentry;
 	int slot;
 
-	if (maxsize % 2 != 0)
-		maxsize++;
-
 	if (bmfs_find(filename, &tempentry, &slot) == 0)
 	{
 		unsigned long long blocks_requested = maxsize / 2; // how many blocks to allocate
-		unsigned long long num_blocks = disksize / 2; // number of blocks in the disk
 		char dir_copy[4096]; // copy of directory
 		int num_used_entries = 0; // how many entries of Directory are either used or deleted
 		int first_free_entry = -1; // where to put new entry
 		int tint;
 		struct BMFSEntry *pEntry;
 		unsigned long long new_file_start = 0;
-		unsigned long long prev_file_end = 1;
 
 		if(strlen(filename) > 31)
 		{
@@ -514,33 +505,15 @@ void bmfs_create(char *filename, unsigned long long maxsize)
 			// between the end of the previous file (initially == 1)
 			// and the beginning of the current file (or the last data block if there are no more files).
 
-			unsigned long long this_file_start;
 			pEntry = (struct BMFSEntry *)(dir_copy + tint * 64); // points to the current directory entry
 
-			if (tint == num_used_entries || pEntry->FileName[0] == 0x01)
-				this_file_start = num_blocks - 1; // index of the last block
-			else
-				this_file_start = pEntry->StartingBlock;
-
-			if (this_file_start - prev_file_end >= blocks_requested)
-			{ // fits here
-				new_file_start = prev_file_end;
-				break;
-			}
-
-			if (tint < num_used_entries)
-				prev_file_end = pEntry->StartingBlock + pEntry->ReservedBlocks;
+			new_file_start += pEntry->ReservedBlocks;
 		}
-
-		if (new_file_start == 0)
-		{
-			printf("bmfs error: Cannot create file of size %lld bytes.\n", maxsize);
-			return;
-		}
+		new_file_start += 4; // Skip the directory
 
 		// Add file record to Directory
 		pEntry = (struct BMFSEntry *)(Directory + first_free_entry * 64);
-		pEntry->StartingBlock = new_file_start + 3;
+		pEntry->StartingBlock = new_file_start;
 		pEntry->ReservedBlocks = blocks_requested;
 		pEntry->FileSize = 0;
 		strcpy(pEntry->FileName, filename);
@@ -711,26 +684,6 @@ void bmfs_write(char *filename)
 			fwrite(Directory, 4096, 1, disk);		// Write new directory to disk
 		}
 		fclose(tfile);
-	}
-}
-
-
-void bmfs_delete(char *filename)
-{
-	struct BMFSEntry tempentry;
-	char delmarker = 0x01;
-	int slot;
-
-	if (0 == bmfs_find(filename, &tempentry, &slot))
-	{
-		printf("bmfs error: File not found in BMFS.\n");
-	}
-	else
-	{
-		// Update directory
-		memcpy(Directory+(slot*64), &delmarker, 1);
-		fseek(disk, 4096, SEEK_SET);				// Seek 4KiB in for directory
-		fwrite(Directory, 4096, 1, disk);			// Write new directory to disk
 	}
 }
 
