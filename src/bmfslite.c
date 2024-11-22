@@ -240,7 +240,7 @@ void bmfs_list(void)
 		}
 		else							// Valid entry
 		{
-			printf("%-32s %8lld %10lld %7lld\n", entry.FileName, (long long int)entry.FileSize, (long long int)(entry.ReservedBlocks*blockSize), entry.StartingBlock);
+			printf("%-32s %8lld %10lld %7lld\n", entry.FileName, (long long int)entry.FileSize, (long long int)(entry.ReservedBlocks*blockSize), (long long int)entry.StartingBlock);
 		}
 	}
 }
