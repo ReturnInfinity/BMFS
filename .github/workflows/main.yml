@@ -43,7 +43,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: install packages
-      run: choco install nasm x86_64-elf-gcc
+      run: choco install nasm mingw
 
     - name: build
       run: sh ./build.sh
