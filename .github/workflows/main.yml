@@ -34,3 +34,16 @@ jobs:
     - name: build
       run: sh ./build.sh
 
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: install packages
+      run: choco install nasm x86_64-elf-gcc
+
+    - name: build
+      run: sh ./build.sh
