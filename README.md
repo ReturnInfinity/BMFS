@@ -1,3 +1,5 @@
+[![CI](https://github.com/ReturnInfinity/BMFS/actions/workflows/main.yml/badge.svg)](https://github.com/ReturnInfinity/BMFS/actions/workflows/main.yml)
+
 # BMFS
 
 Utility for accessing a disk or disk image formatted with BareMetal File System (BMFS).
