@@ -76,8 +76,13 @@ int main(int argc, char *argv[])
 		printf("File:     (if applicable)\n");
 		exit(EXIT_SUCCESS);
 	}
+	else if (argc == 2)
+	{
+		printf("Missing argument - function\n");
+		exit(EXIT_FAILURE);
+	}
 
-	if (argc >= 2)
+	if (argc >= 3)
 	{
 		diskname = (argc > 1 ? argv[1] : NULL);
 		command = (argc > 2 ? argv[2] : NULL);
