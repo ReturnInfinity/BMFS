@@ -9,6 +9,7 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
+#include <math.h>
 
 /* Typedefs */
 typedef uint8_t u8;
@@ -818,7 +819,14 @@ void bmfs_write(char *filename)
 		rewind(tfile);
 		if (0 == bmfs_find(filename, &tempentry, &slot))
 		{
-			bmfs_create(filename, (tempfilesize+blockSize)/blockSize);
+			if (tempfilesize < blockSize)
+			{
+				bmfs_create(filename, (tempfilesize+blockSize)/blockSize);
+			}
+			else
+			{
+				bmfs_create(filename, ceil((tempfilesize+1048576)/1048576));
+			}
 			bmfs_find(filename, &tempentry, &slot);
 		}
 		if ((tempentry.ReservedBlocks*blockSize) < tempfilesize)
